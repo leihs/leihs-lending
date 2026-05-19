@@ -1,6 +1,7 @@
 {:paths ["src/server" "resources"]
  :deps {leihs-core/leihs-core    {:local/root "./shared-clj"}
-        metosin/reitit            {:mvn/version "0.10.0"}}
+        metosin/reitit            {:mvn/version "0.10.0"}
+        hiccup/hiccup             {:mvn/version "2.0.0"}}
 
  :aliases {:cljfmt {:extra-deps {io.github.weavejester/cljfmt
                                  {:git/tag "0.11.2"
