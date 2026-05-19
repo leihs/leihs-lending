@@ -4,8 +4,10 @@
    [clojure.pprint :refer [pprint]]
    [clojure.tools.cli :as cli :refer [parse-opts]]
    [leihs.core.core :refer [keyword str presence]]
+   [leihs.core.db :as db]
    [leihs.core.http-server :as http-server]
    [leihs.core.shutdown :as shutdown]
+   [leihs.core.status :as status]
    [leihs.lending.graphql :as graphql]
    [leihs.lending.routing :as routing]
    [logbug.catcher :as catcher]
@@ -17,6 +19,8 @@
    (info "Invoking run with options: " options)
    (shutdown/init options)
    (graphql/init options)
+   (let [s (status/init)]
+     (db/init options (:health-check-registry s)))
    (let [http-handler (routing/init)]
      (http-server/start options http-handler))))
 
@@ -24,7 +28,8 @@
   (concat
    [["-h" "--help"]
     shutdown/pid-file-option]
-   (http-server/cli-options :default-http-port 3270)))
+   (http-server/cli-options :default-http-port 3270)
+   db/cli-options))
 
 (defn main-usage [options-summary & more]
   (->> ["leihs-lending"

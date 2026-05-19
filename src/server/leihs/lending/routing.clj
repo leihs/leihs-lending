@@ -1,5 +1,6 @@
 (ns leihs.lending.routing
   (:require
+   [leihs.core.db :as db]
    [leihs.lending.routes :as routes]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.json :refer [wrap-json-body wrap-json-response]]))
@@ -15,6 +16,7 @@
 
 (defn init []
   (-> (routes/handler)
+      db/wrap-tx
       (wrap-json-body {:keywords? true})
       wrap-json-response
       wrap-catch
