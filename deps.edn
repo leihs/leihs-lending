@@ -1,0 +1,11 @@
+{:paths ["src/server" "resources"]
+ :deps {leihs-core/leihs-core    {:local/root "./shared-clj"}
+        metosin/reitit            {:mvn/version "0.10.0"}}
+
+ :aliases {:cljfmt {:extra-deps {io.github.weavejester/cljfmt
+                                 {:git/tag "0.11.2"
+                                  :sha "fb26b22f569724b05c93eb2502592dfc2de898c3"}}
+                    :main-opts ["-m" "cljfmt.main"]}
+
+           :outdated {:extra-deps {com.github.liquidz/antq {:mvn/version "2.5.1109"}}
+                      :main-opts ["-m" "antq.core"]}}}
