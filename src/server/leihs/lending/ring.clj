@@ -1,4 +1,4 @@
-(ns leihs.lending.routing
+(ns leihs.lending.ring
   (:require
    [leihs.core.db :as db]
    [leihs.core.ring-exception :as ring-exception]

@@ -9,7 +9,7 @@
    [leihs.core.shutdown :as shutdown]
    [leihs.core.status :as status]
    [leihs.lending.graphql :as graphql]
-   [leihs.lending.routing :as routing]
+   [leihs.lending.ring :as ring]
    [logbug.catcher :as catcher]
    [taoensso.timbre :refer [info]]))
 
@@ -21,7 +21,7 @@
    (graphql/init options)
    (let [s (status/init)]
      (db/init options (:health-check-registry s)))
-   (let [http-handler (routing/init)]
+   (let [http-handler (ring/init)]
      (http-server/start options http-handler))))
 
 (def cli-options
