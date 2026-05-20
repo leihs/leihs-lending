@@ -1,0 +1,70 @@
+require "faraday"
+require "digest"
+
+LEIHS_LENDING_HTTP_BASE_URL = ENV["LEIHS_LENDING_HTTP_BASE_URL"].presence || "http://localhost:3270"
+
+SESSION_COOKIE_NAME = "leihs-user-session"
+
+def create_session_for(user_id)
+  token = SecureRandom.uuid
+  token_hash = Digest::SHA256.hexdigest(token)
+  database[:user_sessions].insert(
+    user_id: user_id,
+    token_hash: token_hash,
+    authentication_system_id: "password"
+  )
+  token
+end
+
+class GraphqlQuery
+  attr_reader :response
+
+  def initialize(query, user_id, variables)
+    @query = query
+    @variables = variables
+    @session_token = user_id ? create_session_for(user_id) : nil
+  end
+
+  def perform
+    @response = Faraday.post("#{LEIHS_LENDING_HTTP_BASE_URL}/lending/graphql") do |req|
+      req.headers["Accept"] = "application/json"
+      req.headers["Content-Type"] = "application/json"
+      req.headers["Cookie"] = "#{SESSION_COOKIE_NAME}=#{@session_token}" if @session_token
+      req.body = {query: @query, variables: @variables}.to_json
+    end
+    log_errors if @response.status == 200
+    self
+  end
+
+  def result
+    JSON.parse @response.body
+  end
+
+  def log_errors
+    if result["errors"]
+      puts "\n=== GRAPHQL ERROR ===\n#{result.slice("errors")}\n===================\n"
+    end
+  end
+end
+
+RSpec.shared_context "graphql client" do
+  def query(q, user_id = nil, variables = {})
+    gq = GraphqlQuery.new(q, user_id, variables).perform
+    return {status: gq.response.status} unless gq.response.status == 200
+    gq.result.deep_symbolize_keys
+  end
+
+  def expect_graphql_result(result, compared)
+    expect(result[:errors]).to be_nil
+    expect(result[:data]).to eq(compared)
+  end
+
+  def expect_graphql_error(result)
+    expect(result[:errors]).not_to be_empty
+    yield if block_given?
+  end
+end
+
+RSpec.configure do |config|
+  config.include_context "graphql client"
+end
