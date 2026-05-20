@@ -3,7 +3,12 @@
         metosin/reitit            {:mvn/version "0.10.0"}
         hiccup/hiccup             {:mvn/version "2.0.0"}}
 
- :aliases {:cljfmt {:extra-deps {io.github.weavejester/cljfmt
+ :aliases {:build {:deps {io.github.clojure/tools.build
+                          {:git/tag "v0.10.5"
+                           :git/sha "2a21b7a"}}
+                   :ns-default scripts.build}
+
+           :cljfmt {:extra-deps {io.github.weavejester/cljfmt
                                  {:git/tag "0.11.2"
                                   :sha "fb26b22f569724b05c93eb2502592dfc2de898c3"}}
                     :main-opts ["-m" "cljfmt.main"]}

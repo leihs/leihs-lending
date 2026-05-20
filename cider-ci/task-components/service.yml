@@ -1,20 +1,10 @@
 scripts:
 
-  lending-clojure-setup:
-    exclusive_executor_resource: asdf-clojure
-    timeout: 20 Minutes
-    body: |
-      #!/usr/bin/env bash
-      set -euo pipefail
-      cd $LEIHS_LENDING_DIR
-      ./bin/env/java-setup
-      ./bin/env/clojure-setup
-
   lending-service-run:
     timeout: 30 Minutes
     start_when:
-      clojure is set up:
-        script_key: lending-clojure-setup
+      uberjar has been built:
+        script_key: lending-build-uberjar
         states: [passed]
       database has been created:
         script_key: create-database
@@ -27,7 +17,7 @@ scripts:
       unset PGPORT; unset PGUSER
       PGPORT=${PG15PORT} PGUSER=${PG15USER} \
         DB_NAME=${LEIHS_DATABASE_NAME} \
-        clj -M -m leihs.lending.main run \
+        java -jar target/leihs-lending.jar run \
           --http-port ${LEIHS_LENDING_HTTP_PORT} \
           --pid-file tmp/service.pid
 

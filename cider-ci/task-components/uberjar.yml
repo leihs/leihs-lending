@@ -1,0 +1,13 @@
+git_options:
+  submodules:
+    include_match: ^.*$
+
+scripts:
+  lending-build-uberjar:
+    timeout: 60 minutes
+    exclusive_executor_resource: 'build-leihs-lending-jar-{{CIDER_CI_TREE_ID}}'
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd ${LEIHS_LENDING_DIR}
+      ./bin/build

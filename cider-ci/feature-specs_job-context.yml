@@ -10,6 +10,7 @@ task_defaults:
     - path: cider-ci/task-components/database.yml
       submodule: [database]
     - cider-ci/task-components/ruby-bundle.yml
+    - cider-ci/task-components/uberjar.yml
     - cider-ci/task-components/service.yml
     - cider-ci/task-components/asdf-firefox.yml
   ports:
