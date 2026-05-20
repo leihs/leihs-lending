@@ -1,0 +1,66 @@
+traits:
+  incus: true
+
+git_options:
+  submodules:
+    include_match: ^.*$
+
+scripts:
+
+  container-create:
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      incus image list
+      incus launch --ephemeral ${CONTAINER_BASE_IMAGE} ${CONTAINER_NAME}
+      incus list
+
+      git repack -a
+      git submodule foreach --recursive 'git repack -a'
+
+      incus file push --recursive ${CIDER_CI_WORKING_DIR} ${CONTAINER_NAME}/tmp/
+
+      incus exec ${CONTAINER_NAME} -- mv /tmp/${CIDER_CI_TRIAL_ID} /leihs-lending
+      incus exec ${CONTAINER_NAME} -- chown -R root:root /leihs-lending
+      incus exec ${CONTAINER_NAME} -- touch /leihs-lending/test.txt
+      incus exec ${CONTAINER_NAME} -- ls -l /leihs-lending
+      incus exec ${CONTAINER_NAME} -- rm /leihs-lending/test.txt
+
+  container-prepare:
+    start_when:
+      container-create done:
+        script_key: container-create
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      incus exec ${CONTAINER_NAME} -- /leihs-lending/container-build/bin/prepare
+      incus exec ${CONTAINER_NAME} -- /leihs-lending/container-build/bin/asdf-install
+
+  container-build:
+    start_when:
+      container-prepare done:
+        script_key: container-prepare
+    timeout: 60 minutes
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      incus exec ${CONTAINER_NAME} -- git config --global --add safe.directory /leihs-lending
+      incus exec ${CONTAINER_NAME} -- /leihs-lending/bin/build
+
+  container-destroy:
+    start_when:
+      build done:
+        script_key: container-build
+        states: [aborted, passed, failed, skipped]
+    ignore_abort: yes
+    timeout: 1 Hour
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      incus list
+      incus info "$CONTAINER_NAME"
+      until incus delete --force "$CONTAINER_NAME"; do sleep 10; done
+      incus list

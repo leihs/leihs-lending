@@ -1,3 +1,5 @@
+include: container-build/cider-ci.yml
+
 jobs:
 
   build-uberjar:
@@ -74,3 +76,74 @@ jobs:
                 set -euo pipefail
                 cd $LEIHS_LENDING_DIR
                 ./bin/check-ruby-commited
+
+  all-ok:
+    name: All Tests OK
+    depends_on: &ALLOK_DEPS
+      build-uberjar passed:
+        type: job
+        job_key: build-uberjar
+        states: [passed]
+      graphql-specs passed:
+        type: job
+        job_key: graphql-specs
+        states: [passed]
+      feature-specs passed:
+        type: job
+        job_key: feature-specs
+        states: [passed]
+      lint passed:
+        type: job
+        job_key: lint
+        states: [passed]
+      container-build passed:
+        type: job
+        job_key: container-build
+        states: [passed]
+      database merged to master:
+        type: job
+        job_key: merged-to-master
+        submodule: [database]
+        states: [passed]
+      shared-clj merged to master:
+        type: job
+        job_key: merged-to-master
+        submodule: [shared-clj]
+        states: [passed]
+    run_when: *ALLOK_DEPS
+    context:
+      tasks:
+        all-ok:
+          scripts:
+            test:
+              body: "exit 0"
+
+  good-to-merge:
+    name: "⚑ Good To Merge"
+    priority: 99
+    depends_on: &GOOD_TO_MERGE_DEPS
+      all passed:
+        type: job
+        job_key: all-ok
+        states: [passed]
+    run_when: *GOOD_TO_MERGE_DEPS
+    context:
+      include: cider-ci/jobs/good-to-merge.yml
+
+  merged-to-master:
+    name: Merged to master
+    priority: 999
+    depends_on:
+      master branch matches:
+        type: branch
+        include_match: ^master$
+    run_when:
+      master branch matches:
+        type: branch
+        include_match: ^master$
+    context:
+      tasks:
+        merged-to-master:
+          scripts:
+            test:
+              body: "exit 0"

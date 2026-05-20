@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+set -x
+
+apt update --yes
+apt dist-upgrade --yes
+
+apt install --yes \
+  autoconf \
+  bison \
+  build-essential \
+  libdb-dev \
+  libffi-dev \
+  libgdbm-dev \
+  libgdbm6 \
+  libgmp-dev \
+  libncurses5-dev \
+  libpq-dev \
+  libreadline6-dev \
+  libssl-dev \
+  libyaml-dev \
+  patch \
+  rustc \
+  unzip \
+  uuid-dev \
+  zlib1g-dev
+
+# vi: ft=sh
