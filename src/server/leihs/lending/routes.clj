@@ -2,13 +2,18 @@
   (:require
    [leihs.lending.graphiql :as graphiql]
    [leihs.lending.graphql :as graphql]
+   [leihs.lending.home :as home]
    [leihs.lending.sign-in :as sign-in]
    [reitit.ring :as reitit-ring]))
 
 (def routes
-  [["/lending/sign-in"
+  [["/lending/"
+    {:get {:handler home/handler}}]
+   ["/lending/sign-in"
     {:get  {:handler sign-in/get-handler}
      :post {:handler sign-in/post-handler}}]
+   ["/lending/sign-out"
+    {:post {:handler home/sign-out-handler}}]
    ["/lending/graphiql"
     {:get {:handler graphiql/handler}}]
    ["/lending/graphql"
@@ -17,4 +22,6 @@
 (defn handler []
   (reitit-ring/ring-handler
    (reitit-ring/router routes)
-   (reitit-ring/create-default-handler)))
+   (reitit-ring/create-default-handler
+    {:not-found (fn [_] {:status 404 :headers {"Content-Type" "text/plain"} :body "Not Found"})
+     :method-not-allowed (fn [_] {:status 405 :headers {"Content-Type" "text/plain"} :body "Method Not Allowed"})})))

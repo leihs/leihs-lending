@@ -46,7 +46,7 @@
   (let [user (password-checked-user (:user params) (:password params))]
     (if user
       (let [user-session (session/create-user-session user "password" request)]
-        (-> (redirect "/lending/graphiql")
+        (-> (redirect "/lending/")
             (set-cookie USER_SESSION_COOKIE_NAME (:token user-session) {:path "/"})))
       {:status 200
        :headers {"Content-Type" "text/html; charset=utf-8"}
