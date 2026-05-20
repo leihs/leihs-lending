@@ -43,8 +43,11 @@ scripts:
       #!/usr/bin/env bash
       set -euo pipefail
       cd $LEIHS_LENDING_DIR
-      kill $(cat tmp/service.pid)
-      tail --pid=$(cat tmp/service.pid) -f /dev/null
+      if [ -f tmp/service.pid ]; then
+        PID=$(cat tmp/service.pid)
+        kill "$PID" 2>/dev/null || true
+        tail --pid="$PID" -f /dev/null 2>/dev/null || true
+      fi
     start_when:
       test is terminal:
         script_key: test
