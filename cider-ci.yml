@@ -34,3 +34,43 @@ jobs:
     run_when: *SPEC_DEPS
     context:
       include: cider-ci/feature-specs_job-context.yml
+
+  lint:
+    name: Linting
+    run_when: *ON_BRANCH_UPDATE
+    context:
+      task_defaults:
+        traits:
+          asdf: true
+        git_options:
+          submodules:
+            include_match: ^.*$
+        environment_variables:
+          LEIHS_LENDING_DIR: "{{CIDER_CI_WORKING_DIR}}"
+      tasks:
+        cljfmt:
+          scripts:
+            test:
+              body: |
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd $LEIHS_LENDING_DIR
+                ./bin/env/java-setup
+                ./bin/env/clojure-setup
+                clojure -M:cljfmt check
+        ruby-lint:
+          scripts:
+            test:
+              body: |
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd $LEIHS_LENDING_DIR
+                ./bin/rblint
+        ruby-commited:
+          scripts:
+            test:
+              body: |
+                #!/usr/bin/env bash
+                set -euo pipefail
+                cd $LEIHS_LENDING_DIR
+                ./bin/check-ruby-commited

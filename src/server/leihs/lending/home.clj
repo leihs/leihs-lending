@@ -39,8 +39,7 @@
                [:dt "Email"]
                [:dd (:email authenticated-entity)]
                [:dt "Login"]
-               [:dd (:login authenticated-entity)]
-]]
+               [:dd (:login authenticated-entity)]]]
              [:div.actions
               [:a.button {:href "/lending/graphiql"} "Open GraphiQL"]
               [:form {:method "POST" :action "/lending/sign-out"}
