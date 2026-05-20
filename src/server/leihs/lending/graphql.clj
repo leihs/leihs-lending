@@ -7,6 +7,7 @@
    [com.walmartlabs.lacinia.util :as graphql-util]
    [leihs.core.graphql :as core-graphql]
    [leihs.lending.graphql.resolvers :as resolvers]
+   [leihs.lending.graphql.scalars :as scalars]
    [taoensso.timbre :refer [info]]))
 
 (defn load-schema []
@@ -14,6 +15,7 @@
               slurp
               edn/read-string
               (graphql-util/attach-resolvers resolvers/resolvers)
+              (graphql-util/attach-scalar-transformers scalars/scalars)
               graphql-schema/compile)
       (throw (ex-info "Failed to load schema" {}))))
 

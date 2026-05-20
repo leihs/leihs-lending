@@ -1,4 +1,14 @@
-{:queries
- {:hello
-  {:type    String
-   :resolve :query/hello}}}
+{:scalars
+ {:UUID {:parse :uuid-parse :serialize :uuid-serialize}}
+
+ :objects
+ {:CurrentUser {:fields {:id   {:type (non-null :UUID)}
+                         :user {:type (non-null :User)}}}
+  :User        {:fields {:id        {:type (non-null :UUID)}
+                         :email     {:type (non-null String)}
+                         :firstname {:type String}
+                         :lastname  {:type String}}}}
+
+ :queries
+ {:hello       {:type String :resolve :query/hello}
+  :currentUser {:type (non-null :CurrentUser) :resolve :current-user}}}
