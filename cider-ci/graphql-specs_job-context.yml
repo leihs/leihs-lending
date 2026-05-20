@@ -20,6 +20,7 @@ task_defaults:
     LEIHS_DATABASE_DIR: '{{LEIHS_LENDING_DIR}}/database'
     LEIHS_DATABASE_NAME: leihs_lending_{{CIDER_CI_TRIAL_ID}}
     DB_NAME: '{{LEIHS_DATABASE_NAME}}'
+    LEIHS_LENDING_HTTP_BASE_URL: 'http://localhost:{{LEIHS_LENDING_HTTP_PORT}}'
     RAILS_ENV: test
   git_options:
     submodules:
