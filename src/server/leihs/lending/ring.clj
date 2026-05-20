@@ -8,6 +8,7 @@
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.cookies :refer [wrap-cookies]]
    [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
+   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.params :refer [wrap-params]]))
 
 (defn init []
@@ -18,6 +19,7 @@
       (wrap-json-body {:keywords? true})
       wrap-json-response
       ring-exception/wrap
+      wrap-keyword-params
       wrap-params
       wrap-cookies
       wrap-content-type))

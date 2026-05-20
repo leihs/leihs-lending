@@ -1,7 +1,7 @@
 (ns leihs.lending.authenticate
   (:require [clojure.string :as str]))
 
-(def skip-paths #{"/lending/graphiql"})
+(def skip-paths #{"/lending/graphiql" "/lending/sign-in"})
 
 (defn wrap [handler]
   (fn [{:keys [uri] :as request}]
