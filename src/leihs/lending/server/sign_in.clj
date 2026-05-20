@@ -1,4 +1,4 @@
-(ns leihs.lending.sign-in
+(ns leihs.lending.server.sign-in
   (:require
    [hiccup2.core :as hiccup]
    [leihs.core.auth.session :as session]

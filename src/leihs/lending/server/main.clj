@@ -1,4 +1,4 @@
-(ns leihs.lending.main
+(ns leihs.lending.server.main
   (:require
    [clj-reload.core]
    [clj-yaml.core :as yaml]
@@ -8,7 +8,7 @@
    [leihs.core.logging]
    [leihs.core.reload :as reload]
    [leihs.core.repl :as repl]
-   [leihs.lending.run :as run]
+   [leihs.lending.server.run :as run]
    [logbug.catcher :as catcher]
    [logbug.thrown :as thrown]
    [taoensso.timbre :refer [info]])

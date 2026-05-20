@@ -1,4 +1,4 @@
-(ns leihs.lending.graphiql
+(ns leihs.lending.server.graphiql
   (:require
    [hiccup2.core :as hiccup]
    [hiccup.util :refer [raw-string]]))

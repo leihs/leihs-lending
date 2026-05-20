@@ -1,4 +1,4 @@
-(ns leihs.lending.graphql
+(ns leihs.lending.server.graphql
   (:require
    [clojure.edn :as edn]
    [clojure.java.io :as io]
@@ -6,8 +6,8 @@
    [com.walmartlabs.lacinia.schema :as graphql-schema]
    [com.walmartlabs.lacinia.util :as graphql-util]
    [leihs.core.graphql :as core-graphql]
-   [leihs.lending.graphql.resolvers :as resolvers]
-   [leihs.lending.graphql.scalars :as scalars]
+   [leihs.lending.server.graphql.resolvers :as resolvers]
+   [leihs.lending.server.graphql.scalars :as scalars]
    [taoensso.timbre :refer [info]]))
 
 (defn load-schema []

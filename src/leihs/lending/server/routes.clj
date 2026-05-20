@@ -1,9 +1,9 @@
-(ns leihs.lending.routes
+(ns leihs.lending.server.routes
   (:require
-   [leihs.lending.graphiql :as graphiql]
-   [leihs.lending.graphql :as graphql]
-   [leihs.lending.home :as home]
-   [leihs.lending.sign-in :as sign-in]
+   [leihs.lending.server.graphiql :as graphiql]
+   [leihs.lending.server.graphql :as graphql]
+   [leihs.lending.server.home :as home]
+   [leihs.lending.server.sign-in :as sign-in]
    [reitit.ring :as reitit-ring]))
 
 (def routes

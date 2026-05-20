@@ -1,4 +1,4 @@
-(ns leihs.lending.run
+(ns leihs.lending.server.run
   (:refer-clojure :exclude [str keyword])
   (:require
    [clojure.pprint :refer [pprint]]
@@ -8,8 +8,8 @@
    [leihs.core.http-server :as http-server]
    [leihs.core.shutdown :as shutdown]
    [leihs.core.status :as status]
-   [leihs.lending.graphql :as graphql]
-   [leihs.lending.ring :as ring]
+   [leihs.lending.server.graphql :as graphql]
+   [leihs.lending.server.ring :as ring]
    [logbug.catcher :as catcher]
    [taoensso.timbre :refer [info]]))
 

@@ -1,4 +1,4 @@
-(ns leihs.lending.authenticate
+(ns leihs.lending.server.authenticate
   (:require
    [ring.util.response :refer [redirect]]))
 

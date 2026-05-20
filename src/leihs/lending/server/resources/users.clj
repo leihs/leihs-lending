@@ -1,4 +1,4 @@
-(ns leihs.lending.resources.users
+(ns leihs.lending.server.resources.users
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]

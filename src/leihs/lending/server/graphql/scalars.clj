@@ -1,4 +1,4 @@
-(ns leihs.lending.graphql.scalars
+(ns leihs.lending.server.graphql.scalars
   (:import [java.util UUID]))
 
 (def scalars

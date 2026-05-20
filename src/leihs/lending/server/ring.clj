@@ -1,10 +1,10 @@
-(ns leihs.lending.ring
+(ns leihs.lending.server.ring
   (:require
    [leihs.core.auth.session :as session]
    [leihs.core.db :as db]
    [leihs.core.ring-exception :as ring-exception]
-   [leihs.lending.authenticate :as authenticate]
-   [leihs.lending.routes :as routes]
+   [leihs.lending.server.authenticate :as authenticate]
+   [leihs.lending.server.routes :as routes]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.cookies :refer [wrap-cookies]]
    [ring.middleware.json :refer [wrap-json-body wrap-json-response]]

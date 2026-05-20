@@ -1,4 +1,4 @@
-{:paths ["src/server" "resources"]
+{:paths ["src" "resources"]
  :deps {leihs-core/leihs-core    {:local/root "./shared-clj"}
         metosin/reitit            {:mvn/version "0.10.0"}
         hiccup/hiccup             {:mvn/version "2.0.0"}}

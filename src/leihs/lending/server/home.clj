@@ -1,4 +1,4 @@
-(ns leihs.lending.home
+(ns leihs.lending.server.home
   (:require
    [hiccup2.core :as hiccup]
    [leihs.core.constants :refer [USER_SESSION_COOKIE_NAME]]

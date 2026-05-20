@@ -1,6 +1,6 @@
-(ns leihs.lending.graphql.queries
+(ns leihs.lending.server.graphql.queries
   (:require
-   [leihs.lending.resources.users :as users]))
+   [leihs.lending.server.resources.users :as users]))
 
 (def resolvers
   {:query/hello   (fn [_ctx _args _val] "Hello from lending!")
