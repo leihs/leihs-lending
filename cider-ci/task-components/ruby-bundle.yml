@@ -1,0 +1,16 @@
+scripts:
+
+  lending-ruby-bundle:
+    exclusive_executor_resource: asdf-ruby
+    timeout: 20 Minutes
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      ./bin/env/ruby-setup
+
+  test:
+    start_when:
+      gems are bundled:
+        script_key: lending-ruby-bundle
+        states: [passed]

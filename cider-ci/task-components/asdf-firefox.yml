@@ -1,0 +1,17 @@
+scripts:
+
+  lending-firefox-asdf-install:
+    exclusive_executor_resource: asdf-firefox
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      ./bin/env/firefox-setup
+
+  lending-geckodriver-asdf-install:
+    exclusive_executor_resource: asdf-geckodriver
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      ./bin/env/geckodriver-setup

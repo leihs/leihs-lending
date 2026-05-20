@@ -1,0 +1,35 @@
+generate_tasks:
+  include_match: spec\/graphql\/.*_spec\.rb
+
+task_defaults:
+  traits:
+    asdf: true
+    'PostgreSQL 15': true
+  include:
+    - path: cider-ci/task-components/database.yml
+      submodule: [database]
+    - cider-ci/task-components/ruby-bundle.yml
+    - cider-ci/task-components/service.yml
+  ports:
+    LEIHS_LENDING_HTTP_PORT:
+      min: 3000
+      max: 3999
+  environment_variables:
+    LEIHS_LENDING_DIR: '{{CIDER_CI_WORKING_DIR}}'
+    LEIHS_DATABASE_DIR: '{{LEIHS_LENDING_DIR}}/database'
+    LEIHS_DATABASE_NAME: leihs_lending_{{CIDER_CI_TRIAL_ID}}
+    DB_NAME: '{{LEIHS_DATABASE_NAME}}'
+    RAILS_ENV: test
+  git_options:
+    submodules:
+      include_match: ^.*$
+  scripts:
+    test:
+      body: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+        mkdir -p log
+        unset PGPORT; unset PGUSER
+        PGPORT=${PG15PORT} PGUSER=${PG15USER} \
+          DB_NAME=${LEIHS_DATABASE_NAME} \
+          ./bin/rspec $CIDER_CI_TASK_FILE

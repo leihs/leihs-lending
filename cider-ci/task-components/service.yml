@@ -1,0 +1,67 @@
+scripts:
+
+  lending-clojure-setup:
+    exclusive_executor_resource: asdf-clojure
+    timeout: 20 Minutes
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      ./bin/env/java-setup
+      ./bin/env/clojure-setup
+
+  lending-service-run:
+    timeout: 30 Minutes
+    start_when:
+      clojure is set up:
+        script_key: lending-clojure-setup
+        states: [passed]
+      database has been created:
+        script_key: create-database
+        states: [passed]
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      mkdir -p tmp
+      unset PGPORT; unset PGUSER
+      PGPORT=${PG15PORT} PGUSER=${PG15USER} \
+        DB_NAME=${LEIHS_DATABASE_NAME} \
+        clj -M -m leihs.lending.main run \
+          --http-port ${LEIHS_LENDING_HTTP_PORT} \
+          --pid-file tmp/service.pid
+
+  lending-service-is-running:
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      until curl --silent --fail \
+        "http://localhost:${LEIHS_LENDING_HTTP_PORT}/lending/sign-in"; \
+        do sleep 1; done
+    start_when:
+      service is executing:
+        script_key: lending-service-run
+        states: [executing]
+
+  test:
+    start_when:
+      service is running:
+        script_key: lending-service-is-running
+
+  lending-service-stop:
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      kill $(cat tmp/service.pid)
+      tail --pid=$(cat tmp/service.pid) -f /dev/null
+    start_when:
+      test is terminal:
+        script_key: test
+        states: [aborted, defective, passed, failed, skipped]
+
+  delete-database:
+    start_when:
+      service is stopped:
+        script_key: lending-service-stop
+        states: [aborted, defective, passed, failed, skipped]

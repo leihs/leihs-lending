@@ -1,0 +1,17 @@
+jobs:
+
+  graphql-specs:
+    name: Run graphql specs
+    run_when: &ON_BRANCH_UPDATE
+      any branch has been updated:
+        type: branch
+        include_match: ^.*$
+        exclude_match: "^.*(no-ci|hotspot).*$"
+    context:
+      include: cider-ci/graphql-specs_job-context.yml
+
+  feature-specs:
+    name: Run feature specs
+    run_when: *ON_BRANCH_UPDATE
+    context:
+      include: cider-ci/feature-specs_job-context.yml
