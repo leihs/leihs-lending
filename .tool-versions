@@ -2,3 +2,4 @@ clojure 1.12.0.1488
 java zulu-17.58.21
 nodejs 22.13.0
 ruby 3.3.8
+firefox 128.0esr
