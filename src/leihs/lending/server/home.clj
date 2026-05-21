@@ -48,5 +48,5 @@
 (defn sign-out-handler [{:keys [tx authenticated-entity]}]
   (when-let [session-id (:user_session_id authenticated-entity)]
     (jdbc-delete! tx :user_sessions ["id = ?" session-id]))
-  (-> (redirect "/lending/sign-in")
+  (-> (redirect "/")
       (set-cookie USER_SESSION_COOKIE_NAME "" {:path "/" :max-age 0})))

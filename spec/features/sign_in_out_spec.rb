@@ -30,7 +30,7 @@ feature "Sign-in / Sign-out" do
     expect(page).to have_content(@user.login)
   end
 
-  scenario "sign-out clears session and redirects to sign-in" do
+  scenario "sign-out clears session and redirects to root" do
     visit "/lending/sign-in"
     fill_in "user", with: @user.login
     fill_in "password", with: "password"
@@ -40,7 +40,7 @@ feature "Sign-in / Sign-out" do
 
     click_button "Sign out"
 
-    expect(current_path).to eq "/lending/sign-in"
+    expect(current_path).to eq "/"
 
     visit "/lending/"
     expect(current_path).to eq "/lending/sign-in"
