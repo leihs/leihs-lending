@@ -12,6 +12,10 @@
       (->> (jdbc-query tx))
       first))
 
+(defn get-one
+  [{{tx :tx} :request} _ {:keys [user-id]}]
+  (get-by-id tx user-id))
+
 (defn get-current
   [{{tx :tx {user-id :id} :authenticated-entity} :request} _ _]
   {:id   user-id

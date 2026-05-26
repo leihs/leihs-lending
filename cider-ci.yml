@@ -57,9 +57,7 @@ jobs:
                 #!/usr/bin/env bash
                 set -euo pipefail
                 cd $LEIHS_LENDING_DIR
-                ./bin/env/java-setup
-                ./bin/env/clojure-setup
-                clojure -M:cljfmt check
+                ./bin/cljfmt check
         ruby-lint:
           scripts:
             test:
