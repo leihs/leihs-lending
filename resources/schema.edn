@@ -1,41 +1,51 @@
 {:scalars
- {:UUID {:parse :uuid-parse :serialize :uuid-serialize}}
+ {:UUID {:parse :uuid-parse :serialize :uuid-serialize}
+  :NonEmptyString {:parse :non-empty-string-parse :serialize :non-empty-string-serialize}}
 
  :enums
  {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}}
 
  :objects
- {:CurrentUser {:fields {:id   {:type (non-null :UUID)}
+ {:CurrentUser {:fields {:id {:type (non-null :UUID)}
                          :user {:type (non-null :User)}}}
-  :User        {:fields {:id        {:type (non-null :UUID)}
-                         :email     {:type (non-null String)}
-                         :firstname {:type String}
-                         :lastname  {:type String}
-                         :login     {:type String}}}
-  :Model       {:fields {:id   {:type (non-null :UUID)}
-                         :name {:type String}}}
-  :Reservation {:fields {:id    {:type (non-null :UUID)}
+  :User {:fields {:id {:type (non-null :UUID)}
+                  :email {:type (non-null String)}
+                  :firstname {:type String}
+                  :lastname {:type String}
+                  :login {:type String}}}
+  :Model {:fields {:id {:type (non-null :UUID)}
+                   :name {:type String}}}
+  :Reservation {:fields {:id {:type (non-null :UUID)}
                          :model {:type :Model :resolve :model}}}
-  :Order       {:fields {:id           {:type (non-null :UUID)}
-                         :purpose      {:type String}
-                         :state        {:type (non-null :OrderStateEnum)}
-                         :rejectReason {:type String}
-                         :startDate    {:type String}
-                         :endDate      {:type String}
-                         :createdAt    {:type (non-null String)}
-                         :updatedAt    {:type (non-null String)}
-                         :user         {:type (non-null :User) :resolve :user}
-                         :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}}
+  :Order {:fields {:id {:type (non-null :UUID)}
+                   :purpose {:type String}
+                   :state {:type (non-null :OrderStateEnum)}
+                   :rejectReason {:type String}
+                   :startDate {:type String}
+                   :endDate {:type String}
+                   :createdAt {:type (non-null String)}
+                   :updatedAt {:type (non-null String)}
+                   :user {:type (non-null :User) :resolve :user}
+                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}}
 
  :queries
- {:hello       {:type String :resolve :hello}
+ {:hello {:type String :resolve :hello}
   :currentUser {:type (non-null :CurrentUser) :resolve :current-user}
-  :orders      {:type    (list (non-null :Order))
-                :args    {:poolId    {:type (non-null :UUID)}
-                          :states    {:type (list (non-null :OrderStateEnum))}
-                          :startDate {:type String}
-                          :endDate   {:type String}
-                          :page            {:type Int}
-                          :perPage         {:type Int}
-                          :toBeVerified    {:type Boolean}}
-                :resolve :orders}}}
+  :order {:type :Order
+          :args {:id {:type (non-null :UUID)}}
+          :resolve :order}
+  :orders {:type (list (non-null :Order))
+           :args {:poolId {:type (non-null :UUID)}
+                  :states {:type (list (non-null :OrderStateEnum))}
+                  :startDate {:type String}
+                  :endDate {:type String}
+                  :page {:type Int}
+                  :perPage {:type Int}
+                  :toBeVerified {:type Boolean}}
+           :resolve :orders}}
+
+ :mutations
+ {:rejectOrder {:type (non-null :Order)
+                :args {:id {:type (non-null :UUID)}
+                       :reason {:type (non-null :NonEmptyString)}}
+                :resolve :reject-order}}}

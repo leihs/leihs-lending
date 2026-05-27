@@ -1,3 +1,6 @@
-(ns leihs.lending.server.graphql.mutations)
+(ns leihs.lending.server.graphql.mutations
+  (:require
+   [leihs.lending.server.resources.orders :as orders]))
 
-(def resolvers {})
+(def resolvers
+  {:reject-order orders/reject!})

@@ -3,6 +3,7 @@
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (defn base-sqlmap [pool-id]
@@ -63,12 +64,45 @@
   (-> (cond-> (base-sqlmap pool-id)
         (some? to-be-verified)
         (sql/with [:verifiable_orders (verifiable-orders-cte pool-id)]))
-      (apply-filters {:states         states
-                      :start-date     start-date
-                      :end-date       end-date
+      (apply-filters {:states states
+                      :start-date start-date
+                      :end-date end-date
                       :to-be-verified to-be-verified})
-      (sql/limit  (or per-page 10))
+      (sql/limit (or per-page 10))
       (sql/offset (* (dec (or page 1)) (or per-page 10)))
       sql-format
       (->> (jdbc-query tx))))
+
+(defn get-by-id [tx id]
+  (-> (sql/select :orders.id
+                  :orders.user_id
+                  :orders.purpose
+                  [[:upper :orders.state] :state]
+                  :orders.reject_reason
+                  :orders.created_at
+                  :orders.updated_at)
+      (sql/from :orders)
+      (sql/where [:= :orders.id id])
+      sql-format
+      (->> (jdbc-query tx))
+      first))
+
+(defn get-one
+  [{{tx :tx} :request} {:keys [id]} _]
+  (get-by-id tx id))
+
+(defn reject!
+  [{{tx :tx} :request} {:keys [id reason]} _]
+  (-> (sql/update :orders)
+      (sql/set {:state "rejected" :reject_reason reason :updated_at [:now]})
+      (sql/where [:= :orders.id id])
+      sql-format
+      (->> (execute! tx)))
+  (-> (sql/update :reservations)
+      (sql/set {:status "rejected"})
+      (sql/where [:= :reservations.order_id id])
+      (sql/where [:= :reservations.contract_id nil])
+      sql-format
+      (->> (execute! tx)))
+  (get-by-id tx id))
 
