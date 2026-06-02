@@ -4,7 +4,7 @@
 
 (defn- parse-non-empty-string [s]
   (if (str/blank? s)
-    (throw (ex-info "must not be blank" {}))
+    (throw (ex-info "must not be blank" {:status 422}))
     s))
 
 (def scalars

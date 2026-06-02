@@ -4,9 +4,12 @@
    [honey.sql.helpers :as sql]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
+(def base-sqlmap
+  (-> (sql/select :*)
+      (sql/from :users)))
+
 (defn get-by-id [tx id]
-  (-> (sql/select :users/*)
-      (sql/from :users)
+  (-> base-sqlmap
       (sql/where [:= :users/id id])
       sql-format
       (->> (jdbc-query tx))

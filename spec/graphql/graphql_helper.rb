@@ -59,8 +59,12 @@ RSpec.shared_context "graphql client" do
     expect(result[:data]).to eq(compared)
   end
 
-  def expect_graphql_error(result)
+  def expect_graphql_error(result, status: nil)
     expect(result[:errors]).not_to be_empty
+    if status
+      codes = result[:errors].map { |e| e.dig(:extensions, :code) || e.dig(:extensions, :status) }
+      expect(codes).to include(status)
+    end
     yield if block_given?
   end
 end

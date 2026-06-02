@@ -3,6 +3,15 @@
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [java-time :as t]
+   [leihs.core.availability.changes :refer [local-date]]
+   [leihs.core.availability.core :as av]
+   [leihs.core.availability.pool :as pool]
+   [leihs.core.db :as db]
+   [leihs.core.mails :refer [log-mail-failure]]
+   [leihs.lending.server.mails :as mails]
+   [leihs.lending.server.resources.reservations :as res]
+   [next.jdbc :as jdbc]
    [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
@@ -76,6 +85,7 @@
 (defn get-by-id [tx id]
   (-> (sql/select :orders.id
                   :orders.user_id
+                  :orders.inventory_pool_id
                   :orders.purpose
                   [[:upper :orders.state] :state]
                   :orders.reject_reason
@@ -91,10 +101,36 @@
   [{{tx :tx} :request} {:keys [id]} _]
   (get-by-id tx id))
 
+(defn- assert-submitted! [tx id]
+  (when (not= "SUBMITTED" (:state (get-by-id tx id)))
+    (throw (ex-info "Order is not in submitted state" {:status 422}))))
+
+(defn- any-suspended? [tx id]
+  (-> (sql/select
+       [[:exists
+         (-> (sql/select 1)
+             (sql/from :suspensions)
+             (sql/join :orders [:= :orders.inventory_pool_id :suspensions.inventory_pool_id])
+             (sql/where [:= :orders.id id])
+             (sql/where [:>= :suspensions.suspended_until [:raw "CURRENT_DATE"]])
+             (sql/where [:or
+                         [:= :suspensions.user_id :orders.user_id]
+                         [:in :suspensions.user_id
+                          (-> (sql/select :reservations.delegated_user_id)
+                              (sql/from :reservations)
+                              (sql/where [:= :reservations.order_id id])
+                              (sql/where [:!= :reservations.delegated_user_id nil]))]]))]
+        :suspended])
+      sql-format
+      (->> (jdbc-query tx))
+      first
+      :suspended))
+
 (defn reject!
   [{{tx :tx} :request} {:keys [id reason]} _]
+  (assert-submitted! tx id)
   (-> (sql/update :orders)
-      (sql/set {:state "rejected" :reject_reason reason :updated_at [:now]})
+      (sql/set {:state "rejected" :reject_reason reason})
       (sql/where [:= :orders.id id])
       sql-format
       (->> (execute! tx)))
@@ -105,4 +141,65 @@
       sql-format
       (->> (execute! tx)))
   (get-by-id tx id))
+
+(defn- all-reservations-expired? [tx id]
+  (let [today (local-date)
+        reservations (res/get-for-order tx id)]
+    (and (seq reservations)
+         (every? #(not (t/before? today (local-date (:end_date %))))
+                 reservations))))
+
+(defn- any-pool-closed? [tx id]
+  (some (fn [r]
+          (let [pool-id (:inventory_pool_id r)
+                workdays (pool/get-workdays tx pool-id)
+                holidays (pool/get-holidays tx pool-id)
+                pool-data (merge workdays {:holidays holidays})]
+            (or (pool/close-time? (:start_date r) pool-data)
+                (pool/close-time? (:end_date r) pool-data))))
+        (res/get-for-order tx id)))
+
+(defn- any-unavailable? [tx id]
+  (let [order (get-by-id tx id)
+        user-id (:user_id order)
+        today (local-date)]
+    (some (fn [r]
+            (and (t/before? today (local-date (:end_date r)))
+                 (< (av/maximum-available-in-pool-and-period-summed-for-groups
+                     tx (:model_id r) user-id
+                     (:start_date r) (:end_date r)
+                     (:inventory_pool_id r)
+                     [(:id r)])
+                    (:quantity r))))
+          (res/get-for-order tx id))))
+
+(defn approve!
+  [{{tx :tx} :request} {:keys [id force comment]} _]
+  (assert-submitted! tx id)
+  (when (all-reservations-expired? tx id)
+    (throw (ex-info "All reservations have already ended" {:status 422})))
+  (when (and (not force) (any-suspended? tx id))
+    (throw (ex-info "A suspended user is associated with this order" {:status 422})))
+  (when (and (not force) (any-pool-closed? tx id))
+    (throw (ex-info "Pool is closed on reservation start or end date" {:status 422})))
+  (when (and (not force) (any-unavailable? tx id))
+    (throw (ex-info "Some reservations are not available" {:status 422})))
+  (-> (sql/update :orders)
+      (sql/set {:state "approved"})
+      (sql/where [:= :orders.id id])
+      sql-format
+      (->> (execute! tx)))
+  (-> (sql/update :reservations)
+      (sql/set {:status "approved"})
+      (sql/where [:= :reservations.order_id id])
+      (sql/where [:= :reservations.contract_id nil])
+      sql-format
+      (->> (execute! tx)))
+  (let [order (get-by-id tx id)]
+    (try
+      (jdbc/with-transaction+options [mail-tx (db/get-ds)]
+        (mails/send-approved mail-tx order comment))
+      (catch Exception e
+        (log-mail-failure (:user_id order) e)))
+    order))
 

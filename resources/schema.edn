@@ -16,6 +16,8 @@
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
+                         :startDate {:type String}
+                         :endDate {:type String}
                          :model {:type :Model :resolve :model}}}
   :Order {:fields {:id {:type (non-null :UUID)}
                    :purpose {:type String}
@@ -48,4 +50,9 @@
  {:rejectOrder {:type (non-null :Order)
                 :args {:id {:type (non-null :UUID)}
                        :reason {:type (non-null :NonEmptyString)}}
-                :resolve :reject-order}}}
+                :resolve :reject-order}
+  :approveOrder {:type (non-null :Order)
+                 :args {:id {:type (non-null :UUID)}
+                        :force {:type Boolean}
+                        :comment {:type String}}
+                 :resolve :approve-order}}}

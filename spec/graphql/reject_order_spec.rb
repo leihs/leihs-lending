@@ -49,7 +49,7 @@ describe "rejectOrder" do
   it "fails when reason is blank" do
     order = create_order
     result = reject_order(order.id, "", user.id)
-    expect_graphql_error(result)
+    expect_graphql_error(result, status: 422)
   end
 
   it "fails when reason is missing" do
@@ -58,5 +58,11 @@ describe "rejectOrder" do
       mutation { rejectOrder(id: "#{order.id}") { id } }
     GQL
     expect_graphql_error(result)
+  end
+
+  it "fails when order is not in submitted state" do
+    order = create_order(state: "approved")
+    result = reject_order(order.id, "No stock available", user.id)
+    expect_graphql_error(result, status: 422)
   end
 end
