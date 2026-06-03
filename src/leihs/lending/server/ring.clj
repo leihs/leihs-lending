@@ -20,8 +20,8 @@
       db/wrap-tx
       (wrap-json-body {:keywords? true})
       wrap-json-response
-      ring-exception/wrap
       wrap-keyword-params
       wrap-params
       wrap-cookies
-      wrap-content-type))
+      wrap-content-type
+      ring-exception/wrap))
