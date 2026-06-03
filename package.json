@@ -1,0 +1,47 @@
+{
+  "type": "module",
+  "scripts": {
+    "dev": "rm -rf dev/gen .shadow-cljs && concurrently \"shadow-cljs -A:frontend watch frontend\" \"npm run tailwind\"",
+    "build": "npm run clean && shadow-cljs -A:frontend release frontend && npm run tailwind:release",
+    "tailwind": "postcss src/leihs/lending/client/main.css -o resources/public/lending/assets/css/style.css --verbose -w",
+    "tailwind:release": "NODE_ENV=production postcss src/leihs/lending/client/main.css -o resources/public/lending/assets/css/style.css",
+    "start:libs": "mkdir -p dev/gen && touch dev/gen/libs.js && node watch.mjs",
+    "build:libs": "node build.mjs",
+    "clean": "rm -rf resources/public/lending/assets/js/* resources/public/lending/assets/css/style.css",
+    "format": "prettier --write ./src/leihs/lending/client",
+    "format:check": "prettier --check ./src/leihs/lending/client"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@types/node": "^22.10.0",
+    "concurrently": "^9.1.0",
+    "cssnano": "^7.0.6",
+    "esbuild": "^0.27.0",
+    "postcss": "^8.4.49",
+    "postcss-cli": "^11.0.0",
+    "prettier": "^3.4.0",
+    "react-refresh": "^0.14.2",
+    "shadow-cljs": "^2.28.21",
+    "tailwindcss": "^4.1.14"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.5.0",
+    "@hookform/resolvers": "^5.2.1",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@urql/core": "^5.1.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "graphql": "^16.10.0",
+    "lucide-react": "^0.474.0",
+    "radix-ui": "^1.4.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-router": "^7.1.5",
+    "tailwind-merge": "^2.6.0",
+    "tw-animate-css": "^1.2.0",
+    "urql": "^5.0.0",
+    "zod": "^4.0.15"
+  }
+}

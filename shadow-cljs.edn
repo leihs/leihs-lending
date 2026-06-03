@@ -1,0 +1,19 @@
+{:deps
+ {:aliases [:frontend]}
+ :dev-http {8080
+            {:root "resources/public/lending"
+             :proxy-url "http://localhost:3270"}}
+
+ :builds
+ {:frontend
+  {:output-dir "resources/public/lending/assets/js/"
+   :target :browser
+   :modules {:main {:entries [leihs.lending.client.main]
+                    :init-fn leihs.lending.client.main/init}}
+   :devtools {:preloads [preload devtools.preload]}
+   :js-options {:js-provider :external
+                :external-index "dev/gen/libs.js"
+                :external-index-format :esm}
+   :release {:build-hooks [(dev.build/run-cmd-flush {:cmd ["npm" "run" "build:libs"]
+                                                     :once true})]}
+   :dev {:build-hooks [(dev.build/run-cmd-configure {:cmd ["npm" "run" "start:libs"]})]}}}}

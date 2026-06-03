@@ -1,0 +1,12 @@
+{
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "baseUrl": "./",
+    "allowJs": true,
+    "paths": {
+      "@/*": ["src/leihs/lending/client/*"],
+      "@@/*": ["src/leihs/lending/client/components/ui/*"],
+      "~/*": ["./*"]
+    }
+  }
+}

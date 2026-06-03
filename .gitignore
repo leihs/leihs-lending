@@ -1,2 +1,15 @@
 target/
 .cider-ci_private/
+.clj-kondo/*
+!.clj-kondo/config.edn
+.cpcache/
+.lsp/
+.nrepl-port
+.shadow-cljs/
+log/
+logs/
+node_modules/
+resources/public/lending/assets/js/
+resources/public/lending/assets/css/style.css
+dev/gen/
+tmp/

@@ -13,8 +13,8 @@ FactoryBot.define do
     leihs_model
     order
     status { "submitted" }
-    start_date { Date.tomorrow.to_s }
-    end_date { (Date.tomorrow + 1.day).to_s }
+    start_date { Date.today.next_week(:monday).to_s }
+    end_date { (Date.today.next_week(:monday) + 1.day).to_s }
     created_at { Time.now }
     updated_at { Time.now }
   end

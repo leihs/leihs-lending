@@ -6,7 +6,7 @@ FactoryBot.define do
   factory :holiday do
     inventory_pool
     name { Faker::Lorem.word }
-    start_date { Date.tomorrow.to_s }
-    end_date { (Date.tomorrow + 1).to_s }
+    start_date { Date.today.next_week(:monday).to_s }
+    end_date { (Date.today.next_week(:monday) + 1).to_s }
   end
 end
