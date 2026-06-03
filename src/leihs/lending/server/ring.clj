@@ -2,6 +2,7 @@
   (:require
    [leihs.core.auth.session :as session]
    [leihs.core.db :as db]
+   [leihs.core.ring-audits :as ring-audits]
    [leihs.core.ring-exception :as ring-exception]
    [leihs.lending.server.authenticate :as authenticate]
    [leihs.lending.server.routes :as routes]
@@ -13,6 +14,7 @@
 
 (defn init []
   (-> (routes/handler)
+      ring-audits/wrap
       authenticate/wrap
       session/wrap-authenticate
       db/wrap-tx
