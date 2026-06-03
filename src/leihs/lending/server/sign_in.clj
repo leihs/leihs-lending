@@ -1,8 +1,9 @@
 (ns leihs.lending.server.sign-in
   (:require
    [hiccup2.core :as hiccup]
+   [leihs.core.anti-csrf.back :as anti-csrf]
    [leihs.core.auth.session :as session]
-   [leihs.core.constants :refer [USER_SESSION_COOKIE_NAME]]
+   [leihs.core.constants :refer [USER_SESSION_COOKIE_NAME ANTI_CSRF_TOKEN_FORM_PARAM_NAME]]
    [leihs.core.sign-in.password-authentication.core :refer [password-checked-user]]
    [ring.util.response :refer [redirect set-cookie]]))
 
@@ -17,7 +18,7 @@
    button:hover{background:#1557b0}
    .error{background:#fce8e6;color:#c5221f;padding:0.75rem;border-radius:4px;font-size:0.875rem}")
 
-(defn page [& {:keys [error?]}]
+(defn page [csrf-token & {:keys [error?]}]
   (str
    "<!DOCTYPE html>"
    (hiccup/html
@@ -31,16 +32,17 @@
       [:p "For development and test only"]
       (when error? [:div.error "Invalid credentials"])
       [:form {:method "POST" :action "/lending/sign-in"}
+       [:input {:type "hidden" :name ANTI_CSRF_TOKEN_FORM_PARAM_NAME :value csrf-token}]
        [:label "Email / Login"
         [:input {:type "text" :name "user" :autofocus true}]]
        [:label "Password"
         [:input {:type "password" :name "password"}]]
        [:button {:type "submit"} "Sign in"]]]])))
 
-(defn get-handler [_]
+(defn get-handler [request]
   {:status 200
    :headers {"Content-Type" "text/html; charset=utf-8"}
-   :body (page)})
+   :body (page (anti-csrf/anti-csrf-token request))})
 
 (defn post-handler [{:keys [params] :as request}]
   (let [user (password-checked-user (:user params) (:password params))]
@@ -50,4 +52,4 @@
             (set-cookie USER_SESSION_COOKIE_NAME (:token user-session) {:path "/"})))
       {:status 200
        :headers {"Content-Type" "text/html; charset=utf-8"}
-       :body (page :error? true)})))
+       :body (page (anti-csrf/anti-csrf-token request) :error? true)})))

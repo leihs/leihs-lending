@@ -4,6 +4,7 @@ require "digest"
 LEIHS_LENDING_HTTP_BASE_URL = ENV["LEIHS_LENDING_HTTP_BASE_URL"].presence || "http://localhost:3270"
 
 SESSION_COOKIE_NAME = "leihs-user-session"
+ANTI_CSRF_COOKIE_NAME = "leihs-anti-csrf-token"
 
 def create_session_for(user_id)
   token = SecureRandom.uuid
@@ -23,13 +24,17 @@ class GraphqlQuery
     @query = query
     @variables = variables
     @session_token = user_id ? create_session_for(user_id) : nil
+    @csrf_token = SecureRandom.uuid
   end
 
   def perform
     @response = Faraday.post("#{LEIHS_LENDING_HTTP_BASE_URL}/lending/graphql") do |req|
       req.headers["Accept"] = "application/json"
       req.headers["Content-Type"] = "application/json"
-      req.headers["Cookie"] = "#{SESSION_COOKIE_NAME}=#{@session_token}" if @session_token
+      req.headers["x-csrf-token"] = @csrf_token
+      cookies = {ANTI_CSRF_COOKIE_NAME.to_s => @csrf_token}
+      cookies[SESSION_COOKIE_NAME] = @session_token if @session_token
+      req.headers["Cookie"] = cookies.map { |k, v| "#{k}=#{v}" }.join("; ")
       req.body = {query: @query, variables: @variables}.to_json
     end
     log_errors if @response.status == 200

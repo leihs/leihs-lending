@@ -1,7 +1,8 @@
 (ns leihs.lending.server.home
   (:require
    [hiccup2.core :as hiccup]
-   [leihs.core.constants :refer [USER_SESSION_COOKIE_NAME]]
+   [leihs.core.anti-csrf.back :as anti-csrf]
+   [leihs.core.constants :refer [USER_SESSION_COOKIE_NAME ANTI_CSRF_TOKEN_FORM_PARAM_NAME]]
    [next.jdbc.sql :refer [delete!] :rename {delete! jdbc-delete!}]
    [ring.util.response :refer [redirect set-cookie]]))
 
@@ -18,7 +19,7 @@
    form button{padding:0.5rem 1rem;background:#fff;color:#c5221f;border:1px solid #c5221f;border-radius:4px;font-size:0.9rem;cursor:pointer}
    form button:hover{background:#fce8e6}")
 
-(defn handler [{:keys [authenticated-entity]}]
+(defn handler [{:keys [authenticated-entity] :as request}]
   {:status 200
    :headers {"Content-Type" "text/html; charset=utf-8"}
    :body (str
@@ -43,6 +44,7 @@
              [:div.actions
               [:a.button {:href "/lending/graphiql"} "Open GraphiQL"]
               [:form {:method "POST" :action "/lending/sign-out"}
+               [:input {:type "hidden" :name ANTI_CSRF_TOKEN_FORM_PARAM_NAME :value (anti-csrf/anti-csrf-token request)}]
                [:button {:type "submit"} "Sign out"]]]]]))})
 
 (defn sign-out-handler [{:keys [tx authenticated-entity]}]
