@@ -18,7 +18,7 @@ describe "rejectOrder" do
   end
 
   def reject_order(order_id, reason, user_id)
-    query(<<~GQL, user_id)
+    query(<<~GQL, user_id, pool_id: pool.id)
       mutation {
         rejectOrder(id: "#{order_id}", reason: "#{reason}") {
           id state rejectReason
@@ -54,7 +54,7 @@ describe "rejectOrder" do
 
   it "fails when reason is missing" do
     order = create_order
-    result = query(<<~GQL, user.id)
+    result = query(<<~GQL, user.id, pool_id: pool.id)
       mutation { rejectOrder(id: "#{order.id}") { id } }
     GQL
     expect_graphql_error(result)

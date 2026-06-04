@@ -3,9 +3,10 @@ require_relative "graphql_helper"
 
 describe "currentUser" do
   let(:user) { create(:user) }
+  let(:pool) { create(:inventory_pool) }
 
   it "returns id and user fields" do
-    result = query(<<~GRAPHQL, user.id)
+    result = query(<<~GRAPHQL, user.id, pool_id: pool.id)
       { currentUser { id user { id email firstname lastname } } }
     GRAPHQL
 

@@ -12,7 +12,16 @@
                   :email {:type (non-null String)}
                   :firstname {:type String}
                   :lastname {:type String}
-                  :login {:type String}}}
+                  :login {:type String}
+                  :phone {:type String}
+                  :badgeId {:type String}
+                  :address {:type String}
+                  :zip {:type String}
+                  :city {:type String}
+                  :img256Url {:type String}
+                  :isSuspended {:type Boolean}
+                  :suspendedReason {:type String}
+                  :delegatorUser {:type :User}}}
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
@@ -31,8 +40,10 @@
                    :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}}
 
  :queries
- {:hello {:type String :resolve :hello}
-  :currentUser {:type (non-null :CurrentUser) :resolve :current-user}
+ {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
+  :user {:type :User
+         :args {:id {:type (non-null :UUID)}}
+         :resolve :user}
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}

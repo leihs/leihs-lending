@@ -1,0 +1,20 @@
+{:scalars
+ {:UUID {:parse :uuid-parse :serialize :uuid-serialize}}
+
+ :objects
+ {:CurrentUser {:fields {:id {:type (non-null :UUID)}
+                         :user {:type (non-null :User)}}}
+  :User {:fields {:id {:type (non-null :UUID)}
+                  :email {:type (non-null String)}
+                  :firstname {:type String}
+                  :lastname {:type String}
+                  :login {:type String}
+                  :phone {:type String}
+                  :badgeId {:type String}
+                  :address {:type String}
+                  :zip {:type String}
+                  :city {:type String}
+                  :img256Url {:type String}}}}
+
+ :queries
+ {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}}}

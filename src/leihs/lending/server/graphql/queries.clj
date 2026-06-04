@@ -7,7 +7,6 @@
 
 (def resolvers
   {:current-user users/get-current
-   :hello (fn [_ctx _args _val] "Hello from lending!")
    :model models/get-one
    :order orders/get-one
    :orders orders/get-multiple

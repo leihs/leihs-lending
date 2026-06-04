@@ -20,7 +20,7 @@ describe "approveOrder" do
 
   def approve_order(order_id, user_id, force: nil)
     force_arg = force.nil? ? "" : ", force: #{force}"
-    query(<<~GQL, user_id)
+    query(<<~GQL, user_id, pool_id: pool.id)
       mutation {
         approveOrder(id: "#{order_id}"#{force_arg}) {
           id state
@@ -162,7 +162,7 @@ describe "approveOrder" do
 
     it "includes the comment in the email body when provided" do
       order = create_order
-      query(<<~GQL, user.id)
+      query(<<~GQL, user.id, pool_id: pool.id)
         mutation { approveOrder(id: "#{order.id}", comment: "Pick up at desk B") { id } }
       GQL
       email = Email.where(user_id: user.id).first

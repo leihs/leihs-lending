@@ -2,6 +2,7 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [leihs.lending.server.resources.suspensions :as suspensions]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (def base-sqlmap
@@ -16,10 +17,18 @@
       first))
 
 (defn get-one
-  [{{tx :tx} :request} _ {:keys [user-id]}]
-  (get-by-id tx user-id))
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id]} {:keys [user-id]}]
+  (let [uid (or user-id id)
+        user (get-by-id tx uid)
+        suspension (suspensions/active-for-user-in-pool tx uid pool-id)
+        delegator (when-let [did (:delegator_user_id user)]
+                    (get-by-id tx did))]
+    (-> user
+        (assoc :is_suspended (boolean suspension)
+               :suspended_reason (:suspended_reason suspension)
+               :delegator_user delegator))))
 
 (defn get-current
   [{{tx :tx {user-id :id} :authenticated-entity} :request} _ _]
-  {:id   user-id
+  {:id user-id
    :user (get-by-id tx user-id)})
