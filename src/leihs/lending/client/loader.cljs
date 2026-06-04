@@ -38,8 +38,12 @@
 (defn root-layout
   "Loader for /lending/app — fetches the signed-in user."
   []
-  (let [client (urql/make-client "/lending/graphql")]
-    (run-query client current-user-query nil)))
+  (js/Promise.
+   (fn [resolve _reject]
+     (-> (run-query (urql/make-client "/lending/graphql") current-user-query nil)
+         (p/then resolve)
+         (p/catch (fn [_]
+                    (.assign js/window.location "/lending/sign-in")))))))
 
 (def pool-context-query
   ;; Placeholder — replace with whatever data the pool subtree actually needs.

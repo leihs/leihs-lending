@@ -7,7 +7,7 @@ feature "Sign-in / Sign-out" do
 
   scenario "redirect to sign-in when unauthenticated" do
     visit "/lending/"
-    expect(current_path).to eq "/lending/sign-in"
+    expect(page).to have_current_path("/lending/sign-in")
   end
 
   scenario "sign-in with invalid credentials shows error" do
@@ -43,6 +43,6 @@ feature "Sign-in / Sign-out" do
     expect(current_path).to eq "/"
 
     visit "/lending/"
-    expect(current_path).to eq "/lending/sign-in"
+    expect(page).to have_current_path("/lending/sign-in")
   end
 end

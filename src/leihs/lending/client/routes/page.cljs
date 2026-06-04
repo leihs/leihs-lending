@@ -30,4 +30,15 @@
           ($ Button {:as-child true :variant "default"}
              ($ :a {:href "/lending/graphiql"} "Open GraphiQL"))
           ($ Button {:as-child true :variant "outline"}
-             ($ :a {:href "/lending/"} "Back to server home"))))))
+             ($ :a {:href "/lending/"} "Back to server home"))
+
+          ($ Button {:type :submit
+                     :form "sign-out-form"}
+             "Sign out"
+
+             ($ :form {:action "/lending/sign-out"
+                       :method :POST
+                       :id "sign-out-form"}
+                ($ :input {:type :hidden
+                           :name csrf/token-field-name
+                           :value csrf/token})))))))

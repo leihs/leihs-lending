@@ -4,7 +4,7 @@
    [hiccup.util :refer [raw-string]]
    [leihs.core.constants :refer [ANTI_CSRF_TOKEN_COOKIE_NAME ANTI_CSRF_TOKEN_HEADER_NAME]]))
 
-(defn html [pool-id csrf-token]
+(defn- html [graphql-url csrf-token]
   (str
    "<!DOCTYPE html>"
    (hiccup/html
@@ -21,7 +21,7 @@
       [:script {:src "https://unpkg.com/graphiql@3/graphiql.min.js"}]
       [:script (raw-string (str "ReactDOM.createRoot(document.getElementById('graphiql')).render(
         React.createElement(GraphiQL, {fetcher: GraphiQL.createFetcher({
-          url: '/lending/" pool-id "/graphql',
+          url: '" graphql-url "',
           headers: {'" ANTI_CSRF_TOKEN_HEADER_NAME "': '" csrf-token "'}
         })})
       );"))]]])))
@@ -30,4 +30,10 @@
   (let [csrf-token (get-in cookies [ANTI_CSRF_TOKEN_COOKIE_NAME :value])]
     {:status 200
      :headers {"Content-Type" "text/html; charset=utf-8"}
-     :body (html pool-id csrf-token)}))
+     :body (html (str "/lending/" pool-id "/graphql") csrf-token)}))
+
+(defn root-handler [{cookies :cookies}]
+  (let [csrf-token (get-in cookies [ANTI_CSRF_TOKEN_COOKIE_NAME :value])]
+    {:status 200
+     :headers {"Content-Type" "text/html; charset=utf-8"}
+     :body (html "/lending/graphql" csrf-token)}))

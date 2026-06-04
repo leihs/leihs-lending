@@ -1,6 +1,8 @@
 require "capybara/rspec"
 require "selenium-webdriver"
 
+BROWSER_DOWNLOAD_DIR = File.absolute_path(File.expand_path(__FILE__) + "/../../../tmp")
+
 def http_port
   @port ||= Integer(ENV["LEIHS_LENDING_HTTP_PORT"].presence || 3270)
 end
@@ -44,13 +46,39 @@ RSpec.configure do |config|
 
   config.before :all do
     set_capybara_values
+    FileUtils.remove_dir(screenshot_dir, force: true)
+    FileUtils.mkdir_p(screenshot_dir)
   end
 
   config.before :each do
     set_capybara_values
   end
 
+  config.after(:each) do |example|
+    take_screenshot screenshot_dir unless example.exception.nil?
+  end
+
   config.before(type: :feature) do
     page.driver.browser.manage.window.resize_to(1280, 1200)
+  end
+
+  def screenshot_dir
+    Pathname(BROWSER_DOWNLOAD_DIR).join("screenshots")
+  end
+
+  def take_screenshot(screenshot_dir = nil, name = nil)
+    name ||= "#{Time.now.iso8601.tr(":", "-")}.png"
+    path = screenshot_dir.join(name)
+    case Capybara.current_driver
+    when :firefox
+      begin
+        page.driver.browser.save_screenshot(path)
+      rescue
+        nil
+      end
+    else
+      Logger.warn "Taking screenshots is not implemented for \
+              #{Capybara.current_driver}."
+    end
   end
 end

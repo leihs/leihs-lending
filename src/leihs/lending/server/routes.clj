@@ -3,6 +3,7 @@
    [leihs.lending.server.graphiql :as graphiql]
    [leihs.lending.server.graphql :as graphql]
    [leihs.lending.server.home :as home]
+   [leihs.lending.server.root-graphql :as root-graphql]
    [leihs.lending.server.sign-in :as sign-in]
    [reitit.coercion.malli :as malli-coercion]
    [reitit.ring :as reitit-ring]
@@ -16,13 +17,15 @@
           handler))))
 
 (def routes
-  [["/lending/"
-    {:get {:handler home/handler}}]
-   ["/lending/sign-in"
+  [["/lending/sign-in"
     {:get {:handler sign-in/get-handler}
      :post {:handler sign-in/post-handler}}]
    ["/lending/sign-out"
     {:post {:handler home/sign-out-handler}}]
+   ["/lending/graphql"
+    {:post {:handler root-graphql/handler}}]
+   ["/lending/graphiql"
+    {:get {:handler graphiql/root-handler}}]
    ["/lending/:pool-id"
     {:parameters {:path {:pool-id :uuid}}
      :middleware [wrap-pool-id]}
