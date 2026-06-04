@@ -13,10 +13,13 @@
 (def routes
   (router/createBrowserRouter
    (cj
-    [{:path "/lending/"
+    [{:path "/"
+      :loader #(router/redirect "/lending/")}
+
+     {:path "/lending/"
       :id "root"
       :element ($ root-layout)
-      :errorElement ($ error-page)
+      ;; :errorElement ($ error-page)
       :loader loader/root-layout
       :children
       (cj

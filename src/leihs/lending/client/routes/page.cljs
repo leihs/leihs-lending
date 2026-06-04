@@ -3,6 +3,7 @@
    ["@@/button" :refer [Button]]
    ["@@/card" :refer [Card CardContent CardDescription CardHeader CardTitle]]
    ["react-router" :refer [useRouteLoaderData]]
+   [leihs.lending.client.lib.csrf :as csrf]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui page []
