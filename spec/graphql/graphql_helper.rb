@@ -20,15 +20,16 @@ end
 class GraphqlQuery
   attr_reader :response
 
-  def initialize(query, user_id, variables)
+  def initialize(query, user_id, variables, pool_id)
     @query = query
     @variables = variables
+    @pool_id = pool_id
     @session_token = user_id ? create_session_for(user_id) : nil
     @csrf_token = SecureRandom.uuid
   end
 
   def perform
-    @response = Faraday.post("#{LEIHS_LENDING_HTTP_BASE_URL}/lending/graphql") do |req|
+    @response = Faraday.post("#{LEIHS_LENDING_HTTP_BASE_URL}/lending/#{@pool_id}/graphql") do |req|
       req.headers["Accept"] = "application/json"
       req.headers["Content-Type"] = "application/json"
       req.headers["x-csrf-token"] = @csrf_token
@@ -53,8 +54,8 @@ class GraphqlQuery
 end
 
 RSpec.shared_context "graphql client" do
-  def query(q, user_id = nil, variables = {})
-    gq = GraphqlQuery.new(q, user_id, variables).perform
+  def query(q, user_id = nil, pool_id: nil, variables: {})
+    gq = GraphqlQuery.new(q, user_id, variables, pool_id).perform
     return {status: gq.response.status} unless gq.response.status == 200
     gq.result.deep_symbolize_keys
   end

@@ -19,7 +19,7 @@ describe "orders" do
 
   it "returns orders for pool" do
     order = create_order
-    result = query(<<~GQL, user.id)
+    result = query(<<~GQL, user.id, pool_id: pool.id)
       { orders(poolId: "#{pool.id}") { id state purpose } }
     GQL
     expect_graphql_result(result, {
@@ -30,7 +30,7 @@ describe "orders" do
   it "filters by state" do
     create_order(state: "submitted")
     approved = create_order(state: "approved")
-    result = query(<<~GQL, user.id)
+    result = query(<<~GQL, user.id, pool_id: pool.id)
       { orders(poolId: "#{pool.id}", states: [APPROVED]) { id } }
     GQL
     expect_graphql_result(result, {orders: [{id: approved.id.to_s}]})
@@ -38,7 +38,7 @@ describe "orders" do
 
   it "paginates" do
     3.times { create_order }
-    result = query(<<~GQL, user.id)
+    result = query(<<~GQL, user.id, pool_id: pool.id)
       { orders(poolId: "#{pool.id}", page: 1, perPage: 2) { id } }
     GQL
     expect(result[:errors]).to be_nil
@@ -48,7 +48,7 @@ describe "orders" do
   it "returns reservations with model" do
     order = create_order
     reservation = Reservation.where(order_id: order.id).first
-    result = query(<<~GQL, user.id)
+    result = query(<<~GQL, user.id, pool_id: pool.id)
       { orders(poolId: "#{pool.id}") { reservations { id model { id name } } } }
     GQL
     expect_graphql_result(result, {
@@ -63,7 +63,7 @@ describe "orders" do
 
   it "returns user on order" do
     create_order
-    result = query(<<~GQL, user.id)
+    result = query(<<~GQL, user.id, pool_id: pool.id)
       { orders(poolId: "#{pool.id}") { user { id email } } }
     GQL
     expect_graphql_result(result, {
