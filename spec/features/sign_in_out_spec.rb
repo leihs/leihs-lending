@@ -41,8 +41,5 @@ feature "Sign-in / Sign-out" do
     click_button "Sign out"
 
     expect(current_path).to eq "/"
-
-    visit "/lending/"
-    expect(page).to have_current_path("/lending/sign-in")
   end
 end

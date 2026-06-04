@@ -21,6 +21,7 @@
   (-> (routes/handler)
       ring-audits/wrap
       anti-csrf/wrap
+      spa/wrap-dispatch-spa
       authenticate/wrap
       session/wrap-authenticate
       db/wrap-tx
@@ -31,6 +32,5 @@
       wrap-cookies
       (cache-buster2/wrap-resource "public" assets/cache-bust-options)
       wrap-content-type
-      spa/wrap-dispatch-spa
       wrap-accept
       ring-exception/wrap))

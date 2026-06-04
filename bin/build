@@ -9,6 +9,7 @@ source "${PROJECT_DIR}/bin/env/project.sh"
 source "${PROJECT_DIR}/shared-clj/bin/helpers/build.sh"
 
 function build_core {
+  ./bin/cljs-release
   ./bin/clj-uberjar
 }
 
