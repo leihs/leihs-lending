@@ -53,6 +53,15 @@ class GraphqlQuery
   end
 end
 
+def grant_pool_access(user, pool, role: "lending_manager")
+  database[:direct_access_rights].insert(
+    id: SecureRandom.uuid,
+    user_id: user.id,
+    inventory_pool_id: pool.id,
+    role: role
+  )
+end
+
 RSpec.shared_context "graphql client" do
   def query(q, user_id = nil, pool_id: nil, variables: {})
     gq = GraphqlQuery.new(q, user_id, variables, pool_id).perform

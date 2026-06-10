@@ -7,6 +7,8 @@ describe "approveOrder" do
   let(:model) { create(:leihs_model) }
   let!(:item) { create(:item, leihs_model: model, inventory_pool: pool, owner: pool) }
 
+  before { grant_pool_access(user, pool) }
+
   def create_order(state: "submitted")
     order = create(:order, user: user, inventory_pool: pool, state: state)
     create(:reservation,

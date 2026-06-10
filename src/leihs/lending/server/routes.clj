@@ -3,18 +3,13 @@
    [leihs.lending.server.graphiql :as graphiql]
    [leihs.lending.server.graphql :as graphql]
    [leihs.lending.server.home :as home]
+   [leihs.lending.server.middlewares.authorize :as authorize]
+   [leihs.lending.server.middlewares.pool-id :as pool-id]
    [leihs.lending.server.root-graphql :as root-graphql]
    [leihs.lending.server.sign-in :as sign-in]
    [reitit.coercion.malli :as malli-coercion]
    [reitit.ring :as reitit-ring]
    [reitit.ring.coercion :as coercion]))
-
-(defn wrap-pool-id [handler]
-  (fn [request]
-    (let [pool-id (get-in request [:parameters :path :pool-id])]
-      (-> request
-          (assoc :pool-id pool-id)
-          handler))))
 
 (def routes
   [["/lending/sign-in"
@@ -28,9 +23,10 @@
     {:get {:handler graphiql/root-handler}}]
    ["/lending/:pool-id"
     {:parameters {:path {:pool-id :uuid}}
-     :middleware [wrap-pool-id]}
+     :middleware [pool-id/wrap-pool-id authorize/wrap]}
     ["/graphiql" {:get {:handler graphiql/handler}}]
-    ["/graphql" {:post {:handler graphql/handler}}]]])
+    ["/graphql" {:authorize/format :graphql
+                 :post {:handler graphql/handler}}]]])
 
 (defn handler []
   (reitit-ring/ring-handler

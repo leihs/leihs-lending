@@ -4,6 +4,8 @@ require_relative "graphql_helper"
 describe "user" do
   let(:requester) { create(:user) }
   let(:pool) { create(:inventory_pool) }
+
+  before { grant_pool_access(requester, pool) }
   let(:user) do
     create(:user,
       phone: "555-1234",

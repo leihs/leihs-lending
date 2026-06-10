@@ -1,4 +1,4 @@
-(ns leihs.lending.server.spa
+(ns leihs.lending.server.middlewares.spa
   (:require
    [hiccup.page :refer [html5 include-css include-js]]
    [leihs.core.http-cache-buster2 :as cache-buster]))

@@ -1,4 +1,4 @@
-(ns leihs.lending.server.authenticate
+(ns leihs.lending.server.middlewares.authenticate
   (:require
    [clojure.string :as str]
    [leihs.core.graphql.helpers :refer [error-as-graphql-object]]

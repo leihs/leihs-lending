@@ -6,6 +6,8 @@ describe "rejectOrder" do
   let(:pool) { create(:inventory_pool) }
   let(:model) { create(:leihs_model) }
 
+  before { grant_pool_access(user, pool) }
+
   def create_order(state: "submitted")
     order = create(:order, user: user, inventory_pool: pool, state: state)
     create(:reservation,

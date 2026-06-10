@@ -5,6 +5,8 @@ describe "currentUser" do
   let(:user) { create(:user) }
   let(:pool) { create(:inventory_pool) }
 
+  before { grant_pool_access(user, pool) }
+
   it "returns id and user fields" do
     result = query(<<~GRAPHQL, user.id, pool_id: pool.id)
       { currentUser { id user { id email firstname lastname } } }
