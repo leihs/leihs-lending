@@ -1,9 +1,12 @@
 {:scalars
  {:UUID {:parse :uuid-parse :serialize :uuid-serialize}
-  :NonEmptyString {:parse :non-empty-string-parse :serialize :non-empty-string-serialize}}
+  :NonEmptyString {:parse :non-empty-string-parse :serialize :non-empty-string-serialize}
+  :Date {:parse :date-parse :serialize :date-serialize}}
 
  :enums
- {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}}
+ {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}
+  :VisitTypeEnum {:values [:HAND_OVER :TAKE_BACK]}
+  :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}}
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
@@ -28,6 +31,24 @@
                          :startDate {:type String}
                          :endDate {:type String}
                          :model {:type :Model :resolve :model}}}
+  :Email {:fields {:id {:type (non-null :UUID)}
+                  :createdAt {:type (non-null String)}
+                  :subject {:type (non-null String)}
+                  :template {:type String}}}
+  :Visit {:fields {:id {:type (non-null :UUID)}
+                  :date {:type (non-null String)}
+                  :startDate {:type String}
+                  :endDate {:type String}
+                  :visitType {:type (non-null :VisitTypeEnum)}
+                  :isOverdue {:type (non-null Boolean)}
+                  :quantity {:type (non-null Int)}
+                  :withUserToVerify {:type Boolean}
+                  :withUserAndModelToVerify {:type Boolean}
+                  :projectTitle {:type String}
+                  :comment {:type String}
+                  :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
+                  :reminders {:type (list (non-null :Email)) :resolve :reminders}
+                  :user {:type (non-null :User) :resolve :user}}}
   :Order {:fields {:id {:type (non-null :UUID)}
                    :purpose {:type String}
                    :state {:type (non-null :OrderStateEnum)}
@@ -47,6 +68,16 @@
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}
+  :visits {:type (list (non-null :Visit))
+           :args {:date {:type :Date}
+                  :startDate {:type :Date}
+                  :endDate {:type :Date}
+                  :visitType {:type :VisitTypeEnum}
+                  :term {:type String}
+                  :verification {:type :VerificationEnum}
+                  :page {:type Int}
+                  :perPage {:type Int}}
+           :resolve :visits}
   :orders {:type (list (non-null :Order))
            :args {:poolId {:type (non-null :UUID)}
                   :states {:type (list (non-null :OrderStateEnum))}

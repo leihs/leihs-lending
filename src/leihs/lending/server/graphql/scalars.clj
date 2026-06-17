@@ -1,6 +1,7 @@
 (ns leihs.lending.server.graphql.scalars
   (:require [clojure.string :as str])
-  (:import [java.util UUID]))
+  (:import [java.time LocalDate]
+           [java.util UUID]))
 
 (defn- parse-non-empty-string [s]
   (if (str/blank? s)
@@ -11,4 +12,6 @@
   {:uuid-parse #(UUID/fromString %)
    :uuid-serialize str
    :non-empty-string-parse parse-non-empty-string
-   :non-empty-string-serialize str})
+   :non-empty-string-serialize str
+   :date-parse #(LocalDate/parse %)
+   :date-serialize str})

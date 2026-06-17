@@ -11,8 +11,7 @@
    [leihs.core.mails :refer [log-mail-failure]]
    [leihs.lending.server.mails :as mails]
    [leihs.lending.server.resources.reservations :as res]
-   [next.jdbc :as jdbc]
-   [next.jdbc :refer [execute!]]
+   [next.jdbc :refer [execute!] :as jdbc]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (defn base-sqlmap [pool-id]
@@ -23,9 +22,9 @@
                   :orders.reject_reason
                   :orders.created_at
                   :orders.updated_at
-                  [[:raw (str "FIRST_VALUE(orders.created_at) "
-                              "OVER (PARTITION BY orders.user_id "
-                              "ORDER BY orders.created_at DESC)")]
+                  [[:over [[:first_value :orders.created_at]
+                           {:partition-by [:orders.user_id]
+                            :order-by [[:orders.created_at :desc]]}]]
                    :newest_created_at_per_user]
                   [(-> (sql/select [[:min :reservations.start_date] :v])
                        (sql/from :reservations)
@@ -144,7 +143,7 @@
 
 (defn- all-reservations-expired? [tx id]
   (let [today (local-date)
-        reservations (res/get-for-order tx id)]
+        reservations (res/get-for-open-order tx id)]
     (and (seq reservations)
          (every? #(not (t/before? today (local-date (:end_date %))))
                  reservations))))
@@ -157,7 +156,7 @@
                 pool-data (merge workdays {:holidays holidays})]
             (or (pool/close-time? (:start_date r) pool-data)
                 (pool/close-time? (:end_date r) pool-data))))
-        (res/get-for-order tx id)))
+        (res/get-for-open-order tx id)))
 
 (defn- any-unavailable? [tx id]
   (let [order (get-by-id tx id)
@@ -171,7 +170,7 @@
                      (:inventory_pool_id r)
                      [(:id r)])
                     (:quantity r))))
-          (res/get-for-order tx id))))
+          (res/get-for-open-order tx id))))
 
 (defn approve!
   [{{tx :tx} :request} {:keys [id force comment]} _]
