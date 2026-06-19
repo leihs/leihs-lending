@@ -1,7 +1,6 @@
 (ns leihs.lending.server.middlewares.spa
   (:require
-   [hiccup.page :refer [html5 include-css include-js]]
-   [leihs.core.http-cache-buster2 :as cache-buster]))
+   [hiccup.page :refer [html5 include-css include-js]]))
 
 (defn spa-handler [_request]
   {:headers {"Content-Type" "text/html"}
@@ -9,11 +8,11 @@
           [:head
            [:meta {:charset "utf-8"}]
            [:title "Lending"]
-           (include-css (cache-buster/cache-busted-path "/lending/assets/css/style.css"))]
+           (include-css "/lending/assets/css/style.css")]
           [:body
            [:div#app]
-           (include-js (cache-buster/cache-busted-path "/lending/assets/js/libs.js"))
-           (include-js (cache-buster/cache-busted-path "/lending/assets/js/main.js"))])})
+           (include-js "/lending/assets/js/libs.js")
+           (include-js "/lending/assets/js/main.js")])})
 
 (def ^:private no-spa-uris #{"/lending/sign-in" "/lending/graphiql"})
 
