@@ -14,7 +14,23 @@
                   :address {:type String}
                   :zip {:type String}
                   :city {:type String}
-                  :img256Url {:type String}}}}
+                  :img256Url {:type String}
+                  :availablePools {:type (list :AvailablePool)
+                                   :resolve :available-pools}}}
+  :AvailablePool {:fields {:id {:type (non-null :UUID)}
+                           :name {:type (non-null String)}}}
+  :Language {:fields {:name {:type String}
+                      :locale {:type String}
+                      :default {:type Boolean}}}
+  :AppSettings {:fields {:externalBaseUrl {:type String}
+                         :logoLight {:type String}
+                         :logoDark {:type String}
+                         :localCurrencyString {:type String}
+                         :timeZone {:type String}
+                         :lendingTermsUrl {:type String}
+                         :documentationLink {:type String}}}}
 
  :queries
- {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}}}
+ {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
+  :activeLanguages {:type (list :Language) :resolve :active-languages}
+  :appSettings {:type :AppSettings :resolve :app-settings}}}

@@ -14,7 +14,7 @@ FactoryBot.define do
     order
     status { "submitted" }
     start_date { Date.today.next_occurring(:monday).to_s }
-    end_date { (Date.today.next_occurring(:monday) + 7).to_s }
+    end_date { (Date.today.next_occurring(:monday) + 4).to_s }
     created_at { Time.now }
     updated_at { Time.now }
   end

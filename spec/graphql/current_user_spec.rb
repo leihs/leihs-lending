@@ -24,4 +24,40 @@ describe "currentUser" do
       }
     })
   end
+
+  describe "availablePools" do
+    let(:pool2) { create(:inventory_pool) }
+
+    let(:available_pools_query) { "{ currentUser { user { availablePools { id name } } } }" }
+
+    context "lending_manager via direct access right" do
+      before { grant_pool_access(user, pool2, role: "lending_manager") }
+
+      it "returns the pool" do
+        result = query(available_pools_query, user.id)
+        expect(result.dig(:data, :currentUser, :user, :availablePools))
+          .to include(id: pool2.id.to_s, name: pool2.name)
+      end
+    end
+
+    context "group_manager via direct access right" do
+      before { grant_pool_access(user, pool2, role: "group_manager") }
+
+      it "returns the pool" do
+        result = query(available_pools_query, user.id)
+        expect(result.dig(:data, :currentUser, :user, :availablePools))
+          .to include(id: pool2.id.to_s, name: pool2.name)
+      end
+    end
+
+    context "inventory_manager via direct access right" do
+      before { grant_pool_access(user, pool2, role: "inventory_manager") }
+
+      it "returns the pool" do
+        result = query(available_pools_query, user.id)
+        expect(result.dig(:data, :currentUser, :user, :availablePools))
+          .to include(id: pool2.id.to_s, name: pool2.name)
+      end
+    end
+  end
 end
