@@ -1,10 +1,21 @@
 (ns leihs.lending.client.routes.layout
   (:require
-   ["react-router" :refer [Outlet ScrollRestoration]]
+   ["@@/sonner" :refer [Toaster]]
+   ["react-router" :refer [Outlet ScrollRestoration useLoaderData]]
+   ["~/i18n.config.js"]
+   [leihs.lending.client.routes.components.header :as header]
+   [leihs.lending.client.provider.theme-provider :refer [ThemeProvider]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui layout []
-  ($ :<>
-     ($ ScrollRestoration)
-     ($ :main {:class-name "container mx-auto px-4 py-8"}
-        ($ Outlet))))
+  (let [data (useLoaderData)]
+    ($ ThemeProvider {:default-theme "system"}
+       ($ :<>
+          ($ ScrollRestoration)
+          ($ header/main data)
+          ($ :main {:class-name "container py-8"}
+             ($ Outlet)
+             ($ Toaster {:position "top-center"
+                         :closeButton true
+                         :richColors true}))))))
+

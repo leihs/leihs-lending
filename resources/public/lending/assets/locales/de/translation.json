@@ -1,0 +1,41 @@
+{
+  "header": {
+    "links": {
+      "global-search": "Global suchen",
+      "lending": "Verleih",
+      "inventory": "Inventar"
+    },
+    "app-menu": {
+      "lending": "Verleih",
+      "inventory": "Inventar",
+      "borrow": "Ausleihen",
+      "admin": "Admin",
+      "procure": "Bedarfsermittlung",
+      "inventory-pools": "Geräteparks"
+    },
+    "user-menu": {
+      "user-data": "Benutzerdaten",
+      "my-documents": "Meine Dokumente",
+      "logout": "Logout",
+      "language": "Sprache",
+      "theme": {
+        "title": "Anzeige",
+        "light": "Hell",
+        "dark": "Dunkel",
+        "system": "System"
+      }
+    }
+  },
+  "error": {
+    "action": {
+      "error": "Fehler",
+      "error_detail": "HTTP {{httpStatus}}"
+    },
+    "alerts": {
+      "offline": {
+        "title": "Keine Verbindung",
+        "description": "Bitte überprüfen Sie Ihre Internetverbindung."
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "header": {
+    "links": {
+      "global-search": "Search globally",
+      "lending": "Lending",
+      "inventory": "Inventory"
+    },
+    "app-menu": {
+      "lending": "Lending",
+      "inventory": "Inventory",
+      "borrow": "Borrow",
+      "admin": "Admin",
+      "procure": "Procurement",
+      "inventory-pools": "Inventory pools"
+    },
+    "user-menu": {
+      "user-data": "User data",
+      "my-documents": "My documents",
+      "logout": "Logout",
+      "language": "Language",
+      "theme": {
+        "title": "Appearance",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      }
+    }
+  },
+  "error": {
+    "action": {
+      "error": "Error",
+      "error_detail": "HTTP {{httpStatus}}"
+    },
+    "alerts": {
+      "offline": {
+        "title": "No connection",
+        "description": "Please check your internet connection."
+      }
+    }
+  }
+}

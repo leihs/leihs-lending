@@ -38,8 +38,21 @@ feature "Sign-in / Sign-out" do
 
     expect(current_path).to eq "/lending/"
 
-    click_button "Sign out"
+    # Wait for successful sign-in - header should appear
+    expect(page).not_to have_selector("form.ui-form-signin")
+    expect(page).to have_selector("header")
 
-    expect(current_path).to eq "/"
+    # Open user menu by clicking button containing user's name
+    within("header") do
+      # Find and click the user menu button (contains firstname and lastname)
+      user_name = "#{@user.firstname} #{@user.lastname}"
+      user_menu_button = find("button", text: user_name)
+      user_menu_button.click
+    end
+
+    # Click logout button in the dropdown menu
+    click_button "Logout"
+
+    expect(current_path).to eq "/sign-out"
   end
 end

@@ -10,28 +10,25 @@
    ["@@/input-group" :refer [InputGroup InputGroupAddon InputGroupInput]]
    ["lucide-react" :refer [ChevronsUpDown CircleUser LayoutGrid Search]]
    ["react-i18next" :refer [useTranslation]]
-   ["react-router-dom" :as router]
+   ["react-router" :as router]
    ["sonner" :refer [toast]]
    ["~/i18n.config.js" :as i18n :refer [i18n]]
-   [clojure.string :as str]
+   [leihs.lending.client.lib.csrf :as csrf]
+   [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.theme-provider :refer [use-theme]]
    [leihs.core.core :refer [detect]]
-   [leihs.inventory.client.lib.csrf :as csrf]
-   [leihs.inventory.client.lib.hooks :as hooks]
-   [leihs.inventory.client.lib.utils :refer [jc cj]]
-   [leihs.inventory.client.routes.components.theme-provider :refer [use-theme]]
-   [uix.core :as uix :refer [$ defui]]
-   [uix.dom]))
+   [uix.core :as uix :refer [$ defui]]))
 
-(defui main [{:keys [navigation available_inventory_pools user_details languages]}]
+(defui main [{:keys [currentUser activeLanguages appSettings]}]
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         {:keys [theme set-theme]} (use-theme)
-        {:keys [settings]} (router/useRouteLoaderData "root")
-        current-pool (hooks/use-current-pool)
         fetcher (router/useFetcher)
         last-fetcher-data (uix/use-ref nil)
-        current-lending-url (->> navigation :manage_nav_items (detect #(= (:name current-pool) (:name %))) :href)
-        current-search-url (str/replace (or current-lending-url "") "/daily" "/search")
+        user (-> currentUser :user)
+        available-pools (:availablePools user)
+        user-name (str (:firstname user) " " (:lastname user))
+        current-pool (->> available-pools (detect #(= pool-id (:id %))))
         current-lang (.. i18n -language)]
 
     (uix/use-effect
@@ -51,17 +48,16 @@
     ($ :header {:className "bg-background sticky z-50 top-0 flex items-center gap-4 border-b h-16"}
        ($ :nav {:className "container w-full flex flex-row justify-between text-sm items-center"}
           ($ :div {:className "flex items-center"}
-             (let [logo-light (:logo_light settings)
-                   logo-dark (:logo_dark settings)
+             (let [logo-light (:logoLight appSettings)
+                   logo-dark (:logoDark appSettings)
                    resolved-theme (if (= theme "system")
                                     (if (.-matches (.matchMedia js/window "(prefers-color-scheme: dark)"))
                                       "dark"
                                       "light")
                                     theme)
                    logo-src (if (= resolved-theme "dark")
-                              (or logo-dark logo-light "/inventory/assets/zhdk-logo.svg")
-                              (or logo-light logo-dark "/inventory/assets/zhdk-logo.svg"))
-
+                              (or logo-dark logo-light "/lending/assets/zhdk-logo.svg")
+                              (or logo-light logo-dark "/lending/assets/zhdk-logo.svg"))
                    logo-type (cond
                                (and (= resolved-theme "light")
                                     (or logo-light logo-dark)) "Logo light"
@@ -73,17 +69,18 @@
                         :className "max-h-16 py-2"
                         :alt logo-type
                         :data-test-id "app-logo"}))
-             ($ :form {:action current-search-url :method "GET"}
+
+             ($ :form {:action "/" :method "GET"}
                 ($ InputGroup {:className "mx-12 w-fit"}
                    ($ InputGroupInput {:name "search_term"
                                        :placeholder (t "header.links.global-search" "Suche global")})
                    ($ InputGroupAddon
                       ($ Search))))
              ($ :div {:className "flex gap-6"}
-                ($ :a {:href (or current-lending-url "/manage/")}
-                   (t "header.links.lending" "Verleih"))
-                ($ :a {:href "/inventory/"
+                ($ :a {:href "/lending/"
                        :className "font-semibold"}
+                   (t "header.links.lending" "Verleih"))
+                ($ :a {:href "/inventory/"}
                    (t "header.links.inventory" "Inventar"))))
 
           ($ :div {:className "flex"}
@@ -93,25 +90,15 @@
                       ($ :<>
                          ($ LayoutGrid {:className "h-4 w-4"})
                          ($ :span {:className "hidden lg:block"}
-                            (if current-pool (:name current-pool) (t "header.app-menu.inventory" "Inventar")))
+                            (if current-pool (:name current-pool) (t "header.app-menu.lending" "Verleih")))
                          ($ ChevronsUpDown {:className "h-4 w-4 hidden lg:block"}))))
                 ($ DropdownMenuContent {:className "ml-auto" :data-test-id "app-menu"}
-                   ($ DropdownMenuGroup
-                      (when-let [url (:borrow_url navigation)]
-                        ($ DropdownMenuItem {:asChild true}
-                           ($ :a {:href url} (t "header.app-menu.borrow" "Ausleihen"))))
-                      (when-let [url (:admin_url navigation)]
-                        ($ DropdownMenuItem {:asChild true}
-                           ($ :a {:href url} (t "header.app-menu.admin" "Admin"))))
-                      (when-let [url (:procure_url navigation)]
-                        ($ DropdownMenuItem {:asChild true}
-                           ($ :a {:href url} (t "header.app-menu.procure" "Bedarfsermittlung")))))
                    ($ DropdownMenuSeparator)
                    ($ DropdownMenuLabel {:className "text-xs font-normal"}
-                      (t "header.app-menu.inventory-pools", "Geräteparks") ":")
+                      (t "header.app-menu.inventory-pools" "Geräteparks") ":")
                    ($ DropdownMenuGroup
-                      (for [pool (sort-by :name available_inventory_pools)]
-                        (let [url (router/generatePath "/inventory/:pool-id" #js {:pool-id (:id pool)})]
+                      (for [pool (sort-by :name available-pools)]
+                        (let [url (router/generatePath "/lending/:pool-id/" #js {:pool-id (:id pool)})]
                           ($ DropdownMenuItem {:key (:id pool)
                                                :asChild true
                                                :className (when (= pool-id (:id pool)) "font-semibold")}
@@ -122,11 +109,12 @@
                    ($ Button {:variant "outline"}
                       ($ :<>
                          ($ CircleUser {:className "h-4 w-4"})
-                         ($ :span {:className "hidden lg:block"} (:name user_details))
+                         ($ :span {:className "hidden lg:block"} user-name)
                          ($ ChevronsUpDown {:className "h-4 w-4 hidden lg:block"}))))
                 ($ DropdownMenuContent {:className "ml-auto"}
                    ($ DropdownMenuGroup
-                      (when-let [url (some-> (:borrow_url navigation) (str "current-user"))]
+                      (when-let [url (some-> (appSettings :externalBaseUrl)
+                                             (str "/borrow/current-user"))]
                         ($ :<>
                            ($ DropdownMenuItem {:asChild true}
                               ($ :a {:href url} (t "header.user-menu.user-data")))
@@ -153,7 +141,7 @@
                             (t "header.user-menu.language")))
                       ($ DropdownMenuPortal
                          ($ DropdownMenuSubContent
-                            (for [language languages]
+                            (for [language activeLanguages]
                               ($ DropdownMenuItem {:key (:locale language)
                                                    :asChild true}
                                  ($ :button {:type "submit"

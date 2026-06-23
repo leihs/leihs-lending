@@ -3,7 +3,6 @@
    ["@@/button" :refer [Button]]
    ["@@/card" :refer [Card CardContent CardDescription CardHeader CardTitle]]
    ["react-router" :refer [useRouteLoaderData]]
-   [leihs.lending.client.lib.csrf :as csrf]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui page []
@@ -29,17 +28,4 @@
 
        ($ :div {:class-name "flex gap-3"}
           ($ Button {:as-child true :variant "default"}
-             ($ :a {:href "/lending/graphiql"} "Open GraphiQL"))
-          ($ Button {:as-child true :variant "outline"}
-             ($ :a {:href "/lending/"} "Back to server home"))
-
-          ($ Button {:type :submit
-                     :form "sign-out-form"}
-             "Sign out"
-
-             ($ :form {:action "/lending/sign-out"
-                       :method :POST
-                       :id "sign-out-form"}
-                ($ :input {:type :hidden
-                           :name csrf/token-field-name
-                           :value csrf/token})))))))
+             ($ :a {:href "/lending/graphiql"} "Open GraphiQL"))))))

@@ -2,6 +2,7 @@
   (:require
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc cj]]
+   [leihs.lending.client.routes.query :rename {query root-query}]
    [promesa.core :as p]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,7 +41,7 @@
   []
   (js/Promise.
    (fn [resolve _reject]
-     (-> (run-query (urql/make-client "/lending/graphql") current-user-query nil)
+     (-> (run-query (urql/make-client "/lending/graphql") root-query nil)
          (p/then resolve)
          (p/catch (fn [_]
                     (.assign js/window.location "/lending/sign-in")))))))
