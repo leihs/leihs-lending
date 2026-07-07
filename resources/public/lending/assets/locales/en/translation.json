@@ -1,7 +1,14 @@
 {
+  "common": {
+    "date": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}"
+    }
+  },
   "header": {
     "links": {
-      "global-search": "Search globally",
+      "global-search": "Global search",
       "lending": "Lending",
       "inventory": "Inventory"
     },
@@ -24,6 +31,79 @@
         "dark": "Dark",
         "system": "System"
       }
+    }
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "range": "{{range}} of {{total}} rows",
+    "per-page": "Rows per page"
+  },
+  "pool": {
+    "api_browser": "API browser (pool schema)"
+  },
+  "pools": {
+    "breadcrumb": {
+      "lending": "Lending"
+    },
+    "tabs": {
+      "daily": "Daily view",
+      "orders": "Orders",
+      "visits": "Visits",
+      "contracts": "Contracts"
+    }
+  },
+  "root": {
+    "title": "Leihs Lending",
+    "api_browser": "API browser (root schema)",
+    "pools": {
+      "name": "Pool"
+    }
+  },
+  "visits": {
+    "filters": {
+      "term": "Filter by term",
+      "start-date": "From",
+      "end-date": "To",
+      "all-visits": "All visits",
+      "verification-all": "Verification (all)",
+      "reset": "Reset filters"
+    },
+    "type": {
+      "hand-over": "Hand-over",
+      "take-back": "Take-back"
+    },
+    "verification": {
+      "none": "no verification required",
+      "user": "User",
+      "user-and-model": "User and model"
+    },
+    "table": {
+      "name": "Name",
+      "date": "Date",
+      "quantity": "Items",
+      "duration": "Duration",
+      "notifications": "Notifications",
+      "empty": "No visits found"
+    },
+    "duration": {
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "reminders": {
+      "some_one": "{{count}} reminder email",
+      "some_other": "{{count}} reminder emails",
+      "none": "No reminders"
+    },
+    "actions": {
+      "hand-over": "hand over",
+      "take-back": "take back",
+      "delete": "delete",
+      "send-reminder": "send reminder",
+      "not-available": "Action not available yet"
+    },
+    "user": {
+      "suspended": "User suspended"
     }
   },
   "error": {

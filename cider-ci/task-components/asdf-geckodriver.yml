@@ -1,0 +1,12 @@
+traits:
+  asdf: true
+
+scripts:
+
+  lending-geckodriver-asdf-install:
+    exclusive_executor_resource: asdf-geckodriver
+    body: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd $LEIHS_LENDING_DIR
+      ./bin/env/geckodriver-setup

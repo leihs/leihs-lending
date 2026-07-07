@@ -31,7 +31,8 @@
                     :where [:= :r.id [:any :v.reservation_ids]]} :start_date]
                   [{:select [[[:max :r.end_date]]]
                     :from [[:reservations :r]]
-                    :where [:= :r.id [:any :v.reservation_ids]]} :end_date])
+                    :where [:= :r.id [:any :v.reservation_ids]]} :end_date]
+                  [[:over [[:count :*] {}]] :total_count])
       (sql/from [:visits :v])
       (sql/join [:users :u] [:= :u.id :v.user_id])
       (sql/left-join [:suspensions :s]
@@ -64,10 +65,12 @@
   [{{tx :tx pool-id :pool-id} :request}
    {:keys [date start-date end-date visit-type term verification page per-page]}
    _]
-  (-> (base-sqlmap pool-id)
-      (apply-filters {:date date :start-date start-date :end-date end-date
-                      :visit-type visit-type :term term :verification verification})
-      (sql/limit (or per-page 10))
-      (sql/offset (* (dec (or page 1)) (or per-page 10)))
-      sql-format
-      (->> (jdbc-query tx))))
+  (let [rows (-> (base-sqlmap pool-id)
+                 (apply-filters {:date date :start-date start-date :end-date end-date
+                                 :visit-type visit-type :term term :verification verification})
+                 (sql/limit (or per-page 10))
+                 (sql/offset (* (dec (or page 1)) (or per-page 10)))
+                 sql-format
+                 (->> (jdbc-query tx)))]
+    {:items rows
+     :total-count (-> rows first :total_count (or 0))}))

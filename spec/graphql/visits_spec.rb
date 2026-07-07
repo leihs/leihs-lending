@@ -6,10 +6,13 @@ VISITS_GQL = <<~GQL
                $verification: VerificationEnum, $page: Int, $perPage: Int) {
     visits(visitType: $visitType, date: $date, term: $term,
            verification: $verification, page: $page, perPage: $perPage) {
-      id visitType date isOverdue quantity
-      withUserToVerify withUserAndModelToVerify
-      projectTitle comment
-      user { id firstname lastname }
+      items {
+        id visitType date isOverdue quantity
+        withUserToVerify withUserAndModelToVerify
+        projectTitle comment
+        user { id firstname lastname }
+      }
+      totalCount
     }
   }
 GQL
@@ -73,7 +76,7 @@ describe "visits" do
     create_take_back
     result = visits
     expect(result[:errors]).to be_nil
-    types = result.dig(:data, :visits).map { |v| v[:visitType] }
+    types = result.dig(:data, :visits, :items).map { |v| v[:visitType] }
     expect(types).to contain_exactly("HAND_OVER", "TAKE_BACK")
   end
 
@@ -89,7 +92,7 @@ describe "visits" do
       status: "submitted",
       start_date: next_monday.to_s,
       end_date: (next_monday + 7).to_s)
-    expect_graphql_result(visits, {visits: []})
+    expect_graphql_result(visits, {visits: {items: [], totalCount: 0}})
   end
 
   context "visitType filter" do
@@ -101,13 +104,13 @@ describe "visits" do
     it "HAND_OVER" do
       result = visits(visitType: "HAND_OVER")
       expect(result[:errors]).to be_nil
-      expect(result.dig(:data, :visits).map { |v| v[:visitType] }).to all(eq("HAND_OVER"))
+      expect(result.dig(:data, :visits, :items).map { |v| v[:visitType] }).to all(eq("HAND_OVER"))
     end
 
     it "TAKE_BACK" do
       result = visits(visitType: "TAKE_BACK")
       expect(result[:errors]).to be_nil
-      expect(result.dig(:data, :visits).map { |v| v[:visitType] }).to all(eq("TAKE_BACK"))
+      expect(result.dig(:data, :visits, :items).map { |v| v[:visitType] }).to all(eq("TAKE_BACK"))
     end
   end
 
@@ -117,7 +120,7 @@ describe "visits" do
     create_hand_over(target_user: other_user, start_date: next_monday + 1)
     result = visits(date: next_monday.to_s)
     expect(result[:errors]).to be_nil
-    expect(result.dig(:data, :visits).map { |v| v[:date] }).to all(eq(next_monday.to_s))
+    expect(result.dig(:data, :visits, :items).map { |v| v[:date] }).to all(eq(next_monday.to_s))
   end
 
   it "filters by term" do
@@ -126,33 +129,33 @@ describe "visits" do
     create_hand_over(target_user: other_user)
     result = visits(term: "Zoltan")
     expect(result[:errors]).to be_nil
-    expect(result.dig(:data, :visits).map { |v| v.dig(:user, :firstname) }).to all(eq("Zoltan"))
+    expect(result.dig(:data, :visits, :items).map { |v| v.dig(:user, :firstname) }).to all(eq("Zoltan"))
   end
 
   context "isOverdue" do
     it "is true when visit date is in the past" do
       create_hand_over(start_date: Date.today.prev_occurring(:monday))
       result = visits
-      expect(result.dig(:data, :visits, 0, :isOverdue)).to be true
+      expect(result.dig(:data, :visits, :items, 0, :isOverdue)).to be true
     end
 
     it "is false when visit date is in the future" do
       create_hand_over
       result = visits
-      expect(result.dig(:data, :visits, 0, :isOverdue)).to be false
+      expect(result.dig(:data, :visits, :items, 0, :isOverdue)).to be false
     end
   end
 
   it "returns projectTitle and comment" do
     order = create_hand_over
-    visit = visits.dig(:data, :visits, 0)
+    visit = visits.dig(:data, :visits, :items, 0)
     expect(visit[:projectTitle]).to eq(order.customer_order.title)
     expect(visit[:comment]).to eq(order.purpose)
   end
 
   it "returns user" do
     create_hand_over
-    visit = visits.dig(:data, :visits, 0)
+    visit = visits.dig(:data, :visits, :items, 0)
     expect(visit.dig(:user, :id)).to eq(user.id.to_s)
     expect(visit.dig(:user, :firstname)).to eq(user.firstname)
   end
@@ -162,8 +165,9 @@ describe "visits" do
       u = create(:user).tap { |u| grant_pool_access(u, pool) }
       create_hand_over(target_user: u, start_date: next_monday + i)
     end
-    expect(visits(perPage: 2).dig(:data, :visits).size).to eq(2)
-    expect(visits(page: 2, perPage: 2).dig(:data, :visits).size).to eq(1)
+    expect(visits(perPage: 2).dig(:data, :visits, :items).size).to eq(2)
+    expect(visits(page: 2, perPage: 2).dig(:data, :visits, :items).size).to eq(1)
+    expect(visits(perPage: 2).dig(:data, :visits, :totalCount)).to eq(3)
   end
 
   context "verification filter" do
@@ -195,8 +199,8 @@ describe "visits" do
       create_hand_over
       result = visits(verification: "NONE_REQUIRED")
       expect(result[:errors]).to be_nil
-      expect(result.dig(:data, :visits).size).to eq(1)
-      expect(result.dig(:data, :visits, 0, :withUserToVerify)).to be false
+      expect(result.dig(:data, :visits, :items).size).to eq(1)
+      expect(result.dig(:data, :visits, :items, 0, :withUserToVerify)).to be false
     end
 
     it "USER returns visits where user verification required" do
@@ -204,9 +208,9 @@ describe "visits" do
       setup_verification_group
       result = visits(verification: "USER")
       expect(result[:errors]).to be_nil
-      expect(result.dig(:data, :visits).size).to eq(1)
-      expect(result.dig(:data, :visits, 0, :withUserToVerify)).to be true
-      expect(result.dig(:data, :visits, 0, :withUserAndModelToVerify)).to be false
+      expect(result.dig(:data, :visits, :items).size).to eq(1)
+      expect(result.dig(:data, :visits, :items, 0, :withUserToVerify)).to be true
+      expect(result.dig(:data, :visits, :items, 0, :withUserAndModelToVerify)).to be false
     end
 
     it "USER_AND_MODEL returns visits where user and model verification required" do
@@ -214,8 +218,8 @@ describe "visits" do
       setup_verification_group(with_model: true)
       result = visits(verification: "USER_AND_MODEL")
       expect(result[:errors]).to be_nil
-      expect(result.dig(:data, :visits).size).to eq(1)
-      expect(result.dig(:data, :visits, 0, :withUserAndModelToVerify)).to be true
+      expect(result.dig(:data, :visits, :items).size).to eq(1)
+      expect(result.dig(:data, :visits, :items, 0, :withUserAndModelToVerify)).to be true
     end
   end
 end

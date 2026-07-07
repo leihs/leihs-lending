@@ -14,6 +14,7 @@
                   :address {:type String}
                   :zip {:type String}
                   :city {:type String}
+                  :languageLocale {:type String}
                   :img256Url {:type String}
                   :availablePools {:type (list :AvailablePool)
                                    :resolve :available-pools}}}

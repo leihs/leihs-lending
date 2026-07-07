@@ -1,0 +1,1 @@
+This folder contains shadcn components customized for Leihs

@@ -1,0 +1,130 @@
+'./spec/features/appearance/theme_spec.rb[1:1]':
+  name: "Theme 01"
+  environment_variables:
+    FEATURE_NAME: "Theme 01"
+    FEATURE: './spec/features/appearance/theme_spec.rb[1:1]'
+'./spec/features/appearance/theme_spec.rb[1:2]':
+  name: "Theme 02"
+  environment_variables:
+    FEATURE_NAME: "Theme 02"
+    FEATURE: './spec/features/appearance/theme_spec.rb[1:2]'
+'./spec/features/appearance/theme_spec.rb[1:3]':
+  name: "Theme 03"
+  environment_variables:
+    FEATURE_NAME: "Theme 03"
+    FEATURE: './spec/features/appearance/theme_spec.rb[1:3]'
+'./spec/features/i18n/language_switcher_spec.rb[1:1]':
+  name: "Language 01"
+  environment_variables:
+    FEATURE_NAME: "Language 01"
+    FEATURE: './spec/features/i18n/language_switcher_spec.rb[1:1]'
+'./spec/features/i18n/language_switcher_spec.rb[1:2]':
+  name: "Language 02"
+  environment_variables:
+    FEATURE_NAME: "Language 02"
+    FEATURE: './spec/features/i18n/language_switcher_spec.rb[1:2]'
+'./spec/features/i18n/language_switcher_spec.rb[1:3]':
+  name: "Language 03"
+  environment_variables:
+    FEATURE_NAME: "Language 03"
+    FEATURE: './spec/features/i18n/language_switcher_spec.rb[1:3]'
+'./spec/features/sign_in_out_spec.rb[1:1]':
+  name: "Sign-in / Sign-out 01"
+  environment_variables:
+    FEATURE_NAME: "Sign-in / Sign-out 01"
+    FEATURE: './spec/features/sign_in_out_spec.rb[1:1]'
+'./spec/features/sign_in_out_spec.rb[1:2]':
+  name: "Sign-in / Sign-out 02"
+  environment_variables:
+    FEATURE_NAME: "Sign-in / Sign-out 02"
+    FEATURE: './spec/features/sign_in_out_spec.rb[1:2]'
+'./spec/features/sign_in_out_spec.rb[1:3]':
+  name: "Sign-in / Sign-out 03"
+  environment_variables:
+    FEATURE_NAME: "Sign-in / Sign-out 03"
+    FEATURE: './spec/features/sign_in_out_spec.rb[1:3]'
+'./spec/features/sign_in_out_spec.rb[1:4]':
+  name: "Sign-in / Sign-out 04"
+  environment_variables:
+    FEATURE_NAME: "Sign-in / Sign-out 04"
+    FEATURE: './spec/features/sign_in_out_spec.rb[1:4]'
+'./spec/features/visits/list_spec.rb[1:1]':
+  name: "Visits list 01"
+  environment_variables:
+    FEATURE_NAME: "Visits list 01"
+    FEATURE: './spec/features/visits/list_spec.rb[1:1]'
+'./spec/features/visits/list_spec.rb[1:2]':
+  name: "Visits list 02"
+  environment_variables:
+    FEATURE_NAME: "Visits list 02"
+    FEATURE: './spec/features/visits/list_spec.rb[1:2]'
+'./spec/features/visits/list_spec.rb[1:3]':
+  name: "Visits list 03"
+  environment_variables:
+    FEATURE_NAME: "Visits list 03"
+    FEATURE: './spec/features/visits/list_spec.rb[1:3]'
+'./spec/features/visits/list_spec.rb[1:4]':
+  name: "Visits list 04"
+  environment_variables:
+    FEATURE_NAME: "Visits list 04"
+    FEATURE: './spec/features/visits/list_spec.rb[1:4]'
+'./spec/features/visits/list_spec.rb[1:5]':
+  name: "Visits list 05"
+  environment_variables:
+    FEATURE_NAME: "Visits list 05"
+    FEATURE: './spec/features/visits/list_spec.rb[1:5]'
+'./spec/features/visits/list_spec.rb[1:6]':
+  name: "Visits list 06"
+  environment_variables:
+    FEATURE_NAME: "Visits list 06"
+    FEATURE: './spec/features/visits/list_spec.rb[1:6]'
+'./spec/features/visits/list_spec.rb[1:7]':
+  name: "Visits list 07"
+  environment_variables:
+    FEATURE_NAME: "Visits list 07"
+    FEATURE: './spec/features/visits/list_spec.rb[1:7]'
+'./spec/features/visits/list_spec.rb[1:8]':
+  name: "Visits list 08"
+  environment_variables:
+    FEATURE_NAME: "Visits list 08"
+    FEATURE: './spec/features/visits/list_spec.rb[1:8]'
+'./spec/features/visits/list_spec.rb[1:9]':
+  name: "Visits list 09"
+  environment_variables:
+    FEATURE_NAME: "Visits list 09"
+    FEATURE: './spec/features/visits/list_spec.rb[1:9]'
+'./spec/features/visits/list_spec.rb[1:10]':
+  name: "Visits list 10"
+  environment_variables:
+    FEATURE_NAME: "Visits list 10"
+    FEATURE: './spec/features/visits/list_spec.rb[1:10]'
+'./spec/features/visits/list_spec.rb[1:11]':
+  name: "Visits list 11"
+  environment_variables:
+    FEATURE_NAME: "Visits list 11"
+    FEATURE: './spec/features/visits/list_spec.rb[1:11]'
+'./spec/features/visits/list_spec.rb[1:12]':
+  name: "Visits list 12"
+  environment_variables:
+    FEATURE_NAME: "Visits list 12"
+    FEATURE: './spec/features/visits/list_spec.rb[1:12]'
+'./spec/features/visits/list_spec.rb[1:13]':
+  name: "Visits list 13"
+  environment_variables:
+    FEATURE_NAME: "Visits list 13"
+    FEATURE: './spec/features/visits/list_spec.rb[1:13]'
+'./spec/features/visits/list_spec.rb[1:14]':
+  name: "Visits list 14"
+  environment_variables:
+    FEATURE_NAME: "Visits list 14"
+    FEATURE: './spec/features/visits/list_spec.rb[1:14]'
+'./spec/features/visits/list_spec.rb[1:15]':
+  name: "Visits list 15"
+  environment_variables:
+    FEATURE_NAME: "Visits list 15"
+    FEATURE: './spec/features/visits/list_spec.rb[1:15]'
+'./spec/features/visits/list_spec.rb[1:16]':
+  name: "Visits list 16"
+  environment_variables:
+    FEATURE_NAME: "Visits list 16"
+    FEATURE: './spec/features/visits/list_spec.rb[1:16]'

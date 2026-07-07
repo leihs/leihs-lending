@@ -2,7 +2,7 @@ require "features_helper"
 
 feature "Sign-in / Sign-out" do
   before :each do
-    @user = create_user_with_password
+    @user = FactoryBot.create(:user)
   end
 
   scenario "redirect to sign-in when unauthenticated" do

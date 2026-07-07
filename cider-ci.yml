@@ -30,10 +30,24 @@ jobs:
     context:
       include: cider-ci/graphql-specs_job-context.yml
 
+  check-feature-tasks:
+    name: Check if feature tasks are up to date
+    run_when: *ON_BRANCH_UPDATE
+    context:
+      include: cider-ci/jobs/feature_tasks_check.yml
+
   feature-specs:
     name: Run feature specs
-    depends_on: *SPEC_DEPS
-    run_when: *SPEC_DEPS
+    depends_on: &FEATURE_SPEC_DEPS
+      uberjar was built:
+        type: job
+        job_key: build-uberjar
+        states: [passed]
+      feature tasks are up to date:
+        type: job
+        job_key: check-feature-tasks
+        states: [passed]
+    run_when: *FEATURE_SPEC_DEPS
     context:
       include: cider-ci/feature-specs_job-context.yml
 

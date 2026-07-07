@@ -1,7 +1,14 @@
 {
+  "common": {
+    "date": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}"
+    }
+  },
   "header": {
     "links": {
-      "global-search": "Global suchen",
+      "global-search": "Suche global",
       "lending": "Verleih",
       "inventory": "Inventar"
     },
@@ -24,6 +31,79 @@
         "dark": "Dunkel",
         "system": "System"
       }
+    }
+  },
+  "pagination": {
+    "previous": "Vorherige",
+    "next": "Nächste",
+    "range": "{{range}} von insgesamt {{total}} Zeilen",
+    "per-page": "Zeilen pro Seite"
+  },
+  "pool": {
+    "api_browser": "API browser (pool schema)"
+  },
+  "pools": {
+    "breadcrumb": {
+      "lending": "Ausleihe"
+    },
+    "tabs": {
+      "daily": "Tagesansicht",
+      "orders": "Bestellungen",
+      "visits": "Besuche",
+      "contracts": "Verträge"
+    }
+  },
+  "root": {
+    "title": "Leihs Verleih",
+    "api_browser": "API browser (root schema)",
+    "pools": {
+      "name": "Pool"
+    }
+  },
+  "visits": {
+    "filters": {
+      "term": "Filtern nach Begriff",
+      "start-date": "Von",
+      "end-date": "Bis",
+      "all-visits": "Alle Besuche",
+      "verification-all": "Visierungspflicht (Alle)",
+      "reset": "Filter zurücksetzen"
+    },
+    "type": {
+      "hand-over": "Aushändigung",
+      "take-back": "Rücknahme"
+    },
+    "verification": {
+      "none": "nicht visierungspflichtig",
+      "user": "Benutzer",
+      "user-and-model": "Benutzer und Modell"
+    },
+    "table": {
+      "name": "Name",
+      "date": "Datum",
+      "quantity": "Gegenstände",
+      "duration": "Dauer",
+      "notifications": "Benachrichtigungen",
+      "empty": "Keine Besuche gefunden"
+    },
+    "duration": {
+      "days_one": "{{count}} Tag",
+      "days_other": "{{count}} Tage"
+    },
+    "reminders": {
+      "some_one": "{{count}} Erinnerungs-Mail",
+      "some_other": "{{count}} Erinnerungs-Mails",
+      "none": "Keine Erinnerungen"
+    },
+    "actions": {
+      "hand-over": "aushändigen",
+      "take-back": "zurücknehmen",
+      "delete": "löschen",
+      "send-reminder": "Erinnerung senden",
+      "not-available": "Aktion noch nicht verfügbar"
+    },
+    "user": {
+      "suspended": "Benutzer gesperrt"
     }
   },
   "error": {

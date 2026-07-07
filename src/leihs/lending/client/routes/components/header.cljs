@@ -12,11 +12,10 @@
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
    ["sonner" :refer [toast]]
-   ["~/i18n.config.js" :as i18n :refer [i18n]]
+   [leihs.core.core :refer [detect]]
    [leihs.lending.client.lib.csrf :as csrf]
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.provider.theme-provider :refer [use-theme]]
-   [leihs.core.core :refer [detect]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui main [{:keys [currentUser activeLanguages appSettings]}]
@@ -29,7 +28,7 @@
         available-pools (:availablePools user)
         user-name (str (:firstname user) " " (:lastname user))
         current-pool (->> available-pools (detect #(= pool-id (:id %))))
-        current-lang (.. i18n -language)]
+        current-lang (:languageLocale user)]
 
     (uix/use-effect
      (fn []
@@ -66,13 +65,14 @@
                                :else "Logo default")]
 
                ($ :img {:src logo-src
-                        :className "max-h-16 py-2"
+                        :className "h-16 py-2"
                         :alt logo-type
                         :data-test-id "app-logo"}))
 
              ($ :form {:action "/" :method "GET"}
                 ($ InputGroup {:className "mx-12 w-fit"}
                    ($ InputGroupInput {:name "search_term"
+                                       :className "w-[182px]"
                                        :placeholder (t "header.links.global-search" "Suche global")})
                    ($ InputGroupAddon
                       ($ Search))))

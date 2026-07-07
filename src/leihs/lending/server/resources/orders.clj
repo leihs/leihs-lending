@@ -33,7 +33,8 @@
                   [(-> (sql/select [[:max :reservations.end_date] :v])
                        (sql/from :reservations)
                        (sql/where [:= :reservations.order_id :orders.id]))
-                   :end_date])
+                   :end_date]
+                  [[:over [[:count :*] {}]] :total_count])
       (sql/from :orders)
       (sql/where [:= :orders.inventory_pool_id pool-id])
       (sql/order-by [:newest_created_at_per_user :desc]
@@ -69,17 +70,19 @@
   [{{tx :tx} :request}
    {:keys [pool-id states start-date end-date to-be-verified page per-page]}
    _]
-  (-> (cond-> (base-sqlmap pool-id)
-        (some? to-be-verified)
-        (sql/with [:verifiable_orders (verifiable-orders-cte pool-id)]))
-      (apply-filters {:states states
-                      :start-date start-date
-                      :end-date end-date
-                      :to-be-verified to-be-verified})
-      (sql/limit (or per-page 10))
-      (sql/offset (* (dec (or page 1)) (or per-page 10)))
-      sql-format
-      (->> (jdbc-query tx))))
+  (let [rows (-> (cond-> (base-sqlmap pool-id)
+                   (some? to-be-verified)
+                   (sql/with [:verifiable_orders (verifiable-orders-cte pool-id)]))
+                 (apply-filters {:states states
+                                 :start-date start-date
+                                 :end-date end-date
+                                 :to-be-verified to-be-verified})
+                 (sql/limit (or per-page 10))
+                 (sql/offset (* (dec (or page 1)) (or per-page 10)))
+                 sql-format
+                 (->> (jdbc-query tx)))]
+    {:items rows
+     :total-count (-> rows first :total_count (or 0))}))
 
 (defn get-by-id [tx id]
   (-> (sql/select :orders.id
