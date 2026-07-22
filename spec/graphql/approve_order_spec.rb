@@ -162,6 +162,14 @@ describe "approveOrder" do
       expect(email[:subject]).to eq("[leihs] Reservation Confirmation")
     end
 
+    it "sets template and source_pool_id on the inserted email" do
+      order = create_order
+      approve_order(order.id, user.id)
+      email = Email.where(user_id: user.id).first
+      expect(email[:template]).to eq("approved")
+      expect(email[:source_pool_id]).to eq(pool.id)
+    end
+
     it "includes the comment in the email body when provided" do
       order = create_order
       query(<<~GQL, user.id, pool_id: pool.id)
