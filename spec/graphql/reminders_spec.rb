@@ -50,10 +50,11 @@ describe "visit reminders" do
   end
 
   def insert_email(template_name)
+    email_id = SecureRandom.uuid
     database[:emails].insert(
-      id: SecureRandom.uuid,
+      id: email_id,
       user_id: user.id,
-      inventory_pool_id: pool.id,
+      source_pool_id: pool.id,
       from_address: "pool@example.com",
       to_address: user.email,
       subject: "test subject",
@@ -61,6 +62,11 @@ describe "visit reminders" do
       template: template_name,
       created_at: Time.now,
       updated_at: Time.now
+    )
+    visit_id = database[:visits].where(user_id: user.id, inventory_pool_id: pool.id).get(:id)
+    database[:emails_visits].insert(
+      email_id: email_id,
+      visit_id: visit_id
     )
   end
 
