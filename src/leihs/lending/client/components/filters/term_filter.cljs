@@ -1,4 +1,4 @@
-(ns leihs.lending.client.routes.pools.visits.components.filters.term-filter
+(ns leihs.lending.client.components.filters.term-filter
   (:require
    ["@@/input" :refer [Input]]
    ["react-i18next" :refer [useTranslation]]
@@ -65,7 +65,7 @@
      [])
 
     ($ Input {:ref ref
-              :placeholder (t "visits.filters.term")
+              :placeholder (t "components.filters.term.placeholder")
               :name "term"
               :class-name (str "w-48 py-0" class-name)
               :value term

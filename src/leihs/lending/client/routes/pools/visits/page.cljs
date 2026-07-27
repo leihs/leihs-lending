@@ -4,12 +4,11 @@
    ["@@/table" :refer [Table TableBody TableHead TableHeader TableRow]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
+   [leihs.lending.client.components.filters.date-filter :refer [DateFilter]]
+   [leihs.lending.client.components.filters.reset :refer [Reset]]
+   [leihs.lending.client.components.filters.select-filter :refer [SelectFilter]]
+   [leihs.lending.client.components.filters.term-filter :refer [TermFilter]]
    [leihs.lending.client.components.pagination :as pagination]
-   [leihs.lending.client.routes.pools.visits.components.filters.date-filter :refer [DateFilter]]
-   [leihs.lending.client.routes.pools.visits.components.filters.reset :refer [Reset]]
-   [leihs.lending.client.routes.pools.visits.components.filters.term-filter :refer [TermFilter]]
-   [leihs.lending.client.routes.pools.visits.components.filters.verification-filter :refer [VerificationFilter]]
-   [leihs.lending.client.routes.pools.visits.components.filters.visit-type-filter :refer [VisitTypeFilter]]
    [leihs.lending.client.routes.pools.visits.components.table.skeleton-row :refer [SkeletonRow]]
    [leihs.lending.client.routes.pools.visits.components.table.visit-row :refer [VisitRow]]
    [uix.core :as uix :refer [$ defui]]))
@@ -38,8 +37,17 @@
              ($ TermFilter)
              ($ DateFilter {:param "startDate" :title (t "visits.filters.start-date")})
              ($ DateFilter {:param "endDate" :title (t "visits.filters.end-date")})
-             ($ VisitTypeFilter)
-             ($ VerificationFilter)
+             ($ SelectFilter {:class-name "w-[200px]"
+                              :param "visitType"
+                              :items [{:value nil :test-id "all" :content (t "visits.filters.all-visits")}
+                                      {:value "HAND_OVER" :test-id "HAND_OVER"  :content (t "visits.type.hand-over")}
+                                      {:value "TAKE_BACK" :test-id "TAKE_BACK" :content (t "visits.type.take-back")}]})
+             ($ SelectFilter {:class-name "w-[200px]"
+                              :param "verification"
+                              :items [{:value nil :test-id "all" :content (t "visits.filters.verification-all")}
+                                      {:value "NONE_REQUIRED" :test-id "NONE_REQUIRED"  :content (t "visits.verification.none")}
+                                      {:value "USER" :test-id "USER" :content (t "visits.verification.user")}
+                                      {:value "USER_AND_MODEL" :test-id "USER_AND_MODEL" :content (t "visits.verification.user-and-model")}]})
              ($ Reset {:on-reset handle-reset})))
 
        ($ CardContent

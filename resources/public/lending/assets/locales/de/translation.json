@@ -1,9 +1,19 @@
 {
   "common": {
     "date": {
-      "today": "Heute",
-      "yesterday": "Gestern",
+      "today": "heute",
+      "yesterday": "gestern",
       "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}"
+    }
+  },
+  "components": {
+    "filters": {
+      "reset": {
+        "tooltip": "Filter zurücksetzen (Alt+Shift+R)"
+      },
+      "term": {
+        "placeholder": "Filtern nach Begriff"
+      }
     }
   },
   "header": {
@@ -60,13 +70,51 @@
       "name": "Pool"
     }
   },
+  "orders": {
+    "filters": {
+      "start-date": "Von",
+      "end-date": "Bis",
+      "all-states": "Status (alle)",
+      "verification-all": "Visierungspflicht (alle)",
+      "to-be-verified": "visierungspflichtig",
+      "not-to-be-verified": "nicht visierungspflichtig",
+      "reset": "Filter zurücksetzen"
+    },
+    "state": {
+      "submitted": "offen",
+      "approved": "genehmigt",
+      "rejected": "abgelehnt",
+      "canceled": "abgebrochen"
+    },
+    "table": {
+      "name": "Name",
+      "date": "Datum",
+      "quantity": "Gegenstände",
+      "duration": "Dauer",
+      "project-title": "Zweck",
+      "reject-reason": "Begründung",
+      "status": "Status",
+      "empty": "Keine Bestellungen gefunden"
+    },
+    "duration": {
+      "days_one": "{{count}} Tag",
+      "days_other": "{{count}} Tage"
+    },
+    "actions": {
+      "approve": "Genehmigen",
+      "verify-and-approve": "Prüfen + Genehmigen",
+      "reject": "Ablehnen",
+      "edit": "Editieren",
+      "hand-over": "Aushändigen",
+      "not-available": "Aktion noch nicht verfügbar"
+    }
+  },
   "visits": {
     "filters": {
-      "term": "Filtern nach Begriff",
       "start-date": "Von",
       "end-date": "Bis",
       "all-visits": "Alle Besuche",
-      "verification-all": "Visierungspflicht (Alle)",
+      "verification-all": "Visierungspflicht (alle)",
       "reset": "Filter zurücksetzen"
     },
     "type": {
@@ -74,7 +122,7 @@
       "take-back": "Rücknahme"
     },
     "verification": {
-      "none": "nicht visierungspflichtig",
+      "none": "Nicht visierungspflichtig",
       "user": "Benutzer",
       "user-and-model": "Benutzer und Modell"
     },
@@ -96,9 +144,9 @@
       "none": "Keine Erinnerungen"
     },
     "actions": {
-      "hand-over": "aushändigen",
-      "take-back": "zurücknehmen",
-      "delete": "löschen",
+      "hand-over": "Aushändigen",
+      "take-back": "Zurücknehmen",
+      "delete": "Löschen",
       "send-reminder": "Erinnerung senden",
       "not-available": "Aktion noch nicht verfügbar"
     },

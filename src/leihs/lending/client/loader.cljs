@@ -2,6 +2,7 @@
   (:require
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.routes.data :rename {loader root-data-loader}]
+   [leihs.lending.client.routes.pools.orders.data :rename {list-loader orders-list-loader}]
    [leihs.lending.client.routes.pools.visits.data :rename {list-loader visits-list-loader}]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -21,3 +22,10 @@
         url (js/URL. (.. route-data -request -url))
         search-params (.-searchParams url)]
     (visits-list-loader pool-id search-params)))
+
+(defn orders-page
+  [route-data]
+  (let [{:keys [pool-id]} (jc ^js (.-params route-data))
+        url (js/URL. (.. route-data -request -url))
+        search-params (.-searchParams url)]
+    (orders-list-loader pool-id search-params)))

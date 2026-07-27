@@ -1,14 +1,15 @@
-(ns leihs.lending.client.routes.pools.visits.components.filters.reset
+(ns leihs.lending.client.components.filters.reset
   (:require
    ["@@/button" :refer [Button]]
    ["@@/tooltip" :refer [Tooltip TooltipTrigger TooltipContent]]
    ["lucide-react" :refer [ListRestart]]
+   ["react-i18next" :refer [useTranslation]]
    [uix.core :as uix :refer [$ defui]]
    [uix.dom]))
 
 (defui Reset [{:keys [class-name on-reset]}]
-  (let [ref (uix/use-ref nil)]
-
+  (let [ref (uix/use-ref nil)
+        [t] (useTranslation)]
     (uix/use-effect
      (fn []
        (let [on-key-down
@@ -37,4 +38,4 @@
                      :on-click on-reset}
              ($ ListRestart)))
        ($ TooltipContent
-          "Reset filters (Alt+Shift+R)"))))
+          (t "components.filters.reset.tooltip")))))

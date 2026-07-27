@@ -115,7 +115,7 @@ feature "Visits list" do
       expect(page).to have_content("1")                        # quantity
       expect(page).to have_content("8 days")                   # duration (inclusive: 8 days)
       expect(page).to have_content("1 reminder email")         # notifications
-      expect(page).to have_content("hand over")                # action
+      expect(page).to have_content("Hand over")                # action
     end
   end
 
@@ -134,7 +134,7 @@ feature "Visits list" do
       expect(page).to have_content(end_date.strftime("%d/%m/%Y")) # date (en-GB)
       expect(page).to have_content("1")                        # quantity
       expect(page).to have_content("No reminders")             # notifications
-      expect(page).to have_content("take back")                # action
+      expect(page).to have_content("Take back")                # action
     end
   end
 
@@ -227,8 +227,8 @@ feature "Visits list" do
     click_on "Visits"
     find("[name='visitType']").click
     find("[data-test-id='HAND_OVER']").click
-    expect(page).to have_content("hand over")
-    expect(page).not_to have_content("take back")
+    expect(page).to have_content("Hand over")
+    expect(page).not_to have_content("Take back")
   end
 
   scenario "filters visits by verification requirement" do

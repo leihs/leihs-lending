@@ -42,6 +42,7 @@
             :element ($ daily-page)}
 
            {:path "orders"
+            :loader loader/orders-page
             :element ($ orders-page)}
 
            {:path "visits"

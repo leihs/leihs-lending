@@ -50,11 +50,12 @@
                    :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
                    :reminders {:type (list (non-null :Email)) :resolve :reminders}
                    :user {:type (non-null :User) :resolve :user}}}
-  :Order {:fields {:id {:type (non-null :UUID)}
-                   :purpose {:type String}
-                   :state {:type (non-null :OrderStateEnum)}
-                   :rejectReason {:type String}
-                   :startDate {:type String}
+   :Order {:fields {:id {:type (non-null :UUID)}
+                    :purpose {:type String}
+                    :state {:type (non-null :OrderStateEnum)}
+                    :rejectReason {:type String}
+                    :toBeVerified {:type (non-null Boolean)}
+                    :startDate {:type String}
                    :endDate {:type String}
                    :createdAt {:type (non-null String)}
                    :updatedAt {:type (non-null String)}
@@ -83,12 +84,13 @@
                   :page {:type Int}
                   :perPage {:type Int}}
            :resolve :visits}
-  :orders {:type (non-null :OrderList)
-           :args {:poolId {:type (non-null :UUID)}
-                  :states {:type (list (non-null :OrderStateEnum))}
-                  :startDate {:type String}
-                  :endDate {:type String}
-                  :page {:type Int}
+   :orders {:type (non-null :OrderList)
+            :args {:poolId {:type (non-null :UUID)}
+                   :states {:type (list (non-null :OrderStateEnum))}
+                   :startDate {:type :Date}
+                   :endDate {:type :Date}
+                   :term {:type String}
+                   :page {:type Int}
                   :perPage {:type Int}
                   :toBeVerified {:type Boolean}}
            :resolve :orders}}

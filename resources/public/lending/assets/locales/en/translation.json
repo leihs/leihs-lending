@@ -1,9 +1,19 @@
 {
   "common": {
     "date": {
-      "today": "Today",
-      "yesterday": "Yesterday",
+      "today": "today",
+      "yesterday": "yesterday",
       "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}"
+    }
+  },
+  "components": {
+    "filters": {
+      "reset": {
+        "tooltip": "Reset filters (Alt+Shift+R)"
+      },
+      "term": {
+        "placeholder": "Filter by term"
+      }
     }
   },
   "header": {
@@ -60,9 +70,47 @@
       "name": "Pool"
     }
   },
+  "orders": {
+    "filters": {
+      "start-date": "From",
+      "end-date": "To",
+      "all-states": "All",
+      "verification-all": "Verification (all)",
+      "to-be-verified": "Verification required",
+      "not-to-be-verified": "No verification required",
+      "reset": "Reset filters"
+    },
+    "state": {
+      "submitted": "pending",
+      "approved": "approved",
+      "rejected": "rejected",
+      "canceled": "canceled"
+    },
+    "table": {
+      "name": "Name",
+      "date": "Date",
+      "quantity": "Items",
+      "duration": "Duration",
+      "project-title": "Purpose",
+      "reject-reason": "Reason",
+      "status": "Status",
+      "empty": "No orders found"
+    },
+    "duration": {
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "actions": {
+      "approve": "Approve",
+      "verify-and-approve": "Verify + Approve",
+      "reject": "Reject",
+      "edit": "Edit",
+      "hand-over": "Hand over",
+      "not-available": "Action not available yet"
+    }
+  },
   "visits": {
     "filters": {
-      "term": "Filter by term",
       "start-date": "From",
       "end-date": "To",
       "all-visits": "All visits",
@@ -70,11 +118,11 @@
       "reset": "Reset filters"
     },
     "type": {
-      "hand-over": "Hand-over",
-      "take-back": "Take-back"
+      "hand-over": "Hand over",
+      "take-back": "Take back"
     },
     "verification": {
-      "none": "no verification required",
+      "none": "No verification required",
       "user": "User",
       "user-and-model": "User and model"
     },
@@ -96,10 +144,10 @@
       "none": "No reminders"
     },
     "actions": {
-      "hand-over": "hand over",
-      "take-back": "take back",
-      "delete": "delete",
-      "send-reminder": "send reminder",
+      "hand-over": "Hand over",
+      "take-back": "Take back",
+      "delete": "Delete",
+      "send-reminder": "Send reminder",
       "not-available": "Action not available yet"
     },
     "user": {

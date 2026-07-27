@@ -1,4 +1,4 @@
-(ns leihs.lending.client.routes.pools.visits.components.filters.date-filter
+(ns leihs.lending.client.components.filters.date-filter
   (:require
    ["@@/button" :refer [Button]]
    ["@@/calendar" :refer [Calendar]]

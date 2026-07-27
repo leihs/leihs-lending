@@ -28,6 +28,101 @@
   environment_variables:
     FEATURE_NAME: "Language 03"
     FEATURE: './spec/features/i18n/language_switcher_spec.rb[1:3]'
+'./spec/features/orders/filters_spec.rb[1:1]':
+  name: "Orders filters 01"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 01"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:1]'
+'./spec/features/orders/filters_spec.rb[1:2]':
+  name: "Orders filters 02"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 02"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:2]'
+'./spec/features/orders/filters_spec.rb[1:3]':
+  name: "Orders filters 03"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 03"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:3]'
+'./spec/features/orders/filters_spec.rb[1:4]':
+  name: "Orders filters 04"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 04"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:4]'
+'./spec/features/orders/filters_spec.rb[1:5]':
+  name: "Orders filters 05"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 05"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:5]'
+'./spec/features/orders/filters_spec.rb[1:6]':
+  name: "Orders filters 06"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 06"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:6]'
+'./spec/features/orders/filters_spec.rb[1:7]':
+  name: "Orders filters 07"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 07"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:7]'
+'./spec/features/orders/list_spec.rb[1:1]':
+  name: "Orders list 01"
+  environment_variables:
+    FEATURE_NAME: "Orders list 01"
+    FEATURE: './spec/features/orders/list_spec.rb[1:1]'
+'./spec/features/orders/list_spec.rb[1:2]':
+  name: "Orders list 02"
+  environment_variables:
+    FEATURE_NAME: "Orders list 02"
+    FEATURE: './spec/features/orders/list_spec.rb[1:2]'
+'./spec/features/orders/list_spec.rb[1:3]':
+  name: "Orders list 03"
+  environment_variables:
+    FEATURE_NAME: "Orders list 03"
+    FEATURE: './spec/features/orders/list_spec.rb[1:3]'
+'./spec/features/orders/list_spec.rb[1:4]':
+  name: "Orders list 04"
+  environment_variables:
+    FEATURE_NAME: "Orders list 04"
+    FEATURE: './spec/features/orders/list_spec.rb[1:4]'
+'./spec/features/orders/list_spec.rb[1:5]':
+  name: "Orders list 05"
+  environment_variables:
+    FEATURE_NAME: "Orders list 05"
+    FEATURE: './spec/features/orders/list_spec.rb[1:5]'
+'./spec/features/orders/list_spec.rb[1:6]':
+  name: "Orders list 06"
+  environment_variables:
+    FEATURE_NAME: "Orders list 06"
+    FEATURE: './spec/features/orders/list_spec.rb[1:6]'
+'./spec/features/orders/list_spec.rb[1:7]':
+  name: "Orders list 07"
+  environment_variables:
+    FEATURE_NAME: "Orders list 07"
+    FEATURE: './spec/features/orders/list_spec.rb[1:7]'
+'./spec/features/orders/list_spec.rb[1:8]':
+  name: "Orders list 08"
+  environment_variables:
+    FEATURE_NAME: "Orders list 08"
+    FEATURE: './spec/features/orders/list_spec.rb[1:8]'
+'./spec/features/orders/list_spec.rb[1:9]':
+  name: "Orders list 09"
+  environment_variables:
+    FEATURE_NAME: "Orders list 09"
+    FEATURE: './spec/features/orders/list_spec.rb[1:9]'
+'./spec/features/orders/list_spec.rb[1:10]':
+  name: "Orders list 10"
+  environment_variables:
+    FEATURE_NAME: "Orders list 10"
+    FEATURE: './spec/features/orders/list_spec.rb[1:10]'
+'./spec/features/orders/list_spec.rb[1:11]':
+  name: "Orders list 11"
+  environment_variables:
+    FEATURE_NAME: "Orders list 11"
+    FEATURE: './spec/features/orders/list_spec.rb[1:11]'
+'./spec/features/orders/list_spec.rb[1:12]':
+  name: "Orders list 12"
+  environment_variables:
+    FEATURE_NAME: "Orders list 12"
+    FEATURE: './spec/features/orders/list_spec.rb[1:12]'
 './spec/features/sign_in_out_spec.rb[1:1]':
   name: "Sign-in / Sign-out 01"
   environment_variables:
