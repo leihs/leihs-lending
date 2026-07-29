@@ -12,7 +12,7 @@
 (defui page []
   (let [[t] (useTranslation)
         data (useRouteLoaderData "root")
-        pools (-> data :currentUser :user :availablePools)]
+        pools (-> data :currentUser :availablePools)]
     ($ :<>
        ($ Card {:class-name "mt-12 mb-6 overflow-hidden pb-0"}
           ($ CardHeader

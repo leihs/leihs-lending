@@ -3,7 +3,11 @@
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
-                         :user {:type (non-null :User)}}}
+                         :user {:type (non-null :User)}
+                         :availablePools {:type (list :AvailablePool)
+                                          :resolve :available-pools}
+                         :availableSubApps {:type (list :AvailableSubApp)
+                                            :resolve :available-sub-apps}}}
   :User {:fields {:id {:type (non-null :UUID)}
                   :email {:type (non-null String)}
                   :firstname {:type String}
@@ -15,11 +19,11 @@
                   :zip {:type String}
                   :city {:type String}
                   :languageLocale {:type String}
-                  :img256Url {:type String}
-                  :availablePools {:type (list :AvailablePool)
-                                   :resolve :available-pools}}}
+                  :img256Url {:type String}}}
   :AvailablePool {:fields {:id {:type (non-null :UUID)}
                            :name {:type (non-null String)}}}
+  :AvailableSubApp {:fields {:key {:type (non-null String)}
+                             :url {:type (non-null String)}}}
   :Language {:fields {:name {:type String}
                       :locale {:type String}
                       :default {:type Boolean}}}

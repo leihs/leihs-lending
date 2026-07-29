@@ -17,7 +17,7 @@
         params (useParams)
         pool-id (-> params (aget "pool-id"))
         root-data (useRouteLoaderData "root")
-        available-pools (-> root-data :currentUser :user :availablePools)
+        available-pools (-> root-data :currentUser :availablePools)
         current-pool (detect #(= pool-id (:id %)) available-pools)
         pool-name (:name current-pool)
         base (str "/lending/" pool-id "/")

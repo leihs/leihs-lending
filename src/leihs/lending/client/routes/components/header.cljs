@@ -25,7 +25,14 @@
         fetcher (router/useFetcher)
         last-fetcher-data (uix/use-ref nil)
         user (-> currentUser :user)
-        available-pools (:availablePools user)
+        available-pools (:availablePools currentUser)
+        available-sub-app-urls (into {}
+                                     (map (juxt (comp keyword :key) :url)
+                                          (:availableSubApps currentUser)))
+        lending-url (cond-> (-> available-sub-app-urls :lending)
+                      pool-id (str pool-id "/"))
+        inventory-url (cond-> (-> available-sub-app-urls :inventory)
+                        pool-id (str pool-id "/"))
         user-name (str (:firstname user) " " (:lastname user))
         current-pool (->> available-pools (detect #(= pool-id (:id %))))
         current-lang (:languageLocale user)]
@@ -77,10 +84,10 @@
                    ($ InputGroupAddon
                       ($ Search))))
              ($ :div {:className "flex gap-6"}
-                ($ :a {:href "/lending/"
+                ($ :a {:href lending-url
                        :className "font-semibold"}
                    (t "header.links.lending" "Verleih"))
-                ($ :a {:href "/inventory/"}
+                ($ :a {:href inventory-url}
                    (t "header.links.inventory" "Inventar"))))
 
           ($ :div {:className "flex"}
@@ -93,6 +100,13 @@
                             (if current-pool (:name current-pool) (t "header.app-menu.lending" "Verleih")))
                          ($ ChevronsUpDown {:className "h-4 w-4 hidden lg:block"}))))
                 ($ DropdownMenuContent {:className "ml-auto" :data-test-id "app-menu"}
+                   (when (seq available-sub-app-urls)
+                     ($ DropdownMenuGroup
+                        (for [[key url] (dissoc available-sub-app-urls :lending :inventory)]
+                          ($ DropdownMenuItem {:key key
+                                               :asChild true}
+                             ($ :a {:href url}
+                                (t (str "header.app-menu." (name key))))))))
                    ($ DropdownMenuSeparator)
                    ($ DropdownMenuLabel {:className "text-xs font-normal"}
                       (t "header.app-menu.inventory-pools" "Geräteparks") ":")

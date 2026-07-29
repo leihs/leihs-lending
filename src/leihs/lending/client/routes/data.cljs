@@ -8,16 +8,20 @@
   "{
       currentUser {
         id
+        availablePools {
+          id
+          name
+        }
+        availableSubApps {
+          key
+          url
+        }
         user {
           firstname
           lastname
           email
           login
           languageLocale
-          availablePools {
-            id
-            name
-          }
         }
       }
       activeLanguages {
