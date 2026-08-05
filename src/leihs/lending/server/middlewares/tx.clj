@@ -6,23 +6,27 @@
    [next.jdbc :as jdbc]
    [taoensso.timbre :refer [warn]]))
 
+(defn- rollback-signal [resp reason]
+  (ex-info "graphql tx rollback" {::response resp ::reason reason}))
+
 (defn- with-graphql-tx [request handler]
-  (jdbc/with-transaction+options [tx (db/get-ds)]
-    (letfn [(rollback-tx! [] (.rollback (:connectable tx)))]
-      (try (let [resp (-> request (assoc :tx tx) handler)
-                 resp-body (:body resp)
-                 resp-status (:status resp)]
-             (cond (:graphql-error resp)
-                   (do (warn "Rolling back transaction because of graphql error " (:errors resp-body))
-                       (rollback-tx!))
-                   (some-> resp-status (>= 400))
-                   (do (warn "Rolling back transaction because error status " resp-status)
-                       (rollback-tx!)))
-             resp)
-           (catch Throwable th
-             (warn "Rolling back transaction because of " (.getMessage th))
-             (rollback-tx!)
-             (throw th))))))
+  (try
+    (jdbc/with-transaction+options [tx (db/get-ds)]
+      (let [resp (-> request (assoc :tx tx) handler)
+            errors (-> resp :body :errors seq)
+            status (:status resp)]
+        (cond
+          errors
+          (throw (rollback-signal resp (str "graphql error " errors)))
+
+          (some-> status (>= 400))
+          (throw (rollback-signal resp (str "error status " status)))
+
+          :else resp)))
+    (catch Throwable th
+      (let [{::keys [response reason]} (ex-data th)]
+        (warn "Rolling back transaction because of " (or reason (.getMessage th)))
+        (or response (throw th))))))
 
 (defn- graphql-tx [request handler mutation?]
   (if mutation?
