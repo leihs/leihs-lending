@@ -1,0 +1,24 @@
+- name: stop leihs-lending-service
+  service:
+    name: leihs-lending.service
+    enabled: false
+    state: stopped
+  failed_when: false
+
+- name: make sure leihs-lending-service user exists
+  user:
+    name: "{{leihs_lending_user}}"
+    comment: "Leihs Lending Service"
+    shell: /bin/false
+    system: yes
+    state: present
+
+- name: setup directories
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    mode: 0755
+  loop:
+    - { path: "{{leihs_lending_dir}}", owner: root }

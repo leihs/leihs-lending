@@ -1,0 +1,9 @@
+- template:
+    src: reverse-proxy.conf
+    dest: /etc/apache2/leihs/conf.d/leihs_800_lending.conf
+    mode: 0644
+
+- name: reload reverse-proxy
+  service:
+    name: apache2
+    state: reloaded

@@ -1,0 +1,4 @@
+- user:
+    name: '{{leihs_lending_user}}'
+    system: yes
+  name: create leihs-lending user

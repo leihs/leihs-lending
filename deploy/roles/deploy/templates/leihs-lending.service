@@ -1,0 +1,34 @@
+[Unit]
+Description=Leihs Lending Service
+After=syslog.target
+After=network.target
+
+BindsTo=leihs-migration.service
+After=leihs-migration.service
+PartOf=leihs-migration.service
+
+StartLimitIntervalSec=180
+StartLimitBurst=6
+
+
+[Service]
+SyslogIdentifier=leihs-lending
+WorkingDirectory={{leihs_lending_dir}}
+User={{leihs_lending_user}}
+Group={{leihs_lending_user}}
+
+Restart=always
+RestartSec=5
+
+EnvironmentFile=/etc/leihs/config.env
+Environment=DB_MAX_POOL_SIZE=20
+Environment=HTTP_PORT={{LEIHS_LENDING_HTTP_PORT}}
+
+ExecStart=/usr/bin/env java "-Xmx1G" -jar leihs-lending.jar run
+
+
+[Install]
+WantedBy=multi-user.target
+WantedBy=leihs-migration.service
+
+# vi: ft=sh
