@@ -30,5 +30,7 @@
 
 (defn get-current
   [{{tx :tx {user-id :id} :authenticated-entity} :request} _ _]
-  {:id user-id
-   :user (get-by-id tx user-id)})
+  (if-not user-id
+    (throw (ex-info "Not authenticated" {:status 401}))
+    {:id user-id
+     :user (get-by-id tx user-id)}))
