@@ -7,7 +7,9 @@
                          :availablePools {:type (list :AvailablePool)
                                           :resolve :available-pools}
                          :availableSubApps {:type (list :AvailableSubApp)
-                                            :resolve :available-sub-apps}}}
+                                            :resolve :available-sub-apps}
+                         :languageToUse {:type (non-null :Language)
+                                         :resolve :language-to-use}}}
   :User {:fields {:id {:type (non-null :UUID)}
                   :email {:type (non-null String)}
                   :firstname {:type String}
@@ -38,4 +40,9 @@
  :queries
  {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
   :activeLanguages {:type (list :Language) :resolve :active-languages}
-  :appSettings {:type :AppSettings :resolve :app-settings}}}
+  :appSettings {:type :AppSettings :resolve :app-settings}}
+
+ :mutations
+ {:switchLanguage {:type (non-null :CurrentUser)
+                   :args {:locale {:type (non-null String)}}
+                   :resolve :switch-language}}}

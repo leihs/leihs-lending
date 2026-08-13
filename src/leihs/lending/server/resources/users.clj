@@ -3,6 +3,7 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [leihs.lending.server.resources.suspensions :as suspensions]
+   [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (def base-sqlmap
@@ -34,3 +35,15 @@
     (throw (ex-info "Not authenticated" {:status 401}))
     {:id user-id
      :user (get-by-id tx user-id)}))
+
+(defn switch-language!
+  [{{tx :tx {user-id :id} :authenticated-entity} :request} {:keys [locale]} _]
+  (when-not user-id
+    (throw (ex-info "Not authenticated" {:status 401})))
+  (-> (sql/update :users)
+      (sql/set {:language_locale locale})
+      (sql/where [:= :id user-id])
+      sql-format
+      (->> (execute! tx)))
+  {:id user-id
+   :user (get-by-id tx user-id)})

@@ -30,9 +30,21 @@
   "Runs a urql query on the given client and resolves to a clj map of the
    response data. Throws the GraphQL/network error if one occurred so React
    Router routes it to the errorElement."
-  [client query variables]
+  [^js client query variables]
   (js/console.debug "urql run-query")
   (p/let [^js source (.query client query (cj (or variables {})))
+          result (.toPromise source)]
+    (when-let [error (.-error result)]
+      (throw error))
+    (jc (.-data result))))
+
+(defn run-mutation
+  "Runs a urql mutation on the given client and resolves to a clj map of the
+   response data. Throws the GraphQL/network error if one occurred so React
+   Router routes it to the errorElement."
+  [^js client mutation variables]
+  (js/console.debug "urql run-mutation")
+  (p/let [^js source (.mutation client mutation (cj (or variables {})))
           result (.toPromise source)]
     (when-let [error (.-error result)]
       (throw error))

@@ -23,6 +23,9 @@
           login
           languageLocale
         }
+        languageToUse {
+          locale
+        }
       }
       activeLanguages {
         name
@@ -43,7 +46,7 @@
    (fn [resolve _reject]
      (-> (run-query default-client query nil)
          (p/then (fn [data]
-                   (when-let [locale (get-in data [:currentUser :user :languageLocale])]
+                   (when-let [locale (get-in data [:currentUser :languageToUse :locale])]
                      (.changeLanguage i18n locale))
                    (resolve data)))
          (p/catch (fn [_]

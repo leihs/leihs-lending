@@ -28,7 +28,7 @@ feature "Language ", type: :feature do
     expect(page).to have_content("Leihs Verleih")
   end
 
-  scenario "switching works", :pending do
+  scenario "switching works" do
     pool = FactoryBot.create(:inventory_pool)
     user = FactoryBot.create(:user, language_locale: "en-GB")
 
