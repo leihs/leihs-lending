@@ -31,6 +31,12 @@ DB_NAME=leihs_test bin/rspec spec/graphql
 DB_NAME=leihs_test bin/rspec spec/features
 ```
 
+Slow motion option for feature specs:
+
+```
+SPEC_SLOW_MOTION=0.5 DB_NAME=leihs_test bin/rspec spec/features
+```
+
 ## Lint
 
 ```
@@ -86,6 +92,7 @@ Add queries/mutations to root schema only when they must be unauthenticated. Eve
 ### Resolver conventions
 
 **Signature:**
+
 ```clojure
 (defn get-one
   [{{tx :tx pool-id :pool-id user :authenticated-entity} :request} args value]
@@ -136,18 +143,19 @@ Request goes through (in order):
 3. `authorize/wrap` — checks user has `lending_manager` or `inventory_manager` role in `:pool-id`
 
 Pool roles:
+
 ```clojure
 (def AUTHORIZED-ROLES #{"lending_manager" "inventory_manager"})
 ```
 
 ### Key libraries
 
-| Concern | Library |
-|---------|---------|
-| GraphQL | `com.walmartlabs/lacinia` |
-| SQL builder | `com.github.seancorfield/honeysql` |
-| JDBC | `com.github.seancorfield/next.jdbc` |
-| Routing | `metosin/reitit` |
-| HTTP server | `http-kit/http-kit` |
-| Case conversion | `camel-snake-kebab` |
-| Logging | `taoensso/timbre` |
+| Concern         | Library                             |
+| --------------- | ----------------------------------- |
+| GraphQL         | `com.walmartlabs/lacinia`           |
+| SQL builder     | `com.github.seancorfield/honeysql`  |
+| JDBC            | `com.github.seancorfield/next.jdbc` |
+| Routing         | `metosin/reitit`                    |
+| HTTP server     | `http-kit/http-kit`                 |
+| Case conversion | `camel-snake-kebab`                 |
+| Logging         | `taoensso/timbre`                   |

@@ -22,9 +22,4 @@
                                    com.pitch/uix.dom {:mvn/version "1.4.9"}
                                    funcool/promesa {:mvn/version "11.0.678"}
                                    binaryage/devtools {:mvn/version "1.0.7"}
-                                   thheller/shadow-cljs {:mvn/version "3.4.11"}}}
-
-           :clj-watson {:replace-deps
-                        {io.github.clj-holmes/clj-watson
-                         {:git/tag "v6.1.0" :git/sha "be98e4d"}}
-                        :main-opts ["-m" "clj-watson.cli"]}}}
+                                   thheller/shadow-cljs {:mvn/version "3.4.11"}}}}}

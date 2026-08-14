@@ -28,14 +28,14 @@ describe "currentUser" do
   describe "availablePools" do
     let(:pool2) { create(:inventory_pool) }
 
-    let(:available_pools_query) { "{ currentUser { user { availablePools { id name } } } }" }
+    let(:available_pools_query) { "{ currentUser { availablePools { id name } } }" }
 
     context "lending_manager via direct access right" do
       before { grant_pool_access(user, pool2, role: "lending_manager") }
 
       it "returns the pool" do
         result = query(available_pools_query, user.id)
-        expect(result.dig(:data, :currentUser, :user, :availablePools))
+        expect(result.dig(:data, :currentUser, :availablePools))
           .to include(id: pool2.id.to_s, name: pool2.name)
       end
     end
@@ -45,7 +45,7 @@ describe "currentUser" do
 
       it "returns the pool" do
         result = query(available_pools_query, user.id)
-        expect(result.dig(:data, :currentUser, :user, :availablePools))
+        expect(result.dig(:data, :currentUser, :availablePools))
           .to include(id: pool2.id.to_s, name: pool2.name)
       end
     end
@@ -55,7 +55,7 @@ describe "currentUser" do
 
       it "returns the pool" do
         result = query(available_pools_query, user.id)
-        expect(result.dig(:data, :currentUser, :user, :availablePools))
+        expect(result.dig(:data, :currentUser, :availablePools))
           .to include(id: pool2.id.to_s, name: pool2.name)
       end
     end

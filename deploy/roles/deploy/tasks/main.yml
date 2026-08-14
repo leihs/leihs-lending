@@ -1,0 +1,49 @@
+- name: DEBUG-Print publish_lending variable
+  debug:
+    var: publish_lending
+
+- name: install and publish leihs-lending
+  when: publish_lending == true
+  block:
+    - name: prepare
+      include_tasks: prepare.yml
+
+    - file:
+        path: "{{leihs_lending_dir}}"
+        state: absent
+      name: remove existing leihs-lending dir
+
+    - include_tasks: user.yml
+    - include_tasks: build.yml
+
+    - file:
+        path: "{{leihs_lending_dir}}"
+        state: directory
+        owner: "{{leihs_lending_user}}"
+        recurse: yes
+      name: create empty {{leihs_lending_dir}}
+
+    - copy:
+        src: "{{playbook_dir}}/../lending/target/leihs-lending.jar"
+        dest: "{{leihs_lending_dir}}/leihs-lending.jar"
+        owner: "{{leihs_lending_user}}"
+      name: copy jar over to server
+
+    - include_tasks: log-dir.yml
+    - include_tasks: tmp-dir.yml
+
+    - file:
+        path: "{{leihs_lending_dir}}"
+        state: directory
+        owner: "{{leihs_lending_user}}"
+        recurse: yes
+      name: set permissions for leihs-lending dir
+
+    - include_tasks: service.yml
+
+    - name: reverse-proxy
+      include_tasks: reverse-proxy.yml
+
+- name: remove leihs-lending when not published
+  include_tasks: remove.yml
+  when: publish_lending == false

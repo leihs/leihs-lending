@@ -1,0 +1,26 @@
+task_defaults:
+  git_options:
+    submodules:
+      include_match: ^.*$
+  include:
+    - path: cider-ci/task-components/database.yml
+      submodule: [database]
+    - cider-ci/task-components/ruby-bundle.yml
+  traits:
+    asdf: true
+  environment_variables:
+    LEIHS_LENDING_DIR: '{{CIDER_CI_WORKING_DIR}}'
+    LEIHS_DATABASE_DIR: '{{LEIHS_LENDING_DIR}}/database'
+    LEIHS_DATABASE_NAME: 'leihs_{{CIDER_CI_TRIAL_ID}}'
+    RAILS_ENV: test
+tasks:
+  check-feature-tasks:
+    traits: [asdf]
+    scripts:
+      test:
+        start_when:
+          ruby is bundled:
+            script_key: lending-ruby-bundle
+        body: |
+          #!/usr/bin/env bash
+          PGPORT=${PG15PORT} PGUSER=${PG15USER} ./cider-ci/generators/bin/feature-tasks-check

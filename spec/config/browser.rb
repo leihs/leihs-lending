@@ -27,6 +27,23 @@ else
 end
 Selenium::WebDriver::Firefox.path = firefox_bin_path
 
+if ENV["SPEC_SLOW_MOTION"].present?
+  SPEC_SLOW_MOTION_DELAY = ENV["SPEC_SLOW_MOTION"].to_f
+
+  module SlowMotion
+    def click(...)
+      sleep SPEC_SLOW_MOTION_DELAY
+      super
+    end
+
+    def set(...)
+      sleep SPEC_SLOW_MOTION_DELAY
+      super
+    end
+  end
+  Capybara::Node::Element.prepend(SlowMotion)
+end
+
 Capybara.register_driver :firefox do |app|
   options = Selenium::WebDriver::Firefox::Options.new(
     binary: firefox_bin_path,

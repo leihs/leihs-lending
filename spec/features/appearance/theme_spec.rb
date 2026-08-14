@@ -11,13 +11,13 @@ feature "Theme ", type: :feature do
       user: user,
       role: :inventory_manager)
 
-    login(user)
-    visit "/inventory/#{pool.id}/"
+    sign_in(user)
+    click_on pool.name
   end
 
   # Helper methods
   def get_theme_from_storage
-    page.evaluate_script("localStorage.getItem('leihs-inventory-theme')")
+    page.evaluate_script("localStorage.getItem('leihs-lending-theme')")
   end
 
   def has_theme_class?(theme)
@@ -36,7 +36,7 @@ feature "Theme ", type: :feature do
 
   scenario "toggle between dark and light themes" do
     # Verify page loads
-    expect(page).to have_content("Inventory List", wait: 10)
+    expect(page).to have_content(pool.name, wait: 10)
 
     # Open theme menu
     open_theme_menu
@@ -70,7 +70,7 @@ feature "Theme ", type: :feature do
   end
 
   scenario "system theme preference" do
-    expect(page).to have_content("Inventory List", wait: 10)
+    expect(page).to have_content(pool.name, wait: 10)
 
     # Open theme menu
     open_theme_menu
@@ -91,7 +91,7 @@ feature "Theme ", type: :feature do
   end
 
   scenario "theme persists after page reload" do
-    expect(page).to have_content("Inventory List", wait: 10)
+    expect(page).to have_content(pool.name, wait: 10)
 
     # Set dark theme
     open_theme_menu
@@ -99,8 +99,8 @@ feature "Theme ", type: :feature do
     expect(get_theme_from_storage).to eq("dark")
 
     # Reload the page
-    visit "/inventory/#{pool.id}/"
-    expect(page).to have_content("Inventory List", wait: 10)
+    visit "/lending/#{pool.id}/"
+    expect(page).to have_content(pool.name, wait: 10)
 
     # Verify theme persisted
     expect(get_theme_from_storage).to eq("dark")

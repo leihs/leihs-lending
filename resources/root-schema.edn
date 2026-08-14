@@ -3,7 +3,13 @@
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
-                         :user {:type (non-null :User)}}}
+                         :user {:type (non-null :User)}
+                         :availablePools {:type (list :AvailablePool)
+                                          :resolve :available-pools}
+                         :availableSubApps {:type (list :AvailableSubApp)
+                                            :resolve :available-sub-apps}
+                         :languageToUse {:type (non-null :Language)
+                                         :resolve :language-to-use}}}
   :User {:fields {:id {:type (non-null :UUID)}
                   :email {:type (non-null String)}
                   :firstname {:type String}
@@ -14,11 +20,12 @@
                   :address {:type String}
                   :zip {:type String}
                   :city {:type String}
-                  :img256Url {:type String}
-                  :availablePools {:type (list :AvailablePool)
-                                   :resolve :available-pools}}}
+                  :languageLocale {:type String}
+                  :img256Url {:type String}}}
   :AvailablePool {:fields {:id {:type (non-null :UUID)}
                            :name {:type (non-null String)}}}
+  :AvailableSubApp {:fields {:key {:type (non-null String)}
+                             :url {:type (non-null String)}}}
   :Language {:fields {:name {:type String}
                       :locale {:type String}
                       :default {:type Boolean}}}
@@ -33,4 +40,9 @@
  :queries
  {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
   :activeLanguages {:type (list :Language) :resolve :active-languages}
-  :appSettings {:type :AppSettings :resolve :app-settings}}}
+  :appSettings {:type :AppSettings :resolve :app-settings}}
+
+ :mutations
+ {:switchLanguage {:type (non-null :CurrentUser)
+                   :args {:locale {:type (non-null String)}}
+                   :resolve :switch-language}}}

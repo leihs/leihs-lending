@@ -1,0 +1,38 @@
+- name: stop and disable leihs-lending.service
+  service:
+    name: leihs-lending.service
+    state: stopped
+    enabled: false
+  failed_when: false
+
+- name: remove leihs-lending systemd unit
+  file:
+    path: /etc/systemd/system/leihs-lending.service
+    state: absent
+
+- name: reload systemctl
+  command: systemctl daemon-reload
+  changed_when: false
+
+- name: disable leihs-lending reverse-proxy fragment
+  template:
+    src: reverse-proxy-disabled.conf
+    dest: /etc/apache2/leihs/conf.d/leihs_800_lending.conf
+    mode: 0644
+  register: lending_conf_disabled
+
+- name: reload reverse-proxy
+  service:
+    name: apache2
+    state: reloaded
+  when: lending_conf_disabled.changed
+
+- name: remove leihs-lending dir
+  file:
+    path: "{{leihs_lending_dir}}"
+    state: absent
+
+- name: remove leihs-lending user
+  user:
+    name: "{{leihs_lending_user}}"
+    state: absent

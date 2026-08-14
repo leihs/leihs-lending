@@ -1,7 +1,24 @@
 {
+  "common": {
+    "date": {
+      "today": "heute",
+      "yesterday": "gestern",
+      "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}"
+    }
+  },
+  "components": {
+    "filters": {
+      "reset": {
+        "tooltip": "Filter zurücksetzen (Alt+Shift+R)"
+      },
+      "term": {
+        "placeholder": "Filtern nach Begriff"
+      }
+    }
+  },
   "header": {
     "links": {
-      "global-search": "Global suchen",
+      "global-search": "Suche global",
       "lending": "Verleih",
       "inventory": "Inventar"
     },
@@ -24,6 +41,117 @@
         "dark": "Dunkel",
         "system": "System"
       }
+    }
+  },
+  "pagination": {
+    "previous": "Vorherige",
+    "next": "Nächste",
+    "range": "{{range}} von insgesamt {{total}} Zeilen",
+    "per-page": "Zeilen pro Seite"
+  },
+  "pool": {
+    "api_browser": "API browser (pool schema)"
+  },
+  "pools": {
+    "breadcrumb": {
+      "lending": "Verleih"
+    },
+    "tabs": {
+      "daily": "Tagesansicht",
+      "orders": "Bestellungen",
+      "visits": "Besuche",
+      "contracts": "Verträge"
+    }
+  },
+  "root": {
+    "title": "Leihs Verleih",
+    "api_browser": "API browser (root schema)",
+    "pools": {
+      "name": "Pool"
+    }
+  },
+  "orders": {
+    "filters": {
+      "start-date": "Von",
+      "end-date": "Bis",
+      "all-states": "Status (alle)",
+      "verification-all": "Visierungspflicht (alle)",
+      "to-be-verified": "visierungspflichtig",
+      "not-to-be-verified": "nicht visierungspflichtig",
+      "reset": "Filter zurücksetzen"
+    },
+    "state": {
+      "submitted": "offen",
+      "approved": "genehmigt",
+      "rejected": "abgelehnt",
+      "canceled": "abgebrochen"
+    },
+    "table": {
+      "name": "Name",
+      "date": "Datum",
+      "quantity": "Gegenstände",
+      "duration": "Dauer",
+      "project-title": "Zweck",
+      "reject-reason": "Begründung",
+      "status": "Status",
+      "empty": "Keine Bestellungen gefunden"
+    },
+    "duration": {
+      "days_one": "{{count}} Tag",
+      "days_other": "{{count}} Tage"
+    },
+    "actions": {
+      "approve": "Genehmigen",
+      "verify-and-approve": "Prüfen + Genehmigen",
+      "reject": "Ablehnen",
+      "edit": "Editieren",
+      "hand-over": "Aushändigen",
+      "not-available": "Aktion noch nicht verfügbar"
+    }
+  },
+  "visits": {
+    "filters": {
+      "start-date": "Von",
+      "end-date": "Bis",
+      "all-visits": "Alle Besuche",
+      "verification-all": "Visierungspflicht (alle)",
+      "reset": "Filter zurücksetzen"
+    },
+    "type": {
+      "hand-over": "Aushändigung",
+      "take-back": "Rücknahme"
+    },
+    "verification": {
+      "none": "Nicht visierungspflichtig",
+      "user": "Benutzer",
+      "user-and-model": "Benutzer und Modell"
+    },
+    "table": {
+      "name": "Name",
+      "date": "Datum",
+      "quantity": "Gegenstände",
+      "duration": "Dauer",
+      "notifications": "Benachrichtigungen",
+      "empty": "Keine Besuche gefunden"
+    },
+    "duration": {
+      "days_one": "{{count}} Tag",
+      "days_other": "{{count}} Tage"
+    },
+    "reminders": {
+      "some_one": "{{count}} Erinnerungs-Mail",
+      "some_other": "{{count}} Erinnerungs-Mails",
+      "none": "Keine Erinnerungen"
+    },
+    "actions": {
+      "hand-over": "Aushändigen",
+      "take-back": "Zurücknehmen",
+      "delete": "Löschen",
+      "send-reminder": "Erinnerung senden",
+      "not-available": "Aktion noch nicht verfügbar"
+    },
+    "user": {
+      "suspended": "Benutzer gesperrt"
     }
   },
   "error": {

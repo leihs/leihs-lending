@@ -33,9 +33,28 @@
                   [(-> (sql/select [[:max :reservations.end_date] :v])
                        (sql/from :reservations)
                        (sql/where [:= :reservations.order_id :orders.id]))
-                   :end_date])
+                   :end_date]
+                  [[:over [[:count :*] {}]] :total_count]
+                  [[:exists
+                    (-> (sql/select 1)
+                        (sql/from [:reservations :r])
+                        (sql/join [:entitlements :e] [:= :e.model_id :r.model_id])
+                        (sql/join [:entitlement_groups :eg] [:= :e.entitlement_group_id :eg.id])
+                        (sql/join [:entitlement_groups_users :egu] [:= :eg.id :egu.entitlement_group_id])
+                        (sql/where [:= :r.order_id :orders.id])
+                        (sql/where [:= :eg.is_verification_required true])
+                        (sql/where [:= :egu.user_id :r.user_id])
+                        (sql/where [:= :eg.inventory_pool_id :r.inventory_pool_id]))]
+                   :to_be_verified])
       (sql/from :orders)
+      (sql/join [:users :u] [:= :u.id :orders.user_id])
       (sql/where [:= :orders.inventory_pool_id pool-id])
+      (sql/where [:!= :orders.state "canceled"])
+      (sql/where [:exists
+                  (-> (sql/select 1)
+                      (sql/from :reservations)
+                      (sql/where [:= :reservations.order_id :orders.id])
+                      (sql/where [:= :reservations.contract_id nil]))])
       (sql/order-by [:newest_created_at_per_user :desc]
                     [:orders.user_id :asc]
                     [:orders.created_at :desc])))
@@ -52,11 +71,17 @@
       (sql/where [:= :egu.user_id :r.user_id])
       (sql/where [:= :eg.inventory_pool_id :r.inventory_pool_id])))
 
-(defn apply-filters [sqlmap {:keys [states start-date end-date to-be-verified]}]
+(defn apply-filters [sqlmap {:keys [states start-date end-date term to-be-verified]}]
   (cond-> sqlmap
     (seq states) (sql/where [:in :orders.state (map (comp str/lower-case name) states)])
     start-date (sql/where [:>= :orders.created_at start-date])
     end-date (sql/where [:<= :orders.created_at end-date])
+    (seq term) (sql/where [:or
+                           [:ilike :u.firstname (str "%" term "%")]
+                           [:ilike :u.lastname (str "%" term "%")]
+                           [:ilike :u.login (str "%" term "%")]
+                           [:ilike :u.badge_id (str "%" term "%")]
+                           [:ilike :orders.purpose (str "%" term "%")]])
     (true? to-be-verified)
     (sql/where [:in :orders.id
                 (-> (sql/select :order_id) (sql/from :verifiable_orders))])
@@ -67,19 +92,22 @@
 
 (defn get-multiple
   [{{tx :tx} :request}
-   {:keys [pool-id states start-date end-date to-be-verified page per-page]}
+   {:keys [pool-id states start-date end-date term to-be-verified page per-page]}
    _]
-  (-> (cond-> (base-sqlmap pool-id)
-        (some? to-be-verified)
-        (sql/with [:verifiable_orders (verifiable-orders-cte pool-id)]))
-      (apply-filters {:states states
-                      :start-date start-date
-                      :end-date end-date
-                      :to-be-verified to-be-verified})
-      (sql/limit (or per-page 10))
-      (sql/offset (* (dec (or page 1)) (or per-page 10)))
-      sql-format
-      (->> (jdbc-query tx))))
+  (let [rows (-> (cond-> (base-sqlmap pool-id)
+                   (some? to-be-verified)
+                   (sql/with [:verifiable_orders (verifiable-orders-cte pool-id)]))
+                 (apply-filters {:states states
+                                 :start-date start-date
+                                 :end-date end-date
+                                 :term term
+                                 :to-be-verified to-be-verified})
+                 (sql/limit (or per-page 10))
+                 (sql/offset (* (dec (or page 1)) (or per-page 10)))
+                 sql-format
+                 (->> (jdbc-query tx)))]
+    {:items rows
+     :total-count (-> rows first :total_count (or 0))}))
 
 (defn get-by-id [tx id]
   (-> (sql/select :orders.id

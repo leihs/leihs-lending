@@ -1,0 +1,13 @@
+- file:
+    path: '{{leihs_lending_dir}}/tmp'
+    state: directory
+    owner: '{{leihs_lending_user}}'
+    recurse: yes
+  name: create empty leihs-lending tmp dir
+
+- file:
+    path: '{{leihs_lending_dir}}'
+    state: directory
+    owner: '{{leihs_lending_user}}'
+    recurse: yes
+  name: set permissions for leihs-lending dir

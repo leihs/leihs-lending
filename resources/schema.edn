@@ -12,7 +12,7 @@
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
                          :user {:type (non-null :User)}}}
   :User {:fields {:id {:type (non-null :UUID)}
-                  :email {:type (non-null String)}
+                  :email {:type String}
                   :firstname {:type String}
                   :lastname {:type String}
                   :login {:type String}
@@ -21,6 +21,7 @@
                   :address {:type String}
                   :zip {:type String}
                   :city {:type String}
+                  :languageLocale {:type String}
                   :img256Url {:type String}
                   :isSuspended {:type Boolean}
                   :suspendedReason {:type String}
@@ -32,33 +33,38 @@
                          :endDate {:type String}
                          :model {:type :Model :resolve :model}}}
   :Email {:fields {:id {:type (non-null :UUID)}
-                  :createdAt {:type (non-null String)}
-                  :subject {:type (non-null String)}
-                  :template {:type String}}}
+                   :createdAt {:type (non-null String)}
+                   :subject {:type (non-null String)}
+                   :template {:type String}}}
   :Visit {:fields {:id {:type (non-null :UUID)}
-                  :date {:type (non-null String)}
-                  :startDate {:type String}
-                  :endDate {:type String}
-                  :visitType {:type (non-null :VisitTypeEnum)}
-                  :isOverdue {:type (non-null Boolean)}
-                  :quantity {:type (non-null Int)}
-                  :withUserToVerify {:type Boolean}
-                  :withUserAndModelToVerify {:type Boolean}
-                  :projectTitle {:type String}
-                  :comment {:type String}
-                  :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
-                  :reminders {:type (list (non-null :Email)) :resolve :reminders}
-                  :user {:type (non-null :User) :resolve :user}}}
-  :Order {:fields {:id {:type (non-null :UUID)}
-                   :purpose {:type String}
-                   :state {:type (non-null :OrderStateEnum)}
-                   :rejectReason {:type String}
+                   :date {:type (non-null String)}
                    :startDate {:type String}
+                   :endDate {:type String}
+                   :visitType {:type (non-null :VisitTypeEnum)}
+                   :isOverdue {:type (non-null Boolean)}
+                   :quantity {:type (non-null Int)}
+                   :withUserToVerify {:type Boolean}
+                   :withUserAndModelToVerify {:type Boolean}
+                   :projectTitle {:type String}
+                   :comment {:type String}
+                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
+                   :reminders {:type (list (non-null :Email)) :resolve :reminders}
+                   :user {:type (non-null :User) :resolve :user}}}
+   :Order {:fields {:id {:type (non-null :UUID)}
+                    :purpose {:type String}
+                    :state {:type (non-null :OrderStateEnum)}
+                    :rejectReason {:type String}
+                    :toBeVerified {:type (non-null Boolean)}
+                    :startDate {:type String}
                    :endDate {:type String}
                    :createdAt {:type (non-null String)}
                    :updatedAt {:type (non-null String)}
                    :user {:type (non-null :User) :resolve :user}
-                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}}
+                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}
+  :VisitList {:fields {:items {:type (list (non-null :Visit))}
+                       :totalCount {:type (non-null Int)}}}
+  :OrderList {:fields {:items {:type (list (non-null :Order))}
+                       :totalCount {:type (non-null Int)}}}}
 
  :queries
  {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
@@ -68,7 +74,7 @@
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}
-  :visits {:type (list (non-null :Visit))
+  :visits {:type (non-null :VisitList)
            :args {:date {:type :Date}
                   :startDate {:type :Date}
                   :endDate {:type :Date}
@@ -78,12 +84,13 @@
                   :page {:type Int}
                   :perPage {:type Int}}
            :resolve :visits}
-  :orders {:type (list (non-null :Order))
-           :args {:poolId {:type (non-null :UUID)}
-                  :states {:type (list (non-null :OrderStateEnum))}
-                  :startDate {:type String}
-                  :endDate {:type String}
-                  :page {:type Int}
+   :orders {:type (non-null :OrderList)
+            :args {:poolId {:type (non-null :UUID)}
+                   :states {:type (list (non-null :OrderStateEnum))}
+                   :startDate {:type :Date}
+                   :endDate {:type :Date}
+                   :term {:type String}
+                   :page {:type Int}
                   :perPage {:type Int}
                   :toBeVerified {:type Boolean}}
            :resolve :orders}}

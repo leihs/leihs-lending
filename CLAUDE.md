@@ -13,3 +13,7 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 - Schema: custom scalars `UUID`, `NonEmptyString`; non-null via `(non-null :Type)`; field resolvers inline via `:resolve :key`
 - HoneySQL: minimize `[:raw "..."]` and `[:cast ...]`; prefer the DSL (subqueries as maps, `[:any ...]`, etc.). Avoid casts in resolvers — use GraphQL scalars to parse args into the right JVM type (e.g. `:Date` → `LocalDate`) so next.jdbc binds them correctly without explicit casting.
 - Comments: use docstrings (`"..."` between fn name and args), not line comments (`;`)
+
+## Frontend
+
+- Never modify the vendored components in `src/leihs/lending/client/components/ui/` (coming from https://ui.shadcn.com/), except those in the `customized` subfolder

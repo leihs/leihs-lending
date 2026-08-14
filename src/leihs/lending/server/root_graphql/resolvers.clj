@@ -4,10 +4,12 @@
                                        wrap-resolver-with-error
                                        wrap-resolver-with-camelCase
                                        wrap-resolver-with-kebab-case]]
+   [leihs.lending.server.root-graphql.mutations :as mutations]
    [leihs.lending.server.root-graphql.queries :as queries]))
 
 (def resolvers
   (-> queries/resolvers
+      (merge mutations/resolvers)
       (transform-resolvers (comp wrap-resolver-with-error
                                  wrap-resolver-with-camelCase
                                  wrap-resolver-with-kebab-case))))

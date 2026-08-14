@@ -1,0 +1,10 @@
+- name: Create lending jar
+  tags: [builds_artefact, builds_artefact_with_java]
+  delegate_to: localhost
+  run_once: true
+  args:
+    executable: /bin/bash
+  shell: |
+    DEPLOY_DIR='{{playbook_dir}}'
+    PROJECT_DIR="${DEPLOY_DIR}/../lending"
+    ${PROJECT_DIR}/bin/build

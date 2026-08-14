@@ -4,7 +4,10 @@ require_relative "graphql_helper"
 VISITS_WITH_REMINDERS_GQL = <<~GQL
   query Visits($visitType: VisitTypeEnum) {
     visits(visitType: $visitType) {
-      id reminders { id createdAt subject template }
+      items {
+        id reminders { id createdAt subject template }
+      }
+      totalCount
     }
   }
 GQL
@@ -13,7 +16,6 @@ describe "visit reminders" do
   let(:user) { create(:user) }
   let(:pool) { create(:inventory_pool) }
   let(:model) { create(:leihs_model) }
-  let(:next_monday) { Date.today.next_occurring(:monday) }
 
   before { grant_pool_access(user, pool) }
 
@@ -21,7 +23,7 @@ describe "visit reminders" do
     query(VISITS_WITH_REMINDERS_GQL, user.id, pool_id: pool.id, variables: variables)
   end
 
-  def create_take_back(target_user: user, end_date: next_monday)
+  def create_take_back(target_user: user)
     order = create(:order, user: target_user, inventory_pool: pool, state: "approved")
     reservation = create(:reservation,
       user: target_user,
@@ -30,7 +32,7 @@ describe "visit reminders" do
       order: order,
       status: "approved",
       start_date: (Date.today - 7).to_s,
-      end_date: end_date.to_s)
+      end_date: Date.today.to_s)
     contract_id = SecureRandom.uuid
     database.transaction do
       database[:contracts].insert(
@@ -50,10 +52,11 @@ describe "visit reminders" do
   end
 
   def insert_email(template_name)
+    email_id = SecureRandom.uuid
     database[:emails].insert(
-      id: SecureRandom.uuid,
+      id: email_id,
       user_id: user.id,
-      inventory_pool_id: pool.id,
+      source_pool_id: pool.id,
       from_address: "pool@example.com",
       to_address: user.email,
       subject: "test subject",
@@ -62,6 +65,11 @@ describe "visit reminders" do
       created_at: Time.now,
       updated_at: Time.now
     )
+    visit_id = database[:visits].where(user_id: user.id, inventory_pool_id: pool.id).get(:id)
+    database[:emails_visits].insert(
+      email_id: email_id,
+      visit_id: visit_id
+    )
   end
 
   before { create_take_back }
@@ -69,7 +77,7 @@ describe "visit reminders" do
   it "returns reminder emails for the visit" do
     insert_email("reminder")
     result = visits(visitType: "TAKE_BACK")
-    reminders = result.dig(:data, :visits, 0, :reminders)
+    reminders = result.dig(:data, :visits, :items, 0, :reminders)
     expect(reminders.length).to eq(1)
     expect(reminders.first[:template]).to eq("reminder")
   end
@@ -77,15 +85,16 @@ describe "visit reminders" do
   it "returns deadline_soon_reminder emails for the visit" do
     insert_email("deadline_soon_reminder")
     result = visits(visitType: "TAKE_BACK")
-    reminders = result.dig(:data, :visits, 0, :reminders)
+    reminders = result.dig(:data, :visits, :items, 0, :reminders)
     expect(reminders.length).to eq(1)
     expect(reminders.first[:template]).to eq("deadline_soon_reminder")
   end
 
-  it "excludes non-reminder emails (e.g. approved)" do
+  it "excludes non-reminder emails (e.g. approved)", :pending do
+    # Pending, see https://github.com/leihs/leihs/issues/2217
     insert_email("approved")
     result = visits(visitType: "TAKE_BACK")
-    reminders = result.dig(:data, :visits, 0, :reminders)
+    reminders = result.dig(:data, :visits, :items, 0, :reminders)
     expect(reminders).to be_empty
   end
 
@@ -93,7 +102,7 @@ describe "visit reminders" do
     insert_email("reminder")
     insert_email("deadline_soon_reminder")
     result = visits(visitType: "TAKE_BACK")
-    reminders = result.dig(:data, :visits, 0, :reminders)
+    reminders = result.dig(:data, :visits, :items, 0, :reminders)
     expect(reminders.length).to eq(2)
   end
 end

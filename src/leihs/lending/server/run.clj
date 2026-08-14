@@ -10,7 +10,6 @@
    [leihs.core.status :as status]
    [leihs.lending.server.graphql :as graphql]
    [leihs.lending.server.ring :as ring]
-   [leihs.lending.server.root-graphql :as root-graphql]
    [logbug.catcher :as catcher]
    [taoensso.timbre :refer [info]]))
 
@@ -20,7 +19,6 @@
    (info "Invoking run with options: " options)
    (shutdown/init options)
    (graphql/init options)
-   (root-graphql/init options)
    (let [s (status/init)]
      (db/init options (:health-check-registry s)))
    (let [http-handler (ring/init)]

@@ -12,38 +12,43 @@
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
    ["sonner" :refer [toast]]
-   ["~/i18n.config.js" :as i18n :refer [i18n]]
+   ["~/i18n.config.js" :default i18n]
+   [leihs.core.core :refer [detect]]
    [leihs.lending.client.lib.csrf :as csrf]
+   [leihs.lending.client.lib.urql :refer [default-client run-mutation]]
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.provider.theme-provider :refer [use-theme]]
-   [leihs.core.core :refer [detect]]
-   [uix.core :as uix :refer [$ defui]]))
+   [promesa.core :as p]
+   [uix.core :refer [$ defui]]))
+
+(def switch-language-mutation
+  "mutation($locale: String!) { switchLanguage(locale: $locale) { id } }")
 
 (defui main [{:keys [currentUser activeLanguages appSettings]}]
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         {:keys [theme set-theme]} (use-theme)
-        fetcher (router/useFetcher)
-        last-fetcher-data (uix/use-ref nil)
+        revalidator (router/useRevalidator)
+        switch-language! (fn [locale]
+                           (-> (run-mutation default-client switch-language-mutation
+                                             {:locale locale})
+                               (p/then (fn [_]
+                                         (.changeLanguage i18n locale)
+                                         (.revalidate revalidator)))
+                               (p/catch (fn [_]
+                                          (.. toast (error (t "error.action.error")))))))
         user (-> currentUser :user)
-        available-pools (:availablePools user)
+        available-pools (:availablePools currentUser)
+        available-sub-app-urls (into {}
+                                     (map (juxt (comp keyword :key) :url)
+                                          (:availableSubApps currentUser)))
+        lending-url (cond-> (-> available-sub-app-urls :lending)
+                      pool-id (str pool-id "/"))
+        inventory-url (cond-> (-> available-sub-app-urls :inventory)
+                        pool-id (str pool-id "/"))
         user-name (str (:firstname user) " " (:lastname user))
         current-pool (->> available-pools (detect #(= pool-id (:id %))))
-        current-lang (.. i18n -language)]
-
-    (uix/use-effect
-     (fn []
-       (let [data (.-data fetcher)
-             state (.-state fetcher)]
-         (when (and (= state "idle")
-                    (some? data)
-                    (not= data @last-fetcher-data))
-           (reset! last-fetcher-data data)
-           (when (= (aget data "status") "error")
-             (.. toast (error (t "error.action.error")
-                              (clj->js {:description (t "error.action.error_detail"
-                                                        #js {:httpStatus (aget data "httpStatus")})})))))))
-     [fetcher t])
+        current-lang (get-in currentUser [:languageToUse :locale])]
 
     ($ :header {:className "bg-background sticky z-50 top-0 flex items-center gap-4 border-b h-16"}
        ($ :nav {:className "container w-full flex flex-row justify-between text-sm items-center"}
@@ -66,21 +71,22 @@
                                :else "Logo default")]
 
                ($ :img {:src logo-src
-                        :className "max-h-16 py-2"
+                        :className "h-16 py-2"
                         :alt logo-type
                         :data-test-id "app-logo"}))
 
              ($ :form {:action "/" :method "GET"}
                 ($ InputGroup {:className "mx-12 w-fit"}
                    ($ InputGroupInput {:name "search_term"
+                                       :className "w-[182px]"
                                        :placeholder (t "header.links.global-search" "Suche global")})
                    ($ InputGroupAddon
                       ($ Search))))
              ($ :div {:className "flex gap-6"}
-                ($ :a {:href "/lending/"
+                ($ :a {:href lending-url
                        :className "font-semibold"}
                    (t "header.links.lending" "Verleih"))
-                ($ :a {:href "/inventory/"}
+                ($ :a {:href inventory-url}
                    (t "header.links.inventory" "Inventar"))))
 
           ($ :div {:className "flex"}
@@ -93,6 +99,13 @@
                             (if current-pool (:name current-pool) (t "header.app-menu.lending" "Verleih")))
                          ($ ChevronsUpDown {:className "h-4 w-4 hidden lg:block"}))))
                 ($ DropdownMenuContent {:className "ml-auto" :data-test-id "app-menu"}
+                   (when (seq available-sub-app-urls)
+                     ($ DropdownMenuGroup
+                        (for [[key url] (dissoc available-sub-app-urls :lending :inventory)]
+                          ($ DropdownMenuItem {:key key
+                                               :asChild true}
+                             ($ :a {:href url}
+                                (t (str "header.app-menu." (name key))))))))
                    ($ DropdownMenuSeparator)
                    ($ DropdownMenuLabel {:className "text-xs font-normal"}
                       (t "header.app-menu.inventory-pools" "Geräteparks") ":")
@@ -143,19 +156,12 @@
                          ($ DropdownMenuSubContent
                             (for [language activeLanguages]
                               ($ DropdownMenuItem {:key (:locale language)
-                                                   :asChild true}
-                                 ($ :button {:type "submit"
-                                             :form (str "form-" (:locale language))
+                                                   :asChild true
+                                                   :onClick #(switch-language! (:locale language))}
+                                 ($ :button {:type "button"
                                              :data-test-id (if (= current-lang (:locale language)) "language-btn-selected" "language-btn")
                                              :class-name (str "w-full font-normal " (when (= current-lang (:locale language)) "font-semibold"))}
-                                    (:name language)
-
-                                    ($ fetcher.Form {:id (str "form-" (:locale language))
-                                                     :method "PATCH"
-                                                     :action "/profile"}
-                                       ($ :input {:type "hidden"
-                                                  :name "language"
-                                                  :value (:locale language)}))))))))
+                                    (:name language)))))))
 
                    ($ DropdownMenuSub
                       ($ DropdownMenuSubTrigger

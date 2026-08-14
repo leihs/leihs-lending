@@ -5,7 +5,6 @@
    [leihs.lending.server.home :as home]
    [leihs.lending.server.middlewares.authorize :as authorize]
    [leihs.lending.server.middlewares.pool-id :as pool-id]
-   [leihs.lending.server.root-graphql :as root-graphql]
    [leihs.lending.server.sign-in :as sign-in]
    [reitit.coercion.malli :as malli-coercion]
    [reitit.ring :as reitit-ring]
@@ -18,7 +17,7 @@
    ["/lending/sign-out"
     {:post {:handler home/sign-out-handler}}]
    ["/lending/graphql"
-    {:post {:handler root-graphql/handler}}]
+    {:post {:handler #(graphql/handler :root %)}}]
    ["/lending/graphiql"
     {:get {:handler graphiql/root-handler}}]
    ["/lending/:pool-id"
@@ -26,7 +25,7 @@
      :middleware [pool-id/wrap-pool-id authorize/wrap]}
     ["/graphiql" {:get {:handler graphiql/handler}}]
     ["/graphql" {:authorize/format :graphql
-                 :post {:handler graphql/handler}}]]])
+                 :post {:handler #(graphql/handler :pool %)}}]]])
 
 (defn handler []
   (reitit-ring/ring-handler

@@ -2,7 +2,6 @@
   (:require
    [leihs.core.anti-csrf.back :as anti-csrf]
    [leihs.core.auth.session :as session]
-   [leihs.core.db :as db]
    [leihs.core.http-cache-buster2 :as cache-buster2]
    [leihs.core.ring-audits :as ring-audits]
    [leihs.core.ring-exception :as ring-exception]
@@ -11,6 +10,7 @@
    [leihs.lending.server.assets :as assets]
    [leihs.lending.server.middlewares.authenticate :as authenticate]
    [leihs.lending.server.middlewares.spa :as spa]
+   [leihs.lending.server.middlewares.tx :as tx]
    [leihs.lending.server.routes :as routes]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.cookies :refer [wrap-cookies]]
@@ -24,7 +24,7 @@
       spa/wrap-dispatch-spa
       authenticate/wrap
       session/wrap-authenticate
-      db/wrap-tx
+      tx/wrap
       (wrap-json-body {:keywords? true})
       wrap-json-response
       routing/wrap-canonicalize-params-maps

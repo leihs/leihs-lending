@@ -43,7 +43,8 @@
                                   :to_address to-address
                                   :subject (:subject tmpl)
                                   :body email-body
-                                  :template "approved"}])
+                                  :template "approved"
+                                  :source_pool_id (:id pool)}])
                     sql-format
                     (->> (jdbc-execute! tx))))))
     (catch Exception e

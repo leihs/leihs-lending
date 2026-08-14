@@ -20,5 +20,5 @@
       (or (skip-paths uri) (graphiql-uri? uri) (:authenticated-entity request)) (handler request)
       (graphql-uri? uri) {:status 401
                           :body (error-as-graphql-object "UNAUTHENTICATED" "Not authenticated")}
-      (not (str/starts-with? uri "/lending/")) (handler request)
+      (and (not= uri "/lending") (not (str/starts-with? uri "/lending/"))) (handler request)
       :else (redirect "/lending/sign-in"))))

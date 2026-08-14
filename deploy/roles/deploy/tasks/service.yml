@@ -1,0 +1,13 @@
+- template:
+    src: leihs-lending.service
+    dest: /etc/systemd/system/leihs-lending.service
+    mode: 0644
+  name: copy leihs-lending.service
+  tags:
+    - test
+
+- command: systemctl daemon-reload
+  changed_when: false
+  name: reload systemctl
+  tags:
+    - test
