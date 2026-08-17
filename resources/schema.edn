@@ -32,6 +32,12 @@
                          :startDate {:type String}
                          :endDate {:type String}
                          :model {:type :Model :resolve :model}}}
+  :ReservationLine {:fields {:model {:type :Model :resolve :model}
+                             :quantity {:type (non-null Int)}
+                             :availableQuantity {:type (non-null Int)}
+                             :startDate {:type (non-null String)}
+                             :endDate {:type (non-null String)}
+                             :reservationIds {:type (list (non-null :UUID))}}}
   :Email {:fields {:id {:type (non-null :UUID)}
                    :createdAt {:type (non-null String)}
                    :subject {:type (non-null String)}
@@ -60,7 +66,8 @@
                    :createdAt {:type (non-null String)}
                    :updatedAt {:type (non-null String)}
                    :user {:type (non-null :User) :resolve :user}
-                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}
+                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
+                   :reservationLines {:type (list (non-null :ReservationLine)) :resolve :reservation-lines}}}
   :VisitList {:fields {:items {:type (list (non-null :Visit))}
                        :totalCount {:type (non-null Int)}}}
   :OrderList {:fields {:items {:type (list (non-null :Order))}

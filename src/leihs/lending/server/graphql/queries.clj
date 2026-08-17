@@ -13,6 +13,7 @@
    :order orders/get-one
    :orders orders/get-multiple
    :reminders reminders/get-multiple
+   :reservation-lines reservations/get-lines
    :reservations reservations/get-multiple
    :user users/get-one
    :visits visits/get-multiple})
