@@ -200,6 +200,16 @@
                     (:quantity r))))
           (res/get-for-open-order tx id))))
 
+(defn update-purpose!
+  [{{tx :tx} :request} {:keys [id purpose]} _]
+  (assert-submitted! tx id)
+  (-> (sql/update :orders)
+      (sql/set {:purpose purpose})
+      (sql/where [:= :orders.id id])
+      sql-format
+      (->> (execute! tx)))
+  (get-by-id tx id))
+
 (defn approve!
   [{{tx :tx} :request} {:keys [id force comment]} _]
   (assert-submitted! tx id)

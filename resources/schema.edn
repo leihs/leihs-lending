@@ -111,4 +111,8 @@
                  :args {:id {:type (non-null :UUID)}
                         :force {:type Boolean}
                         :comment {:type String}}
-                 :resolve :approve-order}}}
+                 :resolve :approve-order}
+  :updateOrderPurpose {:type (non-null :Order)
+                       :args {:id {:type (non-null :UUID)}
+                              :purpose {:type (non-null :NonEmptyString)}}
+                       :resolve :update-order-purpose}}}
