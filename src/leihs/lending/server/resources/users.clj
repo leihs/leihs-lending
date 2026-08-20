@@ -17,23 +17,44 @@
       (->> (jdbc-query tx))
       first))
 
+(defn- enrich [tx pool-id user]
+  (let [suspension (suspensions/active-for-user-in-pool tx (:id user) pool-id)]
+    (assoc user
+           :is_suspended (boolean suspension)
+           :suspended_reason (:suspended_reason suspension))))
+
 (defn get-one
-  [{{tx :tx pool-id :pool-id} :request} {:keys [id]} {:keys [user-id]}]
-  (let [uid (or user-id id)
-        user (get-by-id tx uid)
-        suspension (suspensions/active-for-user-in-pool tx uid pool-id)
-        delegator (when-let [did (:delegator_user_id user)]
-                    (get-by-id tx did))]
-    (-> user
-        (assoc :is_suspended (boolean suspension)
-               :suspended_reason (:suspended_reason suspension)
-               :delegator_user delegator))))
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id]}
+   {:keys [user-id delegator-user-id]}]
+  (when-let [user (get-by-id tx (or id user-id delegator-user-id))]
+    (enrich tx pool-id user)))
+
+(defn get-multiple
+  [{{tx :tx pool-id :pool-id} :request} {:keys [term]} _]
+  (-> base-sqlmap
+      (sql/where [:exists
+                  (-> (sql/select 1)
+                      (sql/from :access_rights)
+                      (sql/where [:= :access_rights.user_id :users/id])
+                      (sql/where [:= :access_rights.inventory_pool_id pool-id]))])
+      (cond->
+       (seq term)
+        (sql/where [:or
+                    [:ilike :users/firstname (str "%" term "%")]
+                    [:ilike :users/lastname (str "%" term "%")]
+                    [:ilike :users/login (str "%" term "%")]
+                    [:ilike :users/badge_id (str "%" term "%")]]))
+      (sql/limit 20)
+      sql-format
+      (->> (jdbc-query tx))
+      (->> (mapv #(enrich tx pool-id %)))))
 
 (defn get-current
   [{{tx :tx {user-id :id} :authenticated-entity} :request} _ _]
   (if-not user-id
     (throw (ex-info "Not authenticated" {:status 401}))
     {:id user-id
+     :user-id user-id
      :user (get-by-id tx user-id)}))
 
 (defn switch-language!
@@ -46,4 +67,5 @@
       sql-format
       (->> (execute! tx)))
   {:id user-id
+   :user-id user-id
    :user (get-by-id tx user-id)})

@@ -16,4 +16,5 @@
    :reservation-lines reservations/get-lines
    :reservations reservations/get-multiple
    :user users/get-one
+   :users users/get-multiple
    :visits visits/get-multiple})

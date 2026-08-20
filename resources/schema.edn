@@ -10,7 +10,7 @@
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
-                         :user {:type (non-null :User)}}}
+                         :user {:type (non-null :User) :resolve :user}}}
   :User {:fields {:id {:type (non-null :UUID)}
                   :email {:type String}
                   :firstname {:type String}
@@ -25,7 +25,7 @@
                   :img256Url {:type String}
                   :isSuspended {:type Boolean}
                   :suspendedReason {:type String}
-                  :delegatorUser {:type :User}}}
+                  :delegatorUser {:type :User :resolve :user}}}
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
@@ -78,6 +78,9 @@
   :user {:type :User
          :args {:id {:type (non-null :UUID)}}
          :resolve :user}
+  :users {:type (non-null (list (non-null :User)))
+          :args {:term {:type String}}
+          :resolve :users}
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}
@@ -115,4 +118,9 @@
   :updateOrderPurpose {:type (non-null :Order)
                        :args {:id {:type (non-null :UUID)}
                               :purpose {:type (non-null :NonEmptyString)}}
-                       :resolve :update-order-purpose}}}
+                       :resolve :update-order-purpose}
+  :swapOrderUser {:type (non-null :Order)
+                  :args {:id {:type (non-null :UUID)}
+                         :userId {:type (non-null :UUID)}
+                         :delegatedUserId {:type :UUID}}
+                  :resolve :swap-order-user}}}

@@ -5,4 +5,5 @@
 (def resolvers
   {:reject-order orders/reject!
    :approve-order orders/approve!
-   :update-order-purpose orders/update-purpose!})
+   :update-order-purpose orders/update-purpose!
+   :swap-order-user orders/swap-user!})

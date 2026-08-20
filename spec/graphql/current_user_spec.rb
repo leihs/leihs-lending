@@ -25,6 +25,28 @@ describe "currentUser" do
     })
   end
 
+  it "returns delegatorUser for a delegation account" do
+    delegator = create(:user)
+    delegation = create(:user, delegator_user_id: delegator.id)
+    grant_pool_access(delegation, pool)
+
+    result = query(<<~GRAPHQL, delegation.id, pool_id: pool.id)
+      { currentUser { user { delegatorUser { id firstname lastname } } } }
+    GRAPHQL
+
+    expect_graphql_result(result, {
+      currentUser: {
+        user: {
+          delegatorUser: {
+            id: delegator.id.to_s,
+            firstname: delegator.firstname,
+            lastname: delegator.lastname
+          }
+        }
+      }
+    })
+  end
+
   describe "availablePools" do
     let(:pool2) { create(:inventory_pool) }
 
