@@ -123,4 +123,15 @@
                   :args {:id {:type (non-null :UUID)}
                          :userId {:type (non-null :UUID)}
                          :delegatedUserId {:type :UUID}}
-                  :resolve :swap-order-user}}}
+                  :resolve :swap-order-user}
+  :createReservation {:type (non-null :Reservation)
+                      :args {:orderId {:type :UUID}
+                             :userId {:type (non-null :UUID)}
+                             :modelId {:type (non-null :UUID)}
+                             :startDate {:type (non-null :Date)}
+                             :endDate {:type (non-null :Date)}}
+                      :resolve :create-reservation}
+  :deleteReservation {:type (non-null :UUID)
+                      :args {:id {:type (non-null :UUID)}
+                             :orderId {:type :UUID}}
+                      :resolve :delete-reservation}}}

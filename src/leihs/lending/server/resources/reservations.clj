@@ -3,6 +3,7 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [leihs.core.availability.core :as av]
+   [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (def base-sqlmap
@@ -59,3 +60,54 @@
                  :start_date start_date
                  :end_date end_date
                  :reservation_ids ids})))))
+
+(defn- assert-order-submitted! [tx order-id]
+  (when order-id
+    (let [state (-> (sql/select [[:upper :state] :state])
+                    (sql/from :orders)
+                    (sql/where [:= :id order-id])
+                    sql-format
+                    (->> (jdbc-query tx))
+                    first
+                    :state)]
+      (when (not= "SUBMITTED" state)
+        (throw (ex-info "Order is not in submitted state" {:status 422}))))))
+
+(defn- assert-not-removing-all! [tx order-id excluded-id]
+  (when order-id
+    (let [remaining (->> (get-for-open-order tx order-id)
+                         (remove #(= excluded-id (:id %)))
+                         count)]
+      (when (zero? remaining)
+        (throw (ex-info "Cannot remove the last reservation — reject the order instead"
+                        {:status 422}))))))
+
+(defn create!
+  [{{tx :tx pool-id :pool-id} :request}
+   {:keys [order-id user-id model-id start-date end-date]} _]
+  (assert-order-submitted! tx order-id)
+  (-> (sql/insert-into :reservations)
+      (sql/values [{:inventory_pool_id pool-id
+                    :user_id user-id
+                    :order_id order-id
+                    :model_id model-id
+                    :quantity 1
+                    :start_date start-date
+                    :end_date end-date
+                    :status (if order-id "submitted" "approved")
+                    :created_at [:now]
+                    :updated_at [:now]}])
+      (sql/returning :*)
+      sql-format
+      (->> (jdbc-query tx))
+      first))
+
+(defn delete!
+  [{{tx :tx} :request} {:keys [id order-id]} _]
+  (assert-order-submitted! tx order-id)
+  (assert-not-removing-all! tx order-id id)
+  (-> (sql/delete-from :reservations)
+      (sql/where [:= :id id])
+      sql-format
+      (->> (execute! tx)))
+  id)
