@@ -10,6 +10,7 @@
 (def resolvers
   {:current-user users/get-current
    :model models/get-one
+   :models models/get-multiple
    :order orders/get-one
    :orders orders/get-multiple
    :reminders reminders/get-multiple

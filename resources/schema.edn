@@ -27,7 +27,8 @@
                   :suspendedReason {:type String}
                   :delegatorUser {:type :User :resolve :user}}}
   :Model {:fields {:id {:type (non-null :UUID)}
-                   :name {:type String}}}
+                   :name {:type String}
+                   :manufacturer {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
                          :startDate {:type String}
                          :endDate {:type String}
@@ -81,6 +82,9 @@
   :users {:type (non-null (list (non-null :User)))
           :args {:term {:type String}}
           :resolve :users}
+  :models {:type (non-null (list (non-null :Model)))
+           :args {:term {:type String}}
+           :resolve :models}
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}
