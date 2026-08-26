@@ -50,13 +50,22 @@
       (throw error))
     (jc (.-data result))))
 
-(defn make-pool-client
-  "Creates a client for routes inside a pool"
-  [pool-id]
-  (js/console.debug "urql make-pool-client" pool-id)
-  (make-client (str "/lending/" pool-id "/graphql")))
-
 (def default-client
   "Client for routes outside any pool (sign-in flow, pool picker, profile)."
   (do (js/console.debug "urql initialize default-client")
       (make-client "/lending/graphql")))
+
+(def ^:private pool-clients
+  "Module-level cache of pool-id → urql client"
+  (atom {}))
+
+(defn make-pool-client
+  "Returns the cached urql client for `pool-id`, creating it on first call.
+   Subsequent calls with the same pool-id return the same JS instance, so
+   loaders and React components share one client per pool."
+  [pool-id]
+  (or (get @pool-clients pool-id)
+      (let [client (do (js/console.debug "urql make-pool-client" pool-id)
+                       (make-client (str "/lending/" pool-id "/graphql")))]
+        (swap! pool-clients assoc pool-id client)
+        client)))

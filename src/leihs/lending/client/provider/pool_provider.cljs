@@ -9,7 +9,6 @@
   (let [params (useParams)
         pool-id (aget params "pool-id")
         client (uix/use-memo (fn []
-                               (js/console.debug "pool-provider memo miss" pool-id)
                                (urql/make-pool-client pool-id))
                              [pool-id])]
     ($ Provider {:value client}
