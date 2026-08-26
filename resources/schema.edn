@@ -6,7 +6,8 @@
  :enums
  {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}
   :VisitTypeEnum {:values [:HAND_OVER :TAKE_BACK]}
-  :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}}
+  :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}
+  :ContractStateEnum {:values [:OPEN :CLOSED]}}
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
@@ -29,10 +30,15 @@
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}
                    :manufacturer {:type String}}}
+  :Option {:fields {:id {:type (non-null :UUID)}
+                    :name {:type String}
+                    :manufacturer {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
                          :startDate {:type String}
                          :endDate {:type String}
-                         :model {:type :Model :resolve :model}}}
+                         :quantity {:type Int}
+                         :model {:type :Model :resolve :model}
+                         :option {:type :Option :resolve :option}}}
   :ReservationLine {:fields {:model {:type :Model :resolve :model}
                              :quantity {:type (non-null Int)}
                              :availableQuantity {:type (non-null Int)}
@@ -69,10 +75,22 @@
                    :user {:type (non-null :User) :resolve :user}
                    :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
                    :reservationLines {:type (list (non-null :ReservationLine)) :resolve :reservation-lines}}}
+  :Contract {:fields {:id {:type (non-null :UUID)}
+                      :compactId {:type (non-null String)}
+                      :note {:type String}
+                      :purpose {:type String}
+                      :state {:type (non-null :ContractStateEnum)}
+                      :toBeVerified {:type (non-null Boolean)}
+                      :createdAt {:type (non-null String)}
+                      :updatedAt {:type (non-null String)}
+                      :user {:type (non-null :User) :resolve :user}
+                      :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}
   :VisitList {:fields {:items {:type (list (non-null :Visit))}
                        :totalCount {:type (non-null Int)}}}
   :OrderList {:fields {:items {:type (list (non-null :Order))}
-                       :totalCount {:type (non-null Int)}}}}
+                       :totalCount {:type (non-null Int)}}}
+  :ContractList {:fields {:items {:type (list (non-null :Contract))}
+                          :totalCount {:type (non-null Int)}}}}
 
  :queries
  {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
@@ -107,7 +125,16 @@
                    :page {:type Int}
                   :perPage {:type Int}
                   :toBeVerified {:type Boolean}}
-           :resolve :orders}}
+           :resolve :orders}
+  :contracts {:type (non-null :ContractList)
+              :args {:state {:type :ContractStateEnum}
+                     :term {:type String}
+                     :startDate {:type :Date}
+                     :endDate {:type :Date}
+                     :page {:type Int}
+                     :perPage {:type Int}
+                     :toBeVerified {:type Boolean}}
+              :resolve :contracts}}
 
  :mutations
  {:rejectOrder {:type (non-null :Order)

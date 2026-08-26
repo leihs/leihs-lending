@@ -11,11 +11,13 @@
       (sql/from :reservations)))
 
 (defn get-multiple
-  [{{tx :tx} :request} _ {order-id :id reservation-ids :reservation-ids}]
+  [{{tx :tx} :request} _ {order-id :id contract-id :contract-id reservation-ids :reservation-ids}]
   (-> base-sqlmap
       (cond->
-       (and order-id (not reservation-ids))
+       (and order-id (not reservation-ids) (not contract-id))
         (sql/where [:= :reservations.order_id order-id])
+        contract-id
+        (sql/where [:= :reservations.contract_id contract-id])
         reservation-ids
         (sql/where [:in :reservations.id reservation-ids]))
       sql-format

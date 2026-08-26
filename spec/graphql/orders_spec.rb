@@ -51,18 +51,46 @@ describe "orders" do
     expect(result.dig(:data, :orders, :totalCount)).to eq(3)
   end
 
-  it "returns reservations with model" do
+  it "returns reservations with model and quantity" do
     order = create_order
     reservation = Reservation.where(order_id: order.id).first
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}") { items { reservations { id model { id name } } } totalCount } }
+      { orders(poolId: "#{pool.id}") { items { reservations { id quantity model { id name } } } totalCount } }
     GQL
     expect_graphql_result(result, {
       orders: {
         items: [{
           reservations: [{
             id: reservation.id.to_s,
+            quantity: reservation.quantity,
             model: {id: model.id.to_s, name: model.product}
+          }]
+        }],
+        totalCount: 1
+      }
+    })
+  end
+
+  it "returns reservations with option" do
+    option = create(:option, inventory_pool: pool)
+    order = create(:order, user: user, inventory_pool: pool, state: "submitted")
+    create(:reservation,
+      user: user,
+      inventory_pool: pool,
+      leihs_model: nil,
+      option_id: option.id,
+      order: order,
+      status: "submitted")
+    reservation = Reservation.where(order_id: order.id).first
+    result = query(<<~GQL, user.id, pool_id: pool.id)
+      { orders(poolId: "#{pool.id}") { items { reservations { id option { id name } } } totalCount } }
+    GQL
+    expect_graphql_result(result, {
+      orders: {
+        items: [{
+          reservations: [{
+            id: reservation.id.to_s,
+            option: {id: option.id.to_s, name: option.product}
           }]
         }],
         totalCount: 1
