@@ -2,6 +2,7 @@
   (:require
    ["react-router" :as router]
    [leihs.lending.client.lib.utils :refer [cj]]
+   [leihs.lending.client.components.loading :refer [loading-fallback]]
    [leihs.lending.client.loader :as loader]
    [leihs.lending.client.routes.error :rename {page error-page}]
    [leihs.lending.client.routes.layout :rename {layout root-layout}]
@@ -21,6 +22,7 @@
       :id "root"
       :element ($ root-layout)
       :errorElement ($ error-page)
+      :hydrateFallbackElement ($ loading-fallback)
       :loader loader/root-layout
 
       :children
