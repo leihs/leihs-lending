@@ -17,6 +17,17 @@
       (->> (jdbc-query tx))
       first))
 
+(defn delegated-user-of?
+  [tx user-id delegation-id]
+  (-> (sql/select 1)
+      (sql/from :delegations_users)
+      (sql/where [:= :user_id user-id])
+      (sql/where [:= :delegation_id delegation-id])
+      sql-format
+      (->> (jdbc-query tx))
+      seq
+      boolean))
+
 (defn- enrich [tx pool-id user]
   (let [suspension (suspensions/active-for-user-in-pool tx (:id user) pool-id)]
     (assoc user

@@ -128,6 +128,21 @@
   [{{tx :tx} :request} {:keys [id]} _]
   (get-by-id tx id))
 
+(defn contact-details-for-contract
+  "Distinct, non-blank customer_orders.contact_details reachable from a
+  contract's reservations (reservations -> orders -> customer_orders)."
+  [tx contract-id]
+  (->> (-> (sql/select-distinct [:customer_orders.contact_details :contact_details])
+           (sql/from :customer_orders)
+           (sql/join :orders [:= :orders.customer_order_id :customer_orders.id])
+           (sql/join :reservations [:= :reservations.order_id :orders.id])
+           (sql/where [:= :reservations.contract_id contract-id])
+           (sql/where [:!= :customer_orders.contact_details nil])
+           sql-format
+           (->> (jdbc-query tx)))
+       (map :contact_details)
+       (remove str/blank?)))
+
 (defn- assert-submitted! [tx id]
   (when (not= "SUBMITTED" (:state (get-by-id tx id)))
     (throw (ex-info "Order is not in submitted state" {:status 422}))))

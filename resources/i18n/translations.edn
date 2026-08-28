@@ -1,0 +1,17 @@
+{:contract.quantity {:de-CH "Menge" :en-GB "Quantity" :fr-CH "Quantité"}
+ :contract.inventory-code {:de-CH "Inventarnummer" :en-GB "Inventory code" :fr-CH "Code d'inventaire"}
+ :contract.model {:de-CH "Modell" :en-GB "Model" :fr-CH "Modèle"}
+ :contract.end-date {:de-CH "Enddatum" :en-GB "End date" :fr-CH "Date de fin"}
+ :contract.return {:de-CH "Rückgabe" :en-GB "Return" :fr-CH "Retour"}
+ :contract.borrower {:de-CH "Ausleiher:in" :en-GB "Borrower" :fr-CH "Emprunteur"}
+ :contract.lender {:de-CH "Verleiher:in" :en-GB "Lender" :fr-CH "Prêteur"}
+ :contract.contact-details {:de-CH "Kontaktdaten" :en-GB "Contact details" :fr-CH "Coordonnées"}
+ :contract.returned-items {:de-CH "Zurückgegebene Gegenstände" :en-GB "Returned Items" :fr-CH "Articles retournés"}
+ :contract.borrowed-items {:de-CH "Ausgeliehene Gegenstände" :en-GB "Borrowed Items" :fr-CH "Articles empruntés"}
+ :contract.purpose {:de-CH "Zweck der Ausleihe" :en-GB "Purpose these items are borrowed for" :fr-CH "Objet de l'emprunt"}
+ :contract.additional-notes {:de-CH "Zusätzliche Bemerkungen" :en-GB "Additional notes" :fr-CH "Remarques complémentaires"}
+ :contract.terms {:de-CH "Es gelten die Bedingungen des Verleihers." :en-GB "Terms and conditions of the lender apply." :fr-CH "Les conditions du prêteur s'appliquent."}
+ :contract.signature {:de-CH "Unterschrift" :en-GB "Signature" :fr-CH "Signature"}
+ :contract.served-by {:de-CH "Sie wurden bedient von {{name}}" :en-GB "You were served by {{name}}" :fr-CH "Vous avez été servi par {{name}}"}
+ :contract.title {:de-CH "Ausleihvertrag Nr. {{id}} vom {{date}}" :en-GB "Lending Contract No. {{id}} from {{date}}" :fr-CH "Contrat de prêt n° {{id}} du {{date}}"}
+ :contract.total-price {:de-CH "Gesamtwert (indikativ)" :en-GB "Total price (indicative value)" :fr-CH "Valeur totale (indicative)"}}

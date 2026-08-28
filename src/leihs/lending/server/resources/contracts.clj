@@ -51,6 +51,22 @@
     start-date (sql/where [:>= :contracts.created_at start-date])
     end-date (sql/where [:<= :contracts.created_at end-date])))
 
+(defn get-one [tx contract-id pool-id]
+  (-> (sql/select :contracts.id
+                  :contracts.compact_id
+                  :contracts.note
+                  :contracts.purpose
+                  [[:upper :contracts.state] :state]
+                  :contracts.created_at
+                  :contracts.updated_at
+                  :contracts.user_id)
+      (sql/from :contracts)
+      (sql/where [:= :contracts.id contract-id])
+      (sql/where [:= :contracts.inventory_pool_id pool-id])
+      sql-format
+      (->> (jdbc-query tx))
+      first))
+
 (defn get-multiple
   [{{tx :tx pool-id :pool-id} :request}
    {:keys [state term to-be-verified start-date end-date page per-page]}

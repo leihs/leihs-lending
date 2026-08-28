@@ -17,7 +17,8 @@
 (def ^:private no-spa-uris #{"/lending/sign-in" "/lending/graphiql"})
 
 (def ^:private no-spa-patterns [#"^/lending/assets/"
-                                #"/lending/[^/]+/graphiql$"])
+                                #"/lending/[^/]+/graphiql$"
+                                #"^/lending/[^/]+/contracts/[^/]+$"])
 
 (defn- spa-uri? [uri]
   (and (not (no-spa-uris uri))

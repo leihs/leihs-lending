@@ -1,0 +1,134 @@
+body {
+  padding-top: 1em;
+  padding-bottom: 4em;
+  max-width: 50em;
+  margin: auto;
+  font-family: sans-serif;
+}
+
+body * {
+  color: black;
+  font-size: 0.966em;
+  position: relative;
+}
+
+h2, h3, h4, h5 {
+  display: block;
+  margin-top: 14pt;
+  page-break-after: avoid;
+}
+
+.clear {
+  clear: both;
+}
+
+table {
+  border-collapse: collapse;
+  empty-cells: show;
+  width: 100%;
+}
+
+table tr td {
+  border: 1pt solid rgb(100, 100, 100);
+  padding: 2pt 4pt;
+}
+
+table thead tr td {
+  font-size: 7pt;
+  font-weight: bold;
+}
+
+table thead {
+  display: table-header-group;
+}
+
+table > .start_date, table > .end_date, table > .returning_date {
+  letter-spacing: -1pt;
+}
+
+section {
+  page-break-before: auto;
+  page-break-after: auto;
+}
+
+.dontbreak {
+  page-break-before: auto;
+  page-break-inside: avoid;
+}
+
+.page_break {
+  page-break-before: always;
+}
+
+.barcode {
+  display: block;
+  height: 1cm;
+  width: 100%;
+}
+
+h1 {
+  font-size: 13pt;
+  display: block;
+  padding-bottom: 1cm;
+}
+
+.date {
+  display: inline-block;
+  position: absolute;
+  top: 1.6cm;
+  right: 0;
+}
+
+.parties {
+  margin-bottom: 1.5cm;
+}
+
+.parties .customer {
+  display: block;
+  float: left;
+  width: 30%;
+}
+
+.parties .inventory_pool {
+  display: block;
+  float: left;
+}
+
+.parties .customer > span, .parties .inventory_pool > span {
+  display: block;
+}
+
+.parties .customer > label, .parties .inventory_pool > label {
+  font-weight: bold;
+}
+
+.purposes {
+  margin-top: 1.5cm;
+}
+
+.purposes h2 {
+  display: block;
+  page-break-after: avoid;
+}
+
+.purposes p {
+  display: block;
+  page-break-before: avoid;
+}
+
+.terms_and_signature {
+  display: block;
+  margin-top: 1cm;
+  width: 100%;
+}
+
+.terms_and_signature .terms {
+  width: 65%;
+}
+
+.terms_and_signature span {
+  font-weight: bold;
+  display: inline-block;
+  position: absolute;
+  right: 0.2cm;
+}
