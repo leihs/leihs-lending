@@ -10,7 +10,7 @@
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
    [clojure.string :refer [lower-case]]
-   [leihs.lending.client.lib.date-utils :refer [format-date duration-days]]
+   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date duration-days]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui OrderRow [{:keys [order]}]
@@ -52,7 +52,7 @@
 
        ;; Datum (createdAt)
        ($ TableCell
-          (format-date t (:createdAt order)))
+          (format-date t (date-from-iso (:createdAt order))))
 
        ;; Items (quantity)
        ($ TableCell {:class-name "text-center"}

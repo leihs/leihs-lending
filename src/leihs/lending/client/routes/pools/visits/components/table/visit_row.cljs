@@ -8,7 +8,7 @@
    ["lucide-react" :refer [ChevronDown Mail UserX]]
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
-   [leihs.lending.client.lib.date-utils :refer [format-date duration-days]]
+   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date duration-days]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui VisitRow [{:keys [visit]}]
@@ -23,8 +23,7 @@
         action-label (if is-take-back?
                        (t "visits.actions.take-back")
                        (t "visits.actions.hand-over"))
-        on-action-trigger #(.. toast (message (t "visits.actions.not-available"
-                                                 "Aktion noch nicht verfügbar")))
+        on-action-trigger #(.. toast (message (t "visits.actions.not-available")))
 
         [user-pop-open? set-user-pop-open!] (uix/use-state false)
         [items-pop-open? set-items-pop-open!] (uix/use-state false)
@@ -50,7 +49,7 @@
                      (or (:suspendedReason user)
                          (t "visits.user.suspended")))))))
        ($ TableCell
-          (format-date t (:date visit)))
+          (format-date t (date-from-iso (:date visit))))
        ($ TableCell {:className "text-center"}
           ($ Popover {:open items-pop-open?
                       :on-open-change set-items-pop-open!}
