@@ -1,14 +1,14 @@
 (ns leihs.lending.server.run
-  (:refer-clojure :exclude [str keyword])
   (:require
    [clojure.pprint :refer [pprint]]
-   [clojure.tools.cli :as cli :refer [parse-opts]]
-   [leihs.core.core :refer [keyword str presence]]
+   [clojure.string]
+   [clojure.tools.cli :as cli]
    [leihs.core.db :as db]
    [leihs.core.http-server :as http-server]
    [leihs.core.shutdown :as shutdown]
    [leihs.core.status :as status]
    [leihs.lending.server.graphql :as graphql]
+   [leihs.lending.server.jdbc :as jdbc]
    [leihs.lending.server.ring :as ring]
    [logbug.catcher :as catcher]
    [taoensso.timbre :refer [info]]))
@@ -17,6 +17,7 @@
   (catcher/snatch
    {:return-fn (shutdown/run-return-fn options)}
    (info "Invoking run with options: " options)
+   (jdbc/configure)
    (shutdown/init options)
    (graphql/init options)
    (let [s (status/init)]
@@ -46,7 +47,7 @@
        flatten (clojure.string/join \newline)))
 
 (defn main [gopts args]
-  (let [{:keys [options arguments errors summary]}
+  (let [{:keys [options summary]}
         (cli/parse-opts args cli-options :in-order true)
         options (merge gopts options)]
     (cond

@@ -83,7 +83,7 @@ Add queries/mutations to root schema only when they must be unauthenticated. Eve
 
 ### Schema conventions (Lacinia EDN)
 
-- Custom scalars: `UUID`, `NonEmptyString`
+- Custom scalars: `UUID`, `NonEmptyString`, `Date` (date-only), `DateTime` (timestamp)
 - Non-null fields: `(non-null :Type)`
 - Field-level resolvers declared inline: `:resolve :resolver-key`
 - Paginated lists use the Connection pattern with `:first` and `:after` args

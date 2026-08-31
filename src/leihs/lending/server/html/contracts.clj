@@ -1,7 +1,5 @@
 (ns leihs.lending.server.html.contracts
   (:require
-   [clj-time.core :as time]
-   [clj-time.format :as time-format]
    [clojure.string :as str]
    [hiccup2.core :as hiccup]
    [leihs.core.languages :as lang]
@@ -31,30 +29,17 @@
         (users/delegated-user-of? tx user-id (:user_id contract))
         (permissions/manager-in-pool? pool-id authenticated-entity))))
 
-(def ^:private date-formatter (time-format/formatter "dd.MM.yyyy"))
+(def ^:private date-formatter (DateTimeFormatter/ofPattern "dd.MM.yyyy"))
 
-(defn- ->local-date
-  "clj-time.coerce's to-date-time/to-local-date shift a java.sql.Date by a day
-  when the JVM's default timezone is behind UTC (it round-trips through an
-  epoch-millis instant) -- read the calendar fields directly instead."
-  [v]
-  (cond
-    (instance? org.joda.time.LocalDate v) v
-    (instance? java.sql.Timestamp v)
-    (let [ld (.toLocalDate (.toLocalDateTime ^java.sql.Timestamp v))]
-      (time/local-date (.getYear ld) (.getMonthValue ld) (.getDayOfMonth ld)))
-
-    (instance? java.sql.Date v)
-    (let [ld (.toLocalDate ^java.sql.Date v)]
-      (time/local-date (.getYear ld) (.getMonthValue ld) (.getDayOfMonth ld)))
-
-    :else v))
-
-(defn- format-date [date]
-  (when date (time-format/unparse-local-date date-formatter (->local-date date))))
+(defn- format-date
+  "next.jdbc reads date/timestamp columns as java.time.LocalDate/LocalDateTime
+   -- DateTimeFormatter formats either directly, no LocalDate/LocalDateTime
+   distinction needed."
+  [date]
+  (when date (.format date-formatter date)))
 
 (defn- week-of-year [date]
-  (time/week-number-of-year (->local-date date)))
+  (.get date (.weekOfWeekBasedYear WeekFields/ISO)))
 
 (defn- barcode-data-uri
   "Code128 barcode PNG, base64-embedded -- mirrors legacy's
@@ -225,7 +210,7 @@
         (t :contract.title locale {:id (:compact_id contract)
                                    :date (format-date (:created_at contract))})
         [:span.weeknumber " W" (week-of-year (:created_at contract))]]
-       [:div.date (format-date (time/today))]
+       [:div.date (format-date (LocalDate/now))]
 
        [:section.parties
         (customer-section user delegated-user locale)

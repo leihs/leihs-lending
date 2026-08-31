@@ -1,7 +1,8 @@
 {:scalars
  {:UUID {:parse :uuid-parse :serialize :uuid-serialize}
   :NonEmptyString {:parse :non-empty-string-parse :serialize :non-empty-string-serialize}
-  :Date {:parse :date-parse :serialize :date-serialize}}
+  :Date {:parse :date-parse :serialize :date-serialize}
+  :DateTime {:parse :datetime-parse :serialize :datetime-serialize}}
 
  :enums
  {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}
@@ -34,25 +35,25 @@
                     :name {:type String}
                     :manufacturer {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
-                         :startDate {:type String}
-                         :endDate {:type String}
+                         :startDate {:type :Date}
+                         :endDate {:type :Date}
                          :quantity {:type Int}
                          :model {:type :Model :resolve :model}
                          :option {:type :Option :resolve :option}}}
   :ReservationLine {:fields {:model {:type :Model :resolve :model}
                              :quantity {:type (non-null Int)}
                              :availableQuantity {:type (non-null Int)}
-                             :startDate {:type (non-null String)}
-                             :endDate {:type (non-null String)}
+                             :startDate {:type (non-null :Date)}
+                             :endDate {:type (non-null :Date)}
                              :reservationIds {:type (list (non-null :UUID))}}}
   :Email {:fields {:id {:type (non-null :UUID)}
-                   :createdAt {:type (non-null String)}
+                   :createdAt {:type (non-null :DateTime)}
                    :subject {:type (non-null String)}
                    :template {:type String}}}
   :Visit {:fields {:id {:type (non-null :UUID)}
-                   :date {:type (non-null String)}
-                   :startDate {:type String}
-                   :endDate {:type String}
+                   :date {:type (non-null :Date)}
+                   :startDate {:type :Date}
+                   :endDate {:type :Date}
                    :visitType {:type (non-null :VisitTypeEnum)}
                    :isOverdue {:type (non-null Boolean)}
                    :quantity {:type (non-null Int)}
@@ -68,10 +69,10 @@
                     :state {:type (non-null :OrderStateEnum)}
                     :rejectReason {:type String}
                     :toBeVerified {:type (non-null Boolean)}
-                    :startDate {:type String}
-                   :endDate {:type String}
-                   :createdAt {:type (non-null String)}
-                   :updatedAt {:type (non-null String)}
+                    :startDate {:type :Date}
+                   :endDate {:type :Date}
+                   :createdAt {:type (non-null :DateTime)}
+                   :updatedAt {:type (non-null :DateTime)}
                    :user {:type (non-null :User) :resolve :user}
                    :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
                    :reservationLines {:type (list (non-null :ReservationLine)) :resolve :reservation-lines}}}
@@ -81,8 +82,8 @@
                       :purpose {:type String}
                       :state {:type (non-null :ContractStateEnum)}
                       :toBeVerified {:type (non-null Boolean)}
-                      :createdAt {:type (non-null String)}
-                      :updatedAt {:type (non-null String)}
+                      :createdAt {:type (non-null :DateTime)}
+                      :updatedAt {:type (non-null :DateTime)}
                       :user {:type (non-null :User) :resolve :user}
                       :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}
   :VisitList {:fields {:items {:type (list (non-null :Visit))}
