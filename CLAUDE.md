@@ -13,6 +13,7 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 - Schema: custom scalars `UUID`, `NonEmptyString`; non-null via `(non-null :Type)`; field resolvers inline via `:resolve :key`
 - HoneySQL: minimize `[:raw "..."]` and `[:cast ...]`; prefer the DSL (subqueries as maps, `[:any ...]`, etc.). Avoid casts in resolvers — use GraphQL scalars to parse args into the right JVM type (e.g. `:Date` → `LocalDate`) so next.jdbc binds them correctly without explicit casting.
 - Comments: use docstrings (`"..."` between fn name and args), not line comments (`;`)
+- HTML pages (non-GraphQL): resource-tied pages go in `html/`, one namespace per page (e.g. `html/contracts.clj`, fn named after the action like `show`), mirroring `resources/`'s one-file-per-domain split. Cross-cutting pages (`sign_in.clj`, `home.clj`, `graphiql.clj`) stay at the `server/` top level. Use `hiccup2.core` + a manual `"<!DOCTYPE html>"` string; do resource-dependent auth (e.g. ownership checks) in the handler itself, not via `authorize/wrap` (pool-role only).
 
 ## Frontend
 

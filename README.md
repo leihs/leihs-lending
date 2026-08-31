@@ -56,9 +56,12 @@ src/leihs/lending/server/
   routes.clj                # Reitit route definitions
   graphql.clj               # pool-scoped GraphQL handler + schema
   root_graphql.clj          # unauthenticated root GraphQL handler + schema
-  sign_in.clj               # HTML sign-in form
+  sign_in.clj               # HTML sign-in form (cross-cutting page)
+  home.clj                  # logged-in landing page (cross-cutting page)
+  graphiql.clj              # GraphiQL UI (cross-cutting page)
   db.clj                    # jdbc helpers (kebab-case transform)
-  resources/                # one file per domain (users, orders, reservations, …)
+  resources/                # one file per domain (users, orders, reservations, …) — GraphQL data fetchers
+  html/                     # one file per resource-tied server-rendered page (see below)
   middlewares/
     authenticate.clj        # URI-based session auth check
     authorize.clj           # pool-level role check
@@ -80,6 +83,21 @@ resources/
 - `/lending/:pool-id/graphql` — pool schema (`schema.edn`), requires authenticated user with pool role
 
 Add queries/mutations to root schema only when they must be unauthenticated. Everything else goes in the pool schema.
+
+### Server-rendered HTML pages (non-GraphQL)
+
+Some routes render a full HTML response directly instead of going through GraphQL — a printable document, a sign-in form, a landing page. Two kinds, in different places:
+
+- **Cross-cutting** (not tied to a business resource): `sign_in.clj`, `home.clj`, `graphiql.clj`, at the top level of `server/`.
+- **Resource-tied**: one namespace per page in `html/`, mirroring `resources/`'s one-file-per-domain split but for full HTML responses instead of GraphQL data. Example: `html/contracts.clj` renders `GET /lending/:pool-id/contracts/:contract-id`.
+
+Conventions (see `html/contracts.clj`):
+
+- `hiccup2.core` + a manual `"<!DOCTYPE html>"` string prefix — no templating engine
+- The exported fn name mirrors the action, e.g. `show` — not a generic `handler`
+- Fetch data via the same `resources/*` fns and `:tx`/`:pool-id` the request map already carries (same as resolvers), but there's no resolver-wrapper pipeline here — auth and error handling are explicit in the handler itself
+- When authorization depends on the resource's own data (e.g. "is this user the owner of this specific record?"), it can't be a route-level middleware check — load the resource first, then check in the handler, instead of (or alongside) `authorize/wrap`'s pool-role-only check
+- Page-specific static assets (e.g. print CSS) live under `resources/public/lending/<name>/`, not `resources/public/lending/assets/` — that path is the SPA's own build output and gets overwritten by the frontend build
 
 ### Schema conventions (Lacinia EDN)
 
