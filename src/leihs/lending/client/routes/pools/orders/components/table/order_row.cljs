@@ -6,10 +6,11 @@
    ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
    ["@@/table" :refer [TableCell TableRow]]
    ["@@/tooltip" :refer [Tooltip TooltipTrigger TooltipContent]]
-   ["lucide-react" :refer [ChevronDown CircleCheck Circle CircleX UserX]]
+   ["lucide-react" :refer [ChevronDown CircleCheck Circle CircleX]]
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
    [clojure.string :refer [lower-case]]
+   [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
    [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date duration-days]]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -17,7 +18,6 @@
   (let [[t] (useTranslation)
         user (:user order)
         name (str (:firstname user) " " (:lastname user))
-        suspended? (:isSuspended user)
         state (:state order)
         reject-reason (:rejectReason order)
         days (duration-days (:startDate order) (:endDate order))
@@ -25,7 +25,6 @@
         to-be-verified (:toBeVerified order)
         on-action-trigger #(.. toast (message (t "orders.actions.not-available")))
 
-        [user-pop-open? set-user-pop-open!] (uix/use-state false)
         [items-pop-open? set-items-pop-open!] (uix/use-state false)
         [purpose-pop-open? set-purpose-pop-open!] (uix/use-state false)]
 
@@ -33,22 +32,9 @@
 
        ;; Name
        ($ TableCell
-          ($ Popover {:open user-pop-open?
-                      :on-open-change set-user-pop-open!}
-             ($ PopoverTrigger {:data-test-id "order-user-popover-trigger"}
-                ($ :div {:class-name "flex items-center gap-3"}
-                   ($ :span {:class-name "font-semibold"} name)
-                   (when suspended?
-                     ($ UserX {:class-name "size-4 text-destructive"}))))
-             ($ PopoverContent {:align "start" :class-name "w-[400px]"}
-                ($ :div {:class-name "font-semibold"} name)
-                ($ :div (:email user))
-                ($ :div "...TODO...")
-                ($ :div "...TODO...")
-                (when suspended?
-                  ($ :div {:class-name "text-destructive"}
-                     (or (:suspendedReason user)
-                         (t "orders.user.suspended")))))))
+          ($ UserPopover {:user user
+                          :name name
+                          :test-id "order-user-popover-trigger"}))
 
        ;; Datum (createdAt)
        ($ TableCell

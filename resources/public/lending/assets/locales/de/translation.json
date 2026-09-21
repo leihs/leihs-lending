@@ -149,10 +149,11 @@
       "delete": "Löschen",
       "send-reminder": "Erinnerung senden",
       "not-available": "Aktion noch nicht verfügbar"
-    },
-    "user": {
-      "suspended": "Benutzer gesperrt"
     }
+  },
+  "user": {
+    "suspended": "Benutzer gesperrt",
+    "badge": "Badge {{badgeId}}"
   },
   "error": {
     "action": {

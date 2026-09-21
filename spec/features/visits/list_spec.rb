@@ -206,6 +206,42 @@ feature "Visits list" do
     expect(page).to have_content("...TODO...")
   end
 
+  let(:avatar_data_url) { "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
+
+  scenario "shows avatar, email and badge in user popover" do
+    borrower = FactoryBot.create(:user, firstname: "Ernst", lastname: "Einmalig",
+      badge_id: "123456789", img256_url: avatar_data_url)
+    grant_pool_access(borrower, pool)
+
+    create_hand_over(target_user: borrower)
+
+    click_on "Visits"
+
+    row = find("tbody tr", text: "Ernst Einmalig")
+    row.find("[data-test-id='visit-user-popover-trigger']").click
+
+    expect(page).to have_content(borrower.email)
+    expect(page).to have_content("Badge 123456789")
+    expect(page).to have_css("img[src='#{avatar_data_url}']")
+  end
+
+  scenario "shows suspended user icon and reason in user popover" do
+    suspended_user = FactoryBot.create(:user, firstname: "Sven", lastname: "Gesperrt")
+    grant_pool_access(suspended_user, pool)
+    create(:suspension, user: suspended_user, inventory_pool: pool, suspended_reason: "Overdue return")
+
+    create_hand_over(target_user: suspended_user)
+
+    click_on "Visits"
+
+    name_trigger = find("tbody tr", text: "Sven Gesperrt")
+      .find("[data-test-id='visit-user-popover-trigger']")
+    expect(name_trigger).to have_css("svg")
+
+    name_trigger.click
+    expect(page).to have_content("Overdue return")
+  end
+
   scenario "filters visits by term" do
     user1 = FactoryBot.create(:user, firstname: "Zoltan", lastname: "Uniquesson")
     create_hand_over(target_user: user1)

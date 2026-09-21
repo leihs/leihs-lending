@@ -5,9 +5,10 @@
                                DropdownMenuItem DropdownMenuTrigger]]
    ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
    ["@@/table" :refer [TableCell TableRow]]
-   ["lucide-react" :refer [ChevronDown Mail UserX]]
+   ["lucide-react" :refer [ChevronDown Mail]]
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
+   [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
    [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date duration-days]]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -16,7 +17,6 @@
         user (:user visit)
         name (str (:firstname user) " " (:lastname user))
         overdue? (:isOverdue visit)
-        suspended? (:isSuspended user)
         reminders (count (:reminders visit))
         days (duration-days (:startDate visit) (:endDate visit))
         is-take-back? (= (:visitType visit) "TAKE_BACK")
@@ -25,29 +25,14 @@
                        (t "visits.actions.hand-over"))
         on-action-trigger #(.. toast (message (t "visits.actions.not-available")))
 
-        [user-pop-open? set-user-pop-open!] (uix/use-state false)
         [items-pop-open? set-items-pop-open!] (uix/use-state false)
         [reminders-pop-open? set-reminders-pop-open!] (uix/use-state false)]
     ($ TableRow {:className (str "border-l-4 "
                                  (if overdue? "border-l-destructive" "border-l-transparent"))}
        ($ TableCell
-          ($ Popover {:open user-pop-open?
-                      :on-open-change set-user-pop-open!}
-             ($ PopoverTrigger {:data-test-id "visit-user-popover-trigger"}
-                ($ :div {:className "flex items-center gap-3"}
-                   ($ :span {:className "font-semibold"} name)
-                   (when suspended?
-                     ($ UserX {:className "size-4 text-destructive"}))))
-
-             ($ PopoverContent {:align "start" :class-name "w-[400px]"}
-                ($ :div {:class-name "font-semibold"} name)
-                ($ :div (:email user))
-                ($ :div "...TODO...")
-                ($ :div "...TODO...")
-                (when suspended?
-                  ($ :div {:class-name "text-destructive"}
-                     (or (:suspendedReason user)
-                         (t "visits.user.suspended")))))))
+          ($ UserPopover {:user user
+                          :name name
+                          :test-id "visit-user-popover-trigger"}))
        ($ TableCell
           (format-date t (date-from-iso (:date visit))))
        ($ TableCell {:className "text-center"}

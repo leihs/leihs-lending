@@ -20,11 +20,10 @@
           endDate
           createdAt
           user {
+           id
            firstname
            lastname
-           email
            isSuspended
-           suspendedReason
          }
          reservations {
            id

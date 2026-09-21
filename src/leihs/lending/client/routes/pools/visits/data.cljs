@@ -19,11 +19,10 @@
          isOverdue
          quantity
          user {
+           id
            firstname
            lastname
-           email
            isSuspended
-           suspendedReason
          }
          reminders {
            id
