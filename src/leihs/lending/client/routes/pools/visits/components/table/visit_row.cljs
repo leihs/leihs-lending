@@ -9,7 +9,7 @@
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
    [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
-   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date duration-days]]
+   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date format-date-time duration-days]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui VisitRow [{:keys [visit]}]
@@ -17,7 +17,8 @@
         user (:user visit)
         name (str (:firstname user) " " (:lastname user))
         overdue? (:isOverdue visit)
-        reminders (count (:reminders visit))
+        reminder-list (:reminders visit)
+        reminders (count reminder-list)
         days (duration-days (:startDate visit) (:endDate visit))
         is-take-back? (= (:visitType visit) "TAKE_BACK")
         action-label (if is-take-back?
@@ -54,7 +55,12 @@
                      ($ Mail {:className "size-4 text-muted-foreground"})
                      (t "visits.reminders.some" #js {:count reminders})))
                ($ PopoverContent {:align "start" :class-name "w-[400px]"}
-                  ($ :div "...TODO...")))
+                  ($ :div {:className "flex flex-col gap-1.5 max-h-64 overflow-y-auto"}
+                     (for [reminder reminder-list]
+                       ($ :div {:key (:id reminder) :className "flex gap-3 text-sm"}
+                          ($ :span {:className "text-muted-foreground shrink-0 tabular-nums"}
+                             (format-date-time t (js/Date. (:createdAt reminder))))
+                          ($ :span (:subject reminder)))))))
             ($ :span
                (t "visits.reminders.none"))))
        ($ TableCell

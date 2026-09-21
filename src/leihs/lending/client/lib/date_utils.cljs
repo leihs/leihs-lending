@@ -23,6 +23,12 @@
         (date-fns/isYesterday d) (str date-string " (" (t "common.date.yesterday") ")")
         :else date-string))))
 
+(defn format-date-time
+  "Format JS date object with date and time in a human readable way. Returns nil for nil input."
+  [t d]
+  (when d
+    (t "common.date.formatDateTime" #js{:val d})))
+
 (defn duration-days
   "Inclusive day count between start and end date, or nil if unknown."
   [start-iso end-iso]

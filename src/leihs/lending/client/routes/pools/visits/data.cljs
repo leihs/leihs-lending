@@ -26,6 +26,8 @@
          }
          reminders {
            id
+           createdAt
+           subject
          }
        }
        totalCount

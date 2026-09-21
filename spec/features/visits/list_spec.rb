@@ -201,9 +201,9 @@ feature "Visits list" do
     expect(page).to have_content("...TODO...")
     qty_trigger.click  # close
 
-    # reminders popover (mock content)
+    # reminders popover shows sent reminder emails
     row.find("[data-test-id='visit-reminders-popover-trigger']").click
-    expect(page).to have_content("...TODO...")
+    expect(page).to have_content("Reminder")
   end
 
   let(:avatar_data_url) { "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
@@ -240,6 +240,42 @@ feature "Visits list" do
 
     name_trigger.click
     expect(page).to have_content("Overdue return")
+  end
+
+  scenario "shows reminder emails in reminders popover" do
+    borrower = FactoryBot.create(:user, firstname: "Rolf", lastname: "Erinnert")
+    grant_pool_access(borrower, pool)
+
+    create_hand_over(target_user: borrower)
+
+    database[:emails].insert(
+      id: SecureRandom.uuid,
+      user_id: borrower.id,
+      subject: "First reminder",
+      body: "...",
+      from_address: "noreply@example.com",
+      to_address: borrower.email,
+      created_at: next_monday.to_time,
+      updated_at: next_monday.to_time
+    )
+    database[:emails].insert(
+      id: SecureRandom.uuid,
+      user_id: borrower.id,
+      subject: "Second reminder",
+      body: "...",
+      from_address: "noreply@example.com",
+      to_address: borrower.email,
+      created_at: (next_monday + 1).to_time,
+      updated_at: (next_monday + 1).to_time
+    )
+
+    click_on "Visits"
+
+    row = find("tbody tr", text: "Rolf Erinnert")
+    row.find("[data-test-id='visit-reminders-popover-trigger']").click
+
+    expect(page).to have_content("First reminder")
+    expect(page).to have_content("Second reminder")
   end
 
   scenario "filters visits by term" do

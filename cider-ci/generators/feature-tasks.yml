@@ -238,3 +238,8 @@
   environment_variables:
     FEATURE_NAME: "Visits list 18"
     FEATURE: './spec/features/visits/list_spec.rb[1:18]'
+'./spec/features/visits/list_spec.rb[1:19]':
+  name: "Visits list 19"
+  environment_variables:
+    FEATURE_NAME: "Visits list 19"
+    FEATURE: './spec/features/visits/list_spec.rb[1:19]'
