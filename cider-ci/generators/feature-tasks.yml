@@ -128,6 +128,16 @@
   environment_variables:
     FEATURE_NAME: "Orders list 13"
     FEATURE: './spec/features/orders/list_spec.rb[1:13]'
+'./spec/features/orders/list_spec.rb[1:14]':
+  name: "Orders list 14"
+  environment_variables:
+    FEATURE_NAME: "Orders list 14"
+    FEATURE: './spec/features/orders/list_spec.rb[1:14]'
+'./spec/features/orders/list_spec.rb[1:15]':
+  name: "Orders list 15"
+  environment_variables:
+    FEATURE_NAME: "Orders list 15"
+    FEATURE: './spec/features/orders/list_spec.rb[1:15]'
 './spec/features/sign_in_out_spec.rb[1:1]':
   name: "Sign-in / Sign-out 01"
   environment_variables:
@@ -238,3 +248,13 @@
   environment_variables:
     FEATURE_NAME: "Visits list 18"
     FEATURE: './spec/features/visits/list_spec.rb[1:18]'
+'./spec/features/visits/list_spec.rb[1:19]':
+  name: "Visits list 19"
+  environment_variables:
+    FEATURE_NAME: "Visits list 19"
+    FEATURE: './spec/features/visits/list_spec.rb[1:19]'
+'./spec/features/visits/list_spec.rb[1:20]':
+  name: "Visits list 20"
+  environment_variables:
+    FEATURE_NAME: "Visits list 20"
+    FEATURE: './spec/features/visits/list_spec.rb[1:20]'

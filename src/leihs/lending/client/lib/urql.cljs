@@ -1,6 +1,6 @@
 (ns leihs.lending.client.lib.urql
   (:require
-   ["urql" :refer [createClient fetchExchange]]
+   ["urql" :refer [createClient fetchExchange useQuery]]
    [leihs.lending.client.lib.csrf :as csrf]
    [leihs.lending.client.lib.utils :refer [jc cj]]
    [promesa.core :as p]))
@@ -26,6 +26,30 @@
 
 ;; === PUBLIC ===
 
+;; --- create and manage clients (global / per pool) ---
+
+(def default-client
+  "Client for routes outside any pool (sign-in flow, pool picker, profile)."
+  (do (js/console.debug "urql initialize default-client")
+      (make-client "/lending/graphql")))
+
+(def ^:private pool-clients
+  "Module-level cache of pool-id → urql client"
+  (atom {}))
+
+(defn make-pool-client
+  "Returns the cached urql client for `pool-id`, creating it on first call.
+   Subsequent calls with the same pool-id return the same JS instance, so
+   loaders and React components share one client per pool."
+  [pool-id]
+  (or (get @pool-clients pool-id)
+      (let [client (do (js/console.debug "urql make-pool-client" pool-id)
+                       (make-client (str "/lending/" pool-id "/graphql")))]
+        (swap! pool-clients assoc pool-id client)
+        client)))
+
+;; --- run queries/mutations on a given client ---
+
 (defn run-query
   "Runs a urql query on the given client and resolves to a clj map of the
    response data. Throws the GraphQL/network error if one occurred so React
@@ -50,22 +74,18 @@
       (throw error))
     (jc (.-data result))))
 
-(def default-client
-  "Client for routes outside any pool (sign-in flow, pool picker, profile)."
-  (do (js/console.debug "urql initialize default-client")
-      (make-client "/lending/graphql")))
+;; --- applying the client from the surrounding Provider ---
 
-(def ^:private pool-clients
-  "Module-level cache of pool-id → urql client"
-  (atom {}))
-
-(defn make-pool-client
-  "Returns the cached urql client for `pool-id`, creating it on first call.
-   Subsequent calls with the same pool-id return the same JS instance, so
-   loaders and React components share one client per pool."
-  [pool-id]
-  (or (get @pool-clients pool-id)
-      (let [client (do (js/console.debug "urql make-pool-client" pool-id)
-                       (make-client (str "/lending/" pool-id "/graphql")))]
-        (swap! pool-clients assoc pool-id client)
-        client)))
+(defn use-lazy-query
+  "Applies urql's `useQuery`, but with an `enabled?` flag allowing to defer execution
+   until an event is raised (e.g. user click).
+   Returns the clj data plus `:ready?`, which turns true once the query has
+   resolved or failed, and `:error?`, telling the two apart."
+  [query variables enabled?]
+  (let [[^js result] (useQuery (cj {:query query
+                                    :variables variables
+                                    :pause (not enabled?)}))
+        error? (some? (.-error result))]
+    {:data (jc (.-data result))
+     :error? error?
+     :ready? (or (some? (.-data result)) error?)}))

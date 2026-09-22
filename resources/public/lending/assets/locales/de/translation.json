@@ -3,10 +3,23 @@
     "date": {
       "today": "heute",
       "yesterday": "gestern",
-      "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}"
-    }
+      "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}",
+      "formatDateTime": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric; hour: 2-digit; minute: 2-digit)}}"
+    },
+    "load-error": "Konnte nicht geladen werden"
   },
   "components": {
+    "entities": {
+      "items-popover": {
+        "date-range_one": "{{- startDate}} - {{- endDate}} ({{count}} Tag)",
+        "date-range_other": "{{- startDate}} - {{- endDate}} ({{count}} Tage)",
+        "title": "Gegenstände"
+      },
+      "user-popover": {
+        "badge": "Badge {{badgeId}}",
+        "suspended": "Benutzer gesperrt"
+      }
+    },
     "filters": {
       "reset": {
         "tooltip": "Filter zurücksetzen (Alt+Shift+R)"
@@ -141,7 +154,8 @@
     "reminders": {
       "some_one": "{{count}} Erinnerungs-Mail",
       "some_other": "{{count}} Erinnerungs-Mails",
-      "none": "Keine Erinnerungen"
+      "none": "Keine Erinnerungen",
+      "title": "Erinnerungs-Mails"
     },
     "actions": {
       "hand-over": "Aushändigen",
@@ -150,10 +164,6 @@
       "send-reminder": "Erinnerung senden",
       "not-available": "Aktion noch nicht verfügbar"
     }
-  },
-  "user": {
-    "suspended": "Benutzer gesperrt",
-    "badge": "Badge {{badgeId}}"
   },
   "error": {
     "action": {

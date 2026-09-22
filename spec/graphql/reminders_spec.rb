@@ -51,7 +51,7 @@ describe "visit reminders" do
     end
   end
 
-  def insert_email(template_name)
+  def insert_email(template_name, created_at: Time.now)
     email_id = SecureRandom.uuid
     database[:emails].insert(
       id: email_id,
@@ -62,8 +62,8 @@ describe "visit reminders" do
       subject: "test subject",
       body: "test body",
       template: template_name,
-      created_at: Time.now,
-      updated_at: Time.now
+      created_at: created_at,
+      updated_at: created_at
     )
     visit_id = database[:visits].where(user_id: user.id, inventory_pool_id: pool.id).get(:id)
     database[:emails_visits].insert(
@@ -96,6 +96,15 @@ describe "visit reminders" do
     result = visits(visitType: "TAKE_BACK")
     reminders = result.dig(:data, :visits, :items, 0, :reminders)
     expect(reminders).to be_empty
+  end
+
+  it "serializes createdAt as a UTC instant" do
+    # anchored to today: reminders are filtered to the visit date and later
+    today = Date.today
+    insert_email("reminder", created_at: Time.utc(today.year, today.month, today.day, 12, 3, 22))
+    result = visits(visitType: "TAKE_BACK")
+    reminders = result.dig(:data, :visits, :items, 0, :reminders)
+    expect(reminders.first[:createdAt]).to eq("#{today.iso8601}T12:03:22Z")
   end
 
   it "returns multiple reminders ordered newest first" do

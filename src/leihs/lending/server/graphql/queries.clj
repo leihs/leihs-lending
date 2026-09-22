@@ -22,4 +22,5 @@
    :reservations reservations/get-multiple
    :user users/get-one
    :users users/get-multiple
+   :visit visits/get-one
    :visits visits/get-multiple})

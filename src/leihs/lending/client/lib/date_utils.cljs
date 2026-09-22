@@ -13,6 +13,13 @@
           date (js/Date. y (dec m) d)]
       date)))
 
+(defn date-time-from-iso
+  "Create a JS Date object from an ISO instant (`...Z`), i.e. that moment as seen
+   in the client's time zone. Returns nil for nil input."
+  [iso-date-time-string]
+  (when iso-date-time-string
+    (js/Date. iso-date-time-string)))
+
 (defn format-date
   "Format JS date object in a human readable way. Returns nil for nil input."
   [t d]
@@ -22,6 +29,12 @@
         (date-fns/isToday d) (str date-string " (" (t "common.date.today") ")")
         (date-fns/isYesterday d) (str date-string " (" (t "common.date.yesterday") ")")
         :else date-string))))
+
+(defn format-date-time
+  "Format JS date object with date and time in a human readable way. Returns nil for nil input."
+  [t d]
+  (when d
+    (t "common.date.formatDateTime" #js{:val d})))
 
 (defn duration-days
   "Inclusive day count between start and end date, or nil if unknown."

@@ -74,3 +74,11 @@
                  (->> (jdbc-query tx)))]
     {:items rows
      :total-count (-> rows first :total_count (or 0))}))
+
+(defn get-one
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id]} _]
+  (-> (base-sqlmap pool-id)
+      (sql/where [:= :v.id id])
+      sql-format
+      (->> (jdbc-query tx))
+      first))

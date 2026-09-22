@@ -107,6 +107,9 @@
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}
+  :visit {:type :Visit
+          :args {:id {:type (non-null :UUID)}}
+          :resolve :visit}
   :visits {:type (non-null :VisitList)
            :args {:date {:type :Date}
                   :startDate {:type :Date}

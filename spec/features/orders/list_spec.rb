@@ -152,11 +152,99 @@ feature "Orders list" do
     expect(page).to have_content(borrower.email)
     name_trigger.click  # close
 
-    # items popover (mock content)
+    # items popover shows the order's items grouped by model
     items_trigger = row.find("[data-test-id='order-items-popover-trigger']")
     items_trigger.click
-    expect(page).to have_content("...TODO...")
+    expect(page).to have_content(model.product)
     items_trigger.click  # close
+  end
+
+  scenario "shows date range and grouped items in items popover" do
+    borrower = FactoryBot.create(:user, firstname: "Gustav", lastname: "Gegenstand")
+    grant_pool_access(borrower, pool)
+
+    other_model = create(:leihs_model)
+    order = create(:order, user: borrower, inventory_pool: pool)
+    create(:reservation,
+      user: borrower,
+      inventory_pool: pool,
+      leihs_model: model,
+      order: order,
+      status: "submitted",
+      start_date: next_monday.to_s,
+      end_date: (next_monday + 7).to_s)
+    create(:reservation,
+      user: borrower,
+      inventory_pool: pool,
+      leihs_model: other_model,
+      order: order,
+      status: "submitted",
+      start_date: next_monday.to_s,
+      end_date: (next_monday + 7).to_s)
+
+    click_on "Orders"
+
+    row = find("tbody tr", text: "Gustav Gegenstand")
+    row.find("[data-test-id='order-items-popover-trigger']").click
+
+    expect(page).to have_content(
+      "#{next_monday.strftime("%d/%m/%Y")} - #{(next_monday + 7).strftime("%d/%m/%Y")} (8 days)"
+    )
+    expect(page).to have_content(model.product)
+    expect(page).to have_content(other_model.product)
+  end
+
+  scenario "items popover lists handed-over reservations too" do
+    borrower = FactoryBot.create(:user, firstname: "Hilde", lastname: "Halbwegs")
+    grant_pool_access(borrower, pool)
+
+    other_model = create(:leihs_model)
+    order = create(:order, user: borrower, inventory_pool: pool, state: "approved")
+    create(:reservation,
+      user: borrower,
+      inventory_pool: pool,
+      leihs_model: model,
+      order: order,
+      status: "approved",
+      start_date: next_monday.to_s,
+      end_date: (next_monday + 7).to_s)
+    handed_over = create(:reservation,
+      user: borrower,
+      inventory_pool: pool,
+      leihs_model: other_model,
+      order: order,
+      status: "approved",
+      start_date: next_monday.to_s,
+      end_date: (next_monday + 7).to_s)
+
+    # the contract constraint is deferred, so both statements must share a transaction
+    contract_id = SecureRandom.uuid
+    database.transaction do
+      database[:contracts].insert(
+        id: contract_id,
+        compact_id: contract_id[0..7],
+        state: "open",
+        user_id: borrower.id,
+        inventory_pool_id: pool.id,
+        purpose: "test",
+        created_at: Time.now,
+        updated_at: Time.now
+      )
+      database[:reservations]
+        .where(id: handed_over.id)
+        .update(status: "signed", contract_id: contract_id)
+    end
+
+    click_on "Orders"
+
+    row = find("tbody tr", text: "Hilde Halbwegs")
+    trigger = row.find("[data-test-id='order-items-popover-trigger']")
+    expect(trigger).to have_content("2")
+    trigger.click
+
+    # the badge counts all of the order's reservations, so the list must too
+    expect(page).to have_content(model.product)
+    expect(page).to have_content(other_model.product)
   end
 
   let(:avatar_data_url) { "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }

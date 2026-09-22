@@ -10,11 +10,12 @@
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
    [clojure.string :refer [lower-case]]
+   [leihs.lending.client.components.entities.items-popover :refer [ItemsPopover]]
    [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
-   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date duration-days]]
+   [leihs.lending.client.lib.date-utils :refer [date-time-from-iso format-date duration-days]]
    [uix.core :as uix :refer [$ defui]]))
 
-(defui OrderRow [{:keys [order]}]
+(defui OrderRow [{:keys [order use-user-details use-items]}]
   (let [[t] (useTranslation)
         user (:user order)
         name (str (:firstname user) " " (:lastname user))
@@ -25,7 +26,6 @@
         to-be-verified (:toBeVerified order)
         on-action-trigger #(.. toast (message (t "orders.actions.not-available")))
 
-        [items-pop-open? set-items-pop-open!] (uix/use-state false)
         [purpose-pop-open? set-purpose-pop-open!] (uix/use-state false)]
 
     ($ TableRow {:class-name "border-l-4 border-l-transparent"}
@@ -34,21 +34,19 @@
        ($ TableCell
           ($ UserPopover {:user user
                           :name name
+                          :use-details use-user-details
                           :test-id "order-user-popover-trigger"}))
 
        ;; Datum (createdAt)
        ($ TableCell
-          (format-date t (date-from-iso (:createdAt order))))
+          (format-date t (date-time-from-iso (:createdAt order))))
 
        ;; Items (quantity)
        ($ TableCell {:class-name "text-center"}
-          ($ Popover {:open items-pop-open?
-                      :on-open-change set-items-pop-open!}
-             ($ PopoverTrigger {:data-test-id "order-items-popover-trigger"}
-                ($ :span {:class-name "px-3"}
-                   quantity))
-             ($ PopoverContent {:align "center" :class-name "w-[400px]"}
-                ($ :div "...TODO..."))))
+          ($ ItemsPopover {:id (:id order)
+                           :quantity quantity
+                           :use-items use-items
+                           :test-id "order-items-popover-trigger"}))
 
        ;; Duration
        ($ TableCell

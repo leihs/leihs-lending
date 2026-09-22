@@ -1,5 +1,6 @@
 (ns leihs.lending.client.routes.pools.orders.data
   (:require
+   [clojure.string :refer [split]]
    [leihs.lending.client.lib.urql :as urql]
    [promesa.core :as p]))
 
@@ -33,6 +34,42 @@
      }
    }")
 
+(def user-query
+  "query ($id: UUID!) {
+     user(id: $id) {
+       email
+       badgeId
+       img256Url
+       suspendedReason
+     }
+   }")
+
+(defn use-user-details
+  "Loads what the user popover shows on top of what the list already carries."
+  [user-id enabled?]
+  (-> (urql/use-lazy-query user-query {:id user-id} enabled?)
+      (update :data :user)))
+
+(def items-query
+  "query ($id: UUID!) {
+     order(id: $id) {
+       reservations {
+         id
+         quantity
+         startDate
+         endDate
+         model { name }
+         option { name }
+       }
+     }
+   }")
+
+(defn use-items
+  "Loads the reservations the items popover lists."
+  [order-id enabled?]
+  (-> (urql/use-lazy-query items-query {:id order-id} enabled?)
+      (update :data #(-> % :order :reservations))))
+
 (defn list-loader
   "Loader for /lending/:pool-id/orders — reads filter/pagination state from
    the URL search params, maps them to `orders` query variables, and runs the
@@ -44,7 +81,7 @@
         page (js/parseInt (or (get-param "page") "1"))
         per-page (js/parseInt (or (get-param "size") "50"))
         states (when-let [s (get-param "states")]
-                 (clj->js (clojure.string/split s #",")))
+                 (clj->js (split s #",")))
         variables (cond-> {:poolId pool-id :page page :perPage per-page}
                     states (assoc :states states)
                     (get-param "startDate") (assoc :startDate (get-param "startDate"))

@@ -11,6 +11,7 @@
    [leihs.lending.client.components.pagination :as pagination]
    [leihs.lending.client.routes.pools.visits.components.table.skeleton-row :refer [SkeletonRow]]
    [leihs.lending.client.routes.pools.visits.components.table.visit-row :refer [VisitRow]]
+   [leihs.lending.client.routes.pools.visits.data :as data]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui page []
@@ -78,7 +79,10 @@
                             ($ SkeletonRow {:key i}))
 
                           (for [visit visits]
-                            ($ VisitRow {:key (:id visit) :visit visit})))))))))
+                            ($ VisitRow {:key (:id visit)
+                                         :visit visit
+                                         :use-user-details data/use-user-details
+                                         :use-items data/use-items})))))))))
 
        ($ CardFooter {:class-name "sticky bottom-0 bg-background z-10 rounded-b-xl py-6"
                       :style {:background "linear-gradient(to top, var(--background) 80%, transparent 100%)"}}
