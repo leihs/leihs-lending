@@ -9,4 +9,5 @@
    :update-order-purpose orders/update-purpose!
    :swap-order-user orders/swap-user!
    :create-reservation reservations/create!
-   :delete-reservation reservations/delete!})
+   :delete-reservations reservations/delete!
+   :swap-model reservations/swap-model!})

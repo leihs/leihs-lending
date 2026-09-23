@@ -163,7 +163,10 @@
                              :startDate {:type (non-null :Date)}
                              :endDate {:type (non-null :Date)}}
                       :resolve :create-reservation}
-  :deleteReservation {:type (non-null :UUID)
-                      :args {:id {:type (non-null :UUID)}
-                             :orderId {:type :UUID}}
-                      :resolve :delete-reservation}}}
+  :deleteReservations {:type (non-null (list (non-null :UUID)))
+                       :args {:ids {:type (non-null (list (non-null :UUID)))}}
+                       :resolve :delete-reservations}
+  :swapModel {:type (non-null (list (non-null :Reservation)))
+              :args {:ids {:type (non-null (list (non-null :UUID)))}
+                     :modelId {:type (non-null :UUID)}}
+              :resolve :swap-model}}}

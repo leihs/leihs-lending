@@ -128,31 +128,41 @@
                  :end_date end_date
                  :reservation_ids ids})))))
 
-(defn- assert-order-submitted! [tx order-id]
+(defn- assert-order-submitted!
+  "Order must belong to the pool (404) and be in submitted state (422)."
+  [tx pool-id order-id]
   (when order-id
-    (let [state (-> (sql/select [[:upper :state] :state])
+    (let [order (-> (sql/select [[:upper :state] :state])
                     (sql/from :orders)
                     (sql/where [:= :id order-id])
+                    (sql/where [:= :inventory_pool_id pool-id])
                     sql-format
                     (->> (jdbc-query tx))
-                    first
-                    :state)]
-      (when (not= "SUBMITTED" state)
+                    first)]
+      (when-not order
+        (throw (ex-info "Order not found" {:status 404})))
+      (when (not= "SUBMITTED" (:state order))
         (throw (ex-info "Order is not in submitted state" {:status 422}))))))
 
-(defn- assert-not-removing-all! [tx order-id excluded-id]
-  (when order-id
-    (let [remaining (->> (get-for-open-order tx order-id)
-                         (remove #(= excluded-id (:id %)))
-                         count)]
-      (when (zero? remaining)
+(defn- assert-not-removing-all!
+  "Only for submitted reservations -- an order under review must keep at
+  least one; approved (hand-over) ones may be removed freely."
+  [tx reservations]
+  (let [ids (set (map :id reservations))]
+    (doseq [order-id (->> reservations
+                          (filter #(= "submitted" (:status %)))
+                          (map :order_id)
+                          distinct)]
+      (when (->> (get-for-open-order tx order-id)
+                 (remove #(ids (:id %)))
+                 empty?)
         (throw (ex-info "Cannot remove the last reservation — reject the order instead"
                         {:status 422}))))))
 
 (defn create!
   [{{tx :tx pool-id :pool-id} :request}
    {:keys [order-id user-id model-id start-date end-date]} _]
-  (assert-order-submitted! tx order-id)
+  (assert-order-submitted! tx pool-id order-id)
   (-> (sql/insert-into :reservations)
       (sql/values [{:inventory_pool_id pool-id
                     :user_id user-id
@@ -169,12 +179,55 @@
       (->> (jdbc-query tx))
       first))
 
+(defn- assert-model-exists! [tx model-id]
+  (when-not (-> (sql/select :id)
+                (sql/from :models)
+                (sql/where [:= :id model-id])
+                sql-format
+                (->> (jdbc-query tx))
+                seq)
+    (throw (ex-info "Model not found" {:status 422}))))
+
+(def ^:private non-editable-statuses #{"rejected" "signed" "closed" "canceled"})
+
+(defn- get-editable!
+  "Fetches the pool's reservations by ids; 404 if any is missing, 422 if
+  any is in a non-editable status."
+  [tx pool-id ids]
+  (when (empty? ids)
+    (throw (ex-info "No reservation ids given" {:status 422})))
+  (let [ids (distinct ids)
+        rs (-> base-sqlmap
+               (sql/where [:in :id ids])
+               (sql/where [:= :inventory_pool_id pool-id])
+               sql-format
+               (->> (jdbc-query tx)))]
+    (when (not= (count ids) (count rs))
+      (throw (ex-info "Reservation not found" {:status 404})))
+    (when (some (comp non-editable-statuses :status) rs)
+      (throw (ex-info "Reservation is not editable" {:status 422})))
+    rs))
+
 (defn delete!
-  [{{tx :tx} :request} {:keys [id order-id]} _]
-  (assert-order-submitted! tx order-id)
-  (assert-not-removing-all! tx order-id id)
-  (-> (sql/delete-from :reservations)
-      (sql/where [:= :id id])
+  [{{tx :tx pool-id :pool-id} :request} {:keys [ids]} _]
+  (->> (get-editable! tx pool-id ids)
+       (assert-not-removing-all! tx))
+  (let [ids (distinct ids)]
+    (-> (sql/delete-from :reservations)
+        (sql/where [:in :id ids])
+        sql-format
+        (->> (execute! tx)))
+    ids))
+
+(defn swap-model!
+  "Sets model for the given reservations and unassigns their items,
+  mirroring legacy reservations#swap_model."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [ids model-id]} _]
+  (assert-model-exists! tx model-id)
+  (get-editable! tx pool-id ids)
+  (-> (sql/update :reservations)
+      (sql/set {:model_id model-id :item_id nil :updated_at [:now]})
+      (sql/where [:in :id (distinct ids)])
+      (sql/returning :*)
       sql-format
-      (->> (execute! tx)))
-  id)
+      (->> (jdbc-query tx))))

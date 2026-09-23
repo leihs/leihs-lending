@@ -85,4 +85,14 @@ describe "createReservation" do
     result = create_reservation(model.id, start_date, end_date, user.id, order_id: order.id)
     expect_graphql_error(result, status: 422)
   end
+
+  it "fails when the given order belongs to another pool" do
+    other_pool = create(:inventory_pool)
+    order = create(:order, user: user, inventory_pool: other_pool, state: "submitted")
+    start_date = Date.today.next_occurring(:monday)
+    end_date = start_date + 4
+
+    result = create_reservation(model.id, start_date, end_date, user.id, order_id: order.id)
+    expect_graphql_error(result, status: 404)
+  end
 end
