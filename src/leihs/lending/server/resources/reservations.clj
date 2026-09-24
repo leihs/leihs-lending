@@ -3,6 +3,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [leihs.core.availability.core :as av]
+   [leihs.lending.server.resources.items :as items]
+   [leihs.lending.server.resources.models :as models]
+   [leihs.lending.server.resources.options :as options]
    [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
@@ -159,38 +162,80 @@
         (throw (ex-info "Cannot remove the last reservation — reject the order instead"
                         {:status 422}))))))
 
-(defn create!
-  [{{tx :tx pool-id :pool-id} :request}
-   {:keys [order-id user-id model-id start-date end-date]} _]
-  (assert-order-submitted! tx pool-id order-id)
-  (-> (sql/insert-into :reservations)
-      (sql/values [{:inventory_pool_id pool-id
-                    :user_id user-id
-                    :order_id order-id
-                    :model_id model-id
-                    :quantity 1
-                    :start_date start-date
-                    :end_date end-date
-                    :status (if order-id "submitted" "approved")
-                    :created_at [:now]
-                    :updated_at [:now]}])
-      (sql/returning :*)
-      sql-format
-      (->> (jdbc-query tx))
-      first))
-
-(defn- assert-model-exists! [tx model-id]
-  (when-not (-> (sql/select :id)
-                (sql/from :models)
-                (sql/where [:= :id model-id])
+(defn- assert-pool-option-exists! [tx pool-id option-id]
+  (when-not (-> options/base-sqlmap
+                (sql/where [:= :options.id option-id])
+                (sql/where [:= :options.inventory_pool_id pool-id])
                 sql-format
                 (->> (jdbc-query tx))
                 seq)
-    (throw (ex-info "Model not found" {:status 422}))))
+    (throw (ex-info "Option not found" {:status 422}))))
+
+(defn- resolve-inventory-code
+  "Mirrors legacy inventory#find: the item the pool is responsible for, else
+  the pool's option. Returns reservation columns ({:model_id :item_id} or
+  {:option_id}). Throws 422 if the item is retired, inside a package or only
+  owned by the pool; 404 otherwise."
+  [tx pool-id code]
+  (let [item (items/get-by-inventory-code tx code)]
+    (if (= pool-id (:inventory_pool_id item))
+      (do (when (:retired item)
+            (throw (ex-info "Item is retired" {:status 422})))
+          (when (:parent_id item)
+            (throw (ex-info "Item is part of a package" {:status 422})))
+          {:model_id (:model_id item) :item_id (:id item)})
+      (or (some->> (options/get-by-inventory-code tx pool-id code)
+                   :id
+                   (hash-map :option_id))
+          (when (= pool-id (:owner_id item))
+            (throw (ex-info (str "Not responsible for this item, responsible pool is "
+                                 (:inventory_pool_name item))
+                            {:status 422})))
+          (throw (ex-info "Inventory code not found" {:status 404}))))))
+
+(defn- resolve-record
+  "Model or option columns from model-id, option-id or inventory-code
+  (exactly one required). Options can't be added to an order (DB constraint)."
+  [tx pool-id order-id model-id option-id inventory-code]
+  (when (not= 1 (count (filter some? [model-id option-id inventory-code])))
+    (throw (ex-info "Exactly one of modelId, optionId or inventoryCode is required"
+                    {:status 422})))
+  (let [record (cond
+                 model-id (do (models/assert-lendable-in-pool! tx pool-id model-id)
+                              {:model_id model-id})
+                 option-id (do (assert-pool-option-exists! tx pool-id option-id)
+                               {:option_id option-id})
+                 :else (-> (resolve-inventory-code tx pool-id inventory-code)
+                           (select-keys [:model_id :option_id])))]
+    (when (and order-id (:option_id record))
+      (throw (ex-info "Options cannot be added to an order" {:status 422})))
+    record))
+
+(defn create!
+  [{{tx :tx pool-id :pool-id} :request}
+   {:keys [order-id user-id model-id option-id inventory-code start-date end-date]} _]
+  (assert-order-submitted! tx pool-id order-id)
+  (let [record (resolve-record tx pool-id order-id model-id option-id inventory-code)]
+    (-> (sql/insert-into :reservations)
+        (sql/values [(merge record
+                            {:inventory_pool_id pool-id
+                             :user_id user-id
+                             :order_id order-id
+                             :type (if (:option_id record) "OptionLine" "ItemLine")
+                             :quantity 1
+                             :start_date start-date
+                             :end_date end-date
+                             :status (if order-id "submitted" "approved")
+                             :created_at [:now]
+                             :updated_at [:now]})])
+        (sql/returning :*)
+        sql-format
+        (->> (jdbc-query tx))
+        first)))
 
 (def ^:private non-editable-statuses #{"rejected" "signed" "closed" "canceled"})
 
-(defn- get-editable!
+(defn- get-editable
   "Fetches the pool's reservations by ids; 404 if any is missing, 422 if
   any is in a non-editable status."
   [tx pool-id ids]
@@ -210,7 +255,7 @@
 
 (defn delete!
   [{{tx :tx pool-id :pool-id} :request} {:keys [ids]} _]
-  (->> (get-editable! tx pool-id ids)
+  (->> (get-editable tx pool-id ids)
        (assert-not-removing-all! tx))
   (let [ids (distinct ids)]
     (-> (sql/delete-from :reservations)
@@ -223,8 +268,8 @@
   "Sets model for the given reservations and unassigns their items,
   mirroring legacy reservations#swap_model."
   [{{tx :tx pool-id :pool-id} :request} {:keys [ids model-id]} _]
-  (assert-model-exists! tx model-id)
-  (get-editable! tx pool-id ids)
+  (models/assert-lendable-in-pool! tx pool-id model-id)
+  (get-editable tx pool-id ids)
   (-> (sql/update :reservations)
       (sql/set {:model_id model-id :item_id nil :updated_at [:now]})
       (sql/where [:in :id (distinct ids)])

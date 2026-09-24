@@ -16,3 +16,13 @@
         sql-format
         (->> (jdbc-query tx))
         first)))
+
+(defn get-by-inventory-code
+  "The pool's option, case-insensitive."
+  [tx pool-id code]
+  (-> base-sqlmap
+      (sql/where [:= [:lower :options.inventory_code] [:lower code]])
+      (sql/where [:= :options.inventory_pool_id pool-id])
+      sql-format
+      (->> (jdbc-query tx))
+      first))

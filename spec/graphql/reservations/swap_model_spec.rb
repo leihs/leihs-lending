@@ -5,7 +5,11 @@ describe "swapModel" do
   let(:user) { create(:user) }
   let(:pool) { create(:inventory_pool) }
   let(:model) { create(:leihs_model) }
-  let(:new_model) { create(:leihs_model) }
+  let(:new_model) do
+    create(:leihs_model).tap do |m|
+      create(:item, leihs_model: m, inventory_pool: pool, owner: pool)
+    end
+  end
 
   before { grant_pool_access(user, pool) }
 
@@ -56,6 +60,17 @@ describe "swapModel" do
     reservation.reload
     expect(reservation.model_id).to eq(new_model.id)
     expect(reservation.item_id).to be_nil
+  end
+
+  it "fails when the model has no lendable item in the pool" do
+    reservation = create_reservation(status: "approved")
+    retired_only = create(:leihs_model)
+    create(:item, leihs_model: retired_only, inventory_pool: pool, owner: pool,
+      retired: Date.today, retired_reason: "broken")
+
+    result = swap_model([reservation.id], retired_only.id)
+    expect_graphql_error(result, status: 422)
+    expect(reservation.reload.model_id).to eq(model.id)
   end
 
   it "fails when the model does not exist" do

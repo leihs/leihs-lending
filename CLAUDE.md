@@ -4,6 +4,7 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 
 ## Backend
 
+- Clojure style: follow the [Clojure Style Guide](https://guide.clojure.style) unless a rule here says otherwise.
 - Resolver signature: `[{{tx :tx pool-id :pool-id user :authenticated-entity} :request} args value]`
 - Resource modules: one file per domain in `resources/`. Use `get-one` / `get-multiple` as canonical names for fetchers.
 - Queries: build on the resource's `base-sqlmap` whenever possible (also across resources, e.g. `items/base-sqlmap` in a subquery) instead of ad-hoc `select`/`from`.
