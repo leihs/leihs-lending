@@ -193,45 +193,47 @@
                             {:status 422})))
           (throw (ex-info "Inventory code not found" {:status 404}))))))
 
-(defn- resolve-record
-  "Model or option columns from model-id, option-id or inventory-code
-  (exactly one required). Options can't be added to an order (DB constraint)."
-  [tx pool-id order-id model-id option-id inventory-code]
-  (when (not= 1 (count (filter some? [model-id option-id inventory-code])))
-    (throw (ex-info "Exactly one of modelId, optionId or inventoryCode is required"
-                    {:status 422})))
-  (let [record (cond
-                 model-id (do (models/assert-lendable-in-pool! tx pool-id model-id)
-                              {:model_id model-id})
-                 option-id (do (assert-pool-option-exists! tx pool-id option-id)
-                               {:option_id option-id})
-                 :else (-> (resolve-inventory-code tx pool-id inventory-code)
-                           (select-keys [:model_id :option_id])))]
+(defn- insert!
+  "Quantity 1; submitted when on an order, else approved (hand over)."
+  [tx pool-id {:keys [order-id user-id start-date end-date]} record]
+  (-> (sql/insert-into :reservations)
+      (sql/values [(merge record
+                          {:inventory_pool_id pool-id
+                           :user_id user-id
+                           :order_id order-id
+                           :type (if (:option_id record) "OptionLine" "ItemLine")
+                           :quantity 1
+                           :start_date start-date
+                           :end_date end-date
+                           :status (if order-id "submitted" "approved")
+                           :created_at [:now]
+                           :updated_at [:now]})])
+      (sql/returning :*)
+      sql-format
+      (->> (jdbc-query tx))
+      first))
+
+(defn create-for-model!
+  [{{tx :tx pool-id :pool-id} :request} {:keys [order-id model-id] :as args} _]
+  (assert-order-submitted! tx pool-id order-id)
+  (models/assert-lendable-in-pool! tx pool-id model-id)
+  (insert! tx pool-id args {:model_id model-id}))
+
+(defn create-for-option!
+  "No order -- options can't be added to one (DB constraint)."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [option-id] :as args} _]
+  (assert-pool-option-exists! tx pool-id option-id)
+  (insert! tx pool-id args {:option_id option-id}))
+
+(defn create-by-inventory-code!
+  "Reserves the item's model (item not assigned) or the option."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [order-id inventory-code] :as args} _]
+  (assert-order-submitted! tx pool-id order-id)
+  (let [record (-> (resolve-inventory-code tx pool-id inventory-code)
+                   (select-keys [:model_id :option_id]))]
     (when (and order-id (:option_id record))
       (throw (ex-info "Options cannot be added to an order" {:status 422})))
-    record))
-
-(defn create!
-  [{{tx :tx pool-id :pool-id} :request}
-   {:keys [order-id user-id model-id option-id inventory-code start-date end-date]} _]
-  (assert-order-submitted! tx pool-id order-id)
-  (let [record (resolve-record tx pool-id order-id model-id option-id inventory-code)]
-    (-> (sql/insert-into :reservations)
-        (sql/values [(merge record
-                            {:inventory_pool_id pool-id
-                             :user_id user-id
-                             :order_id order-id
-                             :type (if (:option_id record) "OptionLine" "ItemLine")
-                             :quantity 1
-                             :start_date start-date
-                             :end_date end-date
-                             :status (if order-id "submitted" "approved")
-                             :created_at [:now]
-                             :updated_at [:now]})])
-        (sql/returning :*)
-        sql-format
-        (->> (jdbc-query tx))
-        first)))
+    (insert! tx pool-id args record)))
 
 (def ^:private non-editable-statuses #{"rejected" "signed" "closed" "canceled"})
 

@@ -156,18 +156,29 @@
                          :userId {:type (non-null :UUID)}
                          :delegatedUserId {:type :UUID}}
                   :resolve :swap-order-user}
-  :createReservation {:type (non-null :Reservation)
-                      :args {:orderId {:type :UUID}
-                             :userId {:type (non-null :UUID)}
-                             :modelId {:type :UUID
-                                       :description "Exactly one of modelId, optionId or inventoryCode is required."}
-                             :optionId {:type :UUID
-                                        :description "Pool's option. Options can't be added to an order."}
-                             :inventoryCode {:type :NonEmptyString
-                                             :description "Code of an item the pool is responsible for (reserves its model, item not assigned) or of the pool's option. Case-insensitive."}
-                             :startDate {:type (non-null :Date)}
-                             :endDate {:type (non-null :Date)}}
-                      :resolve :create-reservation}
+  :createModelReservation {:type (non-null :Reservation)
+                           :description "Model must have an item the pool is responsible for, not retired and not inside a package."
+                           :args {:orderId {:type :UUID}
+                                  :userId {:type (non-null :UUID)}
+                                  :modelId {:type (non-null :UUID)}
+                                  :startDate {:type (non-null :Date)}
+                                  :endDate {:type (non-null :Date)}}
+                           :resolve :create-model-reservation}
+  :createOptionReservation {:type (non-null :Reservation)
+                            :description "Pool's option. No orderId: options can't be added to an order."
+                            :args {:userId {:type (non-null :UUID)}
+                                   :optionId {:type (non-null :UUID)}
+                                   :startDate {:type (non-null :Date)}
+                                   :endDate {:type (non-null :Date)}}
+                            :resolve :create-option-reservation}
+  :createReservationByInventoryCode {:type (non-null :Reservation)
+                                     :description "Case-insensitive code of an item the pool is responsible for (reserves its model, item not assigned) or of the pool's option (not allowed with orderId)."
+                                     :args {:orderId {:type :UUID}
+                                            :userId {:type (non-null :UUID)}
+                                            :inventoryCode {:type (non-null :NonEmptyString)}
+                                            :startDate {:type (non-null :Date)}
+                                            :endDate {:type (non-null :Date)}}
+                                     :resolve :create-reservation-by-inventory-code}
   :deleteReservations {:type (non-null (list (non-null :UUID)))
                        :args {:ids {:type (non-null (list (non-null :UUID)))}}
                        :resolve :delete-reservations}

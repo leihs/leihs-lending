@@ -8,6 +8,8 @@
    :approve-order orders/approve!
    :update-order-purpose orders/update-purpose!
    :swap-order-user orders/swap-user!
-   :create-reservation reservations/create!
+   :create-model-reservation reservations/create-for-model!
+   :create-option-reservation reservations/create-for-option!
+   :create-reservation-by-inventory-code reservations/create-by-inventory-code!
    :delete-reservations reservations/delete!
    :swap-model reservations/swap-model!})
