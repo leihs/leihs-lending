@@ -30,7 +30,21 @@
                   :delegatorUser {:type :User :resolve :user}}}
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}
-                   :manufacturer {:type String}}}
+                   :manufacturer {:type String}
+                   :availabilityChanges {:type (list (non-null :AvailabilityChange))
+                                         :description "Raw availability changes in the pool, sorted by date, starting today. Each change holds until the next one."
+                                         :resolve :availability-changes}}}
+  :AvailabilityChange {:fields {:date {:type (non-null :Date)}
+                                :groups {:type (non-null (list (non-null :AvailabilityChangeGroup)))}}}
+  :AvailabilityChangeGroup {:fields {:entitlementGroup {:type :EntitlementGroup
+                                                        :description "null = general group"
+                                                        :resolve :entitlement-group}
+                                     :inQuantity {:type (non-null Int)
+                                                  :description "Negative = overbooked"}
+                                     :reservations {:type (non-null (list (non-null :Reservation)))
+                                                    :resolve :reservations}}}
+  :EntitlementGroup {:fields {:id {:type (non-null :UUID)}
+                              :name {:type (non-null String)}}}
   :Option {:fields {:id {:type (non-null :UUID)}
                     :name {:type String}
                     :manufacturer {:type String}}}
@@ -39,7 +53,8 @@
                          :endDate {:type :Date}
                          :quantity {:type Int}
                          :model {:type :Model :resolve :model}
-                         :option {:type :Option :resolve :option}}}
+                         :option {:type :Option :resolve :option}
+                         :user {:type (non-null :User) :resolve :user}}}
   :ReservationLine {:fields {:model {:type :Model :resolve :model}
                              :quantity {:type (non-null Int)}
                              :availableQuantity {:type (non-null Int)}
@@ -101,6 +116,9 @@
   :users {:type (non-null (list (non-null :User)))
           :args {:term {:type String}}
           :resolve :users}
+  :model {:type :Model
+          :args {:id {:type (non-null :UUID)}}
+          :resolve :model}
   :models {:type (non-null (list (non-null :Model)))
            :args {:term {:type String}}
            :resolve :models}

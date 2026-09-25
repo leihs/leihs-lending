@@ -51,11 +51,11 @@ describe "orders" do
     expect(result.dig(:data, :orders, :totalCount)).to eq(3)
   end
 
-  it "returns reservations with model and quantity" do
+  it "returns reservations with model, quantity and user" do
     order = create_order
     reservation = Reservation.where(order_id: order.id).first
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}") { items { reservations { id quantity model { id name } } } totalCount } }
+      { orders(poolId: "#{pool.id}") { items { reservations { id quantity model { id name } user { id } } } totalCount } }
     GQL
     expect_graphql_result(result, {
       orders: {
@@ -63,7 +63,8 @@ describe "orders" do
           reservations: [{
             id: reservation.id.to_s,
             quantity: reservation.quantity,
-            model: {id: model.id.to_s, name: model.product}
+            model: {id: model.id.to_s, name: model.product},
+            user: {id: user.id.to_s}
           }]
         }],
         totalCount: 1

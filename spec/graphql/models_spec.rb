@@ -74,4 +74,23 @@ describe "models" do
     ids = result.dig(:data, :models).map { |m| m[:id] }
     expect(ids).to include(model.id.to_s)
   end
+
+  describe "model(id)" do
+    def fetch_model(id)
+      query(<<~GQL, requester.id, pool_id: pool.id)
+        { model(id: "#{id}") { id name manufacturer } }
+      GQL
+    end
+
+    it "returns the model regardless of pool" do
+      model = create(:leihs_model, product: "Lone Lens", manufacturer: "Zeiss")
+
+      expect_graphql_result(fetch_model(model.id),
+        {model: {id: model.id.to_s, name: "Lone Lens", manufacturer: "Zeiss"}})
+    end
+
+    it "fails with 404 for an unknown id" do
+      expect_graphql_error(fetch_model(SecureRandom.uuid), status: 404)
+    end
+  end
 end

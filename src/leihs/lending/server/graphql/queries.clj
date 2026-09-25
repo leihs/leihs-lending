@@ -1,6 +1,8 @@
 (ns leihs.lending.server.graphql.queries
   (:require
+   [leihs.lending.server.resources.availability :as availability]
    [leihs.lending.server.resources.contracts :as contracts]
+   [leihs.lending.server.resources.entitlement-groups :as entitlement-groups]
    [leihs.lending.server.resources.models :as models]
    [leihs.lending.server.resources.options :as options]
    [leihs.lending.server.resources.orders :as orders]
@@ -10,8 +12,10 @@
    [leihs.lending.server.resources.visits :as visits]))
 
 (def resolvers
-  {:contracts contracts/get-multiple
+  {:availability-changes availability/get-multiple
+   :contracts contracts/get-multiple
    :current-user users/get-current
+   :entitlement-group entitlement-groups/get-one
    :model models/get-one
    :models models/get-multiple
    :option options/get-one

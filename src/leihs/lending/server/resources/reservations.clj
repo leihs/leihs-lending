@@ -14,17 +14,22 @@
       (sql/from :reservations)))
 
 (defn get-multiple
+  "By the parent's order, contract or `reservation-ids`. An empty id list means
+  a parent without reservations (e.g. an availability change group holding
+  none), not an absent filter -- HoneySQL would render it as `IN ()`."
   [{{tx :tx} :request} _ {order-id :id contract-id :contract-id reservation-ids :reservation-ids}]
-  (-> base-sqlmap
-      (cond->
-       (and order-id (not reservation-ids) (not contract-id))
-        (sql/where [:= :reservations.order_id order-id])
-        contract-id
-        (sql/where [:= :reservations.contract_id contract-id])
-        reservation-ids
-        (sql/where [:in :reservations.id reservation-ids]))
-      sql-format
-      (->> (jdbc-query tx))))
+  (if (and reservation-ids (empty? reservation-ids))
+    []
+    (-> base-sqlmap
+        (cond->
+         (and order-id (not reservation-ids) (not contract-id))
+          (sql/where [:= :reservations.order_id order-id])
+          contract-id
+          (sql/where [:= :reservations.contract_id contract-id])
+          reservation-ids
+          (sql/where [:in :reservations.id reservation-ids]))
+        sql-format
+        (->> (jdbc-query tx)))))
 
 (defn get-with-details-for-contract
   "Contract-show lines: one row per reservation, with item/model display fields

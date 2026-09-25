@@ -28,13 +28,16 @@
     (throw (ex-info "Model not available in this pool" {:status 422}))))
 
 (defn get-one
-  [{{tx :tx} :request} _ {:keys [model-id]}]
-  (when model-id
-    (-> base-sqlmap
-        (sql/where [:= :models.id model-id])
-        sql-format
-        (->> (jdbc-query tx))
-        first)))
+  "By `id` arg (top-level query, 404 when missing) or by the parent's
+  `model-id` (nil for option lines)."
+  [{{tx :tx} :request} {:keys [id]} {:keys [model-id]}]
+  (when-let [model-id (or id model-id)]
+    (or (-> base-sqlmap
+            (sql/where [:= :models.id model-id])
+            sql-format
+            (->> (jdbc-query tx))
+            first)
+        (when id (throw (ex-info "Model not found" {:status 404}))))))
 
 (defn get-multiple
   [{{tx :tx pool-id :pool-id} :request} {:keys [term]} _]
