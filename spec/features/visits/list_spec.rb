@@ -177,7 +177,7 @@ feature "Visits list" do
     database[:emails].insert(
       id: SecureRandom.uuid,
       user_id: borrower.id,
-      subject: "Reminder",
+      subject: "Items ready for pick-up",
       body: "Please pick up your items.",
       from_address: "noreply@example.com",
       to_address: borrower.email,
@@ -195,15 +195,122 @@ feature "Visits list" do
     expect(page).to have_content(borrower.email)
     name_trigger.click  # close
 
-    # quantity popover (mock content)
+    # items popover shows the visit's items grouped by model
     qty_trigger = row.find("[data-test-id='visit-items-popover-trigger']")
     qty_trigger.click
-    expect(page).to have_content("...TODO...")
+    expect(page).to have_content(model.product)
     qty_trigger.click  # close
 
-    # reminders popover (mock content)
+    # reminders popover shows sent reminder emails
     row.find("[data-test-id='visit-reminders-popover-trigger']").click
-    expect(page).to have_content("...TODO...")
+    expect(page).to have_content("Items ready for pick-up")
+  end
+
+  let(:avatar_data_url) { "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
+
+  scenario "shows avatar, email and badge in user popover" do
+    borrower = FactoryBot.create(:user, firstname: "Ernst", lastname: "Einmalig",
+      badge_id: "123456789", img256_url: avatar_data_url)
+    grant_pool_access(borrower, pool)
+
+    create_hand_over(target_user: borrower)
+
+    click_on "Visits"
+
+    row = find("tbody tr", text: "Ernst Einmalig")
+    row.find("[data-test-id='visit-user-popover-trigger']").click
+
+    expect(page).to have_content(borrower.email)
+    expect(page).to have_content("Badge 123456789")
+    expect(page).to have_css("img[src='#{avatar_data_url}']")
+  end
+
+  scenario "shows suspended user icon and reason in user popover" do
+    suspended_user = FactoryBot.create(:user, firstname: "Sven", lastname: "Gesperrt")
+    grant_pool_access(suspended_user, pool)
+    create(:suspension, user: suspended_user, inventory_pool: pool, suspended_reason: "Overdue return")
+
+    create_hand_over(target_user: suspended_user)
+
+    click_on "Visits"
+
+    name_trigger = find("tbody tr", text: "Sven Gesperrt")
+      .find("[data-test-id='visit-user-popover-trigger']")
+    expect(name_trigger).to have_css("svg")
+
+    name_trigger.click
+    expect(page).to have_content("Overdue return")
+  end
+
+  scenario "shows date range and grouped items in items popover" do
+    borrower = FactoryBot.create(:user, firstname: "Gustav", lastname: "Gegenstand")
+    grant_pool_access(borrower, pool)
+
+    other_model = create(:leihs_model)
+    order = create(:order, user: borrower, inventory_pool: pool)
+    create(:reservation,
+      user: borrower,
+      inventory_pool: pool,
+      leihs_model: model,
+      order: order,
+      status: "submitted",
+      start_date: next_monday.to_s,
+      end_date: (next_monday + 7).to_s)
+    create(:reservation,
+      user: borrower,
+      inventory_pool: pool,
+      leihs_model: other_model,
+      order: order,
+      status: "submitted",
+      start_date: next_monday.to_s,
+      end_date: (next_monday + 7).to_s)
+
+    click_on "Visits"
+
+    row = find("tbody tr", text: "Gustav Gegenstand")
+    row.find("[data-test-id='visit-items-popover-trigger']").click
+
+    expect(page).to have_content(
+      "#{next_monday.strftime("%d/%m/%Y")} - #{(next_monday + 7).strftime("%d/%m/%Y")} (8 days)"
+    )
+    expect(page).to have_content(model.product)
+    expect(page).to have_content(other_model.product)
+  end
+
+  scenario "shows reminder emails in reminders popover" do
+    borrower = FactoryBot.create(:user, firstname: "Rolf", lastname: "Erinnert")
+    grant_pool_access(borrower, pool)
+
+    create_hand_over(target_user: borrower)
+
+    database[:emails].insert(
+      id: SecureRandom.uuid,
+      user_id: borrower.id,
+      subject: "First reminder",
+      body: "...",
+      from_address: "noreply@example.com",
+      to_address: borrower.email,
+      created_at: next_monday.to_time,
+      updated_at: next_monday.to_time
+    )
+    database[:emails].insert(
+      id: SecureRandom.uuid,
+      user_id: borrower.id,
+      subject: "Second reminder",
+      body: "...",
+      from_address: "noreply@example.com",
+      to_address: borrower.email,
+      created_at: (next_monday + 1).to_time,
+      updated_at: (next_monday + 1).to_time
+    )
+
+    click_on "Visits"
+
+    row = find("tbody tr", text: "Rolf Erinnert")
+    row.find("[data-test-id='visit-reminders-popover-trigger']").click
+
+    expect(page).to have_content("First reminder")
+    expect(page).to have_content("Second reminder")
   end
 
   scenario "filters visits by term" do

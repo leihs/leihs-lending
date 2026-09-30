@@ -1,7 +1,9 @@
 {:paths ["src" "resources"]
  :deps {leihs-core/leihs-core    {:local/root "./shared-clj"}
         metosin/reitit            {:mvn/version "0.10.0"}
-        hiccup/hiccup             {:mvn/version "2.0.0"}}
+        hiccup/hiccup             {:mvn/version "2.0.0"}
+        com.google.zxing/core     {:mvn/version "3.5.3"}
+        com.google.zxing/javase   {:mvn/version "3.5.3"}}
 
  :aliases {:build {:deps {io.github.clojure/tools.build
                           {:git/tag "v0.10.5"

@@ -129,6 +129,8 @@
   --color-shadow: var(--shadow);
 }
 
+@import "./components/nav_progress_bar.css";
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

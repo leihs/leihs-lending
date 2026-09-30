@@ -17,6 +17,17 @@ VISITS_GQL = <<~GQL
   }
 GQL
 
+VISIT_GQL = <<~GQL
+  query Visit($id: UUID!) {
+    visit(id: $id) {
+      id
+      visitType
+      quantity
+      reservations { id quantity startDate endDate model { name } }
+    }
+  }
+GQL
+
 describe "visits" do
   let(:user) { create(:user) }
   let(:pool) { create(:inventory_pool) }
@@ -27,6 +38,10 @@ describe "visits" do
 
   def visits(variables = {})
     query(VISITS_GQL, user.id, pool_id: pool.id, variables: variables)
+  end
+
+  def visit_by_id(id, in_pool: pool)
+    query(VISIT_GQL, user.id, pool_id: in_pool.id, variables: {id: id})
   end
 
   def create_hand_over(target_user: user, status: "submitted", start_date: next_monday)
@@ -220,6 +235,40 @@ describe "visits" do
       expect(result[:errors]).to be_nil
       expect(result.dig(:data, :visits, :items).size).to eq(1)
       expect(result.dig(:data, :visits, :items, 0, :withUserAndModelToVerify)).to be true
+    end
+  end
+
+  context "single visit" do
+    it "returns the visit with its reservations" do
+      create_hand_over
+      id = visits.dig(:data, :visits, :items, 0, :id)
+      result = visit_by_id(id)
+      expect(result[:errors]).to be_nil
+      expect(result.dig(:data, :visit, :id)).to eq(id)
+      expect(result.dig(:data, :visit, :reservations).size).to eq(1)
+      expect(result.dig(:data, :visit, :reservations, 0, :model, :name)).to eq(model.name)
+    end
+
+    it "does not return a visit from another pool" do
+      other_pool = create(:inventory_pool)
+      grant_pool_access(user, other_pool)
+      other_order = create(:order, user: user, inventory_pool: other_pool)
+      create(:reservation,
+        user: user,
+        inventory_pool: other_pool,
+        leihs_model: model,
+        order: other_order,
+        status: "submitted",
+        start_date: next_monday.to_s,
+        end_date: (next_monday + 7).to_s)
+      other_id = query(VISITS_GQL, user.id, pool_id: other_pool.id)
+        .dig(:data, :visits, :items, 0, :id)
+
+      expect_graphql_result(visit_by_id(other_id), {visit: nil})
+    end
+
+    it "returns nothing for an unknown id" do
+      expect_graphql_result(visit_by_id(SecureRandom.uuid), {visit: nil})
     end
   end
 end

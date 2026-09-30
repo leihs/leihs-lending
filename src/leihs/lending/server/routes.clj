@@ -3,6 +3,7 @@
    [leihs.lending.server.graphiql :as graphiql]
    [leihs.lending.server.graphql :as graphql]
    [leihs.lending.server.home :as home]
+   [leihs.lending.server.html.contracts :as html-contracts]
    [leihs.lending.server.middlewares.authorize :as authorize]
    [leihs.lending.server.middlewares.pool-id :as pool-id]
    [leihs.lending.server.sign-in :as sign-in]
@@ -22,10 +23,15 @@
     {:get {:handler graphiql/root-handler}}]
    ["/lending/:pool-id"
     {:parameters {:path {:pool-id :uuid}}
-     :middleware [pool-id/wrap-pool-id authorize/wrap]}
-    ["/graphiql" {:get {:handler graphiql/handler}}]
-    ["/graphql" {:authorize/format :graphql
-                 :post {:handler #(graphql/handler :pool %)}}]]])
+     :middleware [pool-id/wrap-pool-id]}
+    ["/graphiql" {:middleware [authorize/wrap]
+                  :get {:handler graphiql/handler}}]
+    ["/graphql" {:middleware [authorize/wrap]
+                 :authorize/format :graphql
+                 :post {:handler #(graphql/handler :pool %)}}]
+    ["/contracts/:contract-id"
+     {:parameters {:path {:contract-id :uuid}}
+      :get {:handler html-contracts/show}}]]])
 
 (defn handler []
   (reitit-ring/ring-handler

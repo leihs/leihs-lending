@@ -32,6 +32,7 @@
     "@urql/core": "^5.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cn": "^0.3.2",
     "date-fns": "^4.4.0",
     "graphql": "^16.10.0",
     "i18next": "^26.3.1",

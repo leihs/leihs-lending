@@ -7,7 +7,7 @@
    ["lucide-react" :refer [CalendarDays ChevronsUpDown]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
-   [leihs.lending.client.lib.date-utils :refer [format-date]]
+   [leihs.lending.client.lib.date-utils :refer [format-date date-from-iso]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui DateFilter [{:keys [class-name param title]}]
@@ -15,6 +15,7 @@
         [open set-open!] (uix/use-state false)
         [t] (useTranslation)
         value (.. search-params (get param)) ;; param: startDate|endDate
+        selected-date (date-from-iso value)
         handle-select (fn [date]
                         (set-open! false)
                         (let [formatted-date (if date
@@ -35,9 +36,9 @@
                      :data-test-id (str param "-filter-button")}
 
              ($ CalendarDays {:class-name "h-4 w-4"})
-             (if value
+             (if selected-date
                ($ :span {:class-name "truncate w-full text-left"}
-                  (format-date t value))
+                  (format-date t selected-date))
                title)
              ($ ChevronsUpDown {:class-name "ml-auto h-4 w-4 shrink-0 opacity-50"})))
 
@@ -45,5 +46,7 @@
           ($ Calendar {:mode "single"
                        :captionLayout "dropdown"
                        :data-test-id (str param "-calendar")
-                       :selected (js/Date. value)
+                       :selected selected-date
+                       :defaultMonth selected-date
+                       :endMonth (date-fns/addYears (js/Date.) 50)
                        :onSelect handle-select})))))

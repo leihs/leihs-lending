@@ -19,11 +19,10 @@
          isOverdue
          quantity
          user {
+           id
            firstname
            lastname
-           email
            isSuspended
-           suspendedReason
          }
          reminders {
            id
@@ -32,6 +31,60 @@
        totalCount
      }
    }")
+
+(def user-query
+  "query ($id: UUID!) {
+     user(id: $id) {
+       email
+       badgeId
+       img256Url
+       suspendedReason
+     }
+   }")
+
+(defn use-user-details
+  "Loads what the user popover shows on top of what the list already carries."
+  [user-id enabled?]
+  (-> (urql/use-lazy-query user-query {:id user-id} enabled?)
+      (update :data :user)))
+
+(def items-query
+  "query ($id: UUID!) {
+     visit(id: $id) {
+       reservations {
+         id
+         quantity
+         startDate
+         endDate
+         model { name }
+         option { name }
+       }
+     }
+   }")
+
+(defn use-items
+  "Loads the reservations the items popover lists."
+  [visit-id enabled?]
+  (-> (urql/use-lazy-query items-query {:id visit-id} enabled?)
+      (update :data #(-> % :visit :reservations))))
+
+(def reminders-query
+  "query ($id: UUID!) {
+     visit(id: $id) {
+       reminders {
+         id
+         createdAt
+         subject
+       }
+     }
+   }")
+
+(defn use-reminders
+  "Loads the reminders the reminders popover lists; the list query carries only
+   their ids, for the trigger's count."
+  [visit-id enabled?]
+  (-> (urql/use-lazy-query reminders-query {:id visit-id} enabled?)
+      (update :data #(-> % :visit :reminders))))
 
 (defn list-loader
   "Loader for /lending/:pool-id/visits — reads filter/pagination state from

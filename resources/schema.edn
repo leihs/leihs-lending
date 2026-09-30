@@ -1,16 +1,18 @@
 {:scalars
  {:UUID {:parse :uuid-parse :serialize :uuid-serialize}
   :NonEmptyString {:parse :non-empty-string-parse :serialize :non-empty-string-serialize}
-  :Date {:parse :date-parse :serialize :date-serialize}}
+  :Date {:parse :date-parse :serialize :date-serialize}
+  :DateTime {:parse :datetime-parse :serialize :datetime-serialize}}
 
  :enums
  {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}
   :VisitTypeEnum {:values [:HAND_OVER :TAKE_BACK]}
-  :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}}
+  :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}
+  :ContractStateEnum {:values [:OPEN :CLOSED]}}
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
-                         :user {:type (non-null :User)}}}
+                         :user {:type (non-null :User) :resolve :user}}}
   :User {:fields {:id {:type (non-null :UUID)}
                   :email {:type String}
                   :firstname {:type String}
@@ -25,21 +27,33 @@
                   :img256Url {:type String}
                   :isSuspended {:type Boolean}
                   :suspendedReason {:type String}
-                  :delegatorUser {:type :User}}}
+                  :delegatorUser {:type :User :resolve :user}}}
   :Model {:fields {:id {:type (non-null :UUID)}
-                   :name {:type String}}}
+                   :name {:type String}
+                   :manufacturer {:type String}}}
+  :Option {:fields {:id {:type (non-null :UUID)}
+                    :name {:type String}
+                    :manufacturer {:type String}}}
   :Reservation {:fields {:id {:type (non-null :UUID)}
-                         :startDate {:type String}
-                         :endDate {:type String}
-                         :model {:type :Model :resolve :model}}}
+                         :startDate {:type :Date}
+                         :endDate {:type :Date}
+                         :quantity {:type Int}
+                         :model {:type :Model :resolve :model}
+                         :option {:type :Option :resolve :option}}}
+  :ReservationLine {:fields {:model {:type :Model :resolve :model}
+                             :quantity {:type (non-null Int)}
+                             :availableQuantity {:type (non-null Int)}
+                             :startDate {:type (non-null :Date)}
+                             :endDate {:type (non-null :Date)}
+                             :reservationIds {:type (list (non-null :UUID))}}}
   :Email {:fields {:id {:type (non-null :UUID)}
-                   :createdAt {:type (non-null String)}
+                   :createdAt {:type (non-null :DateTime)}
                    :subject {:type (non-null String)}
                    :template {:type String}}}
   :Visit {:fields {:id {:type (non-null :UUID)}
-                   :date {:type (non-null String)}
-                   :startDate {:type String}
-                   :endDate {:type String}
+                   :date {:type (non-null :Date)}
+                   :startDate {:type :Date}
+                   :endDate {:type :Date}
                    :visitType {:type (non-null :VisitTypeEnum)}
                    :isOverdue {:type (non-null Boolean)}
                    :quantity {:type (non-null Int)}
@@ -55,25 +69,47 @@
                     :state {:type (non-null :OrderStateEnum)}
                     :rejectReason {:type String}
                     :toBeVerified {:type (non-null Boolean)}
-                    :startDate {:type String}
-                   :endDate {:type String}
-                   :createdAt {:type (non-null String)}
-                   :updatedAt {:type (non-null String)}
+                    :startDate {:type :Date}
+                   :endDate {:type :Date}
+                   :createdAt {:type (non-null :DateTime)}
+                   :updatedAt {:type (non-null :DateTime)}
                    :user {:type (non-null :User) :resolve :user}
-                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}
+                   :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
+                   :reservationLines {:type (list (non-null :ReservationLine)) :resolve :reservation-lines}}}
+  :Contract {:fields {:id {:type (non-null :UUID)}
+                      :compactId {:type (non-null String)}
+                      :note {:type String}
+                      :purpose {:type String}
+                      :state {:type (non-null :ContractStateEnum)}
+                      :toBeVerified {:type (non-null Boolean)}
+                      :createdAt {:type (non-null :DateTime)}
+                      :updatedAt {:type (non-null :DateTime)}
+                      :user {:type (non-null :User) :resolve :user}
+                      :reservations {:type (list (non-null :Reservation)) :resolve :reservations}}}
   :VisitList {:fields {:items {:type (list (non-null :Visit))}
                        :totalCount {:type (non-null Int)}}}
   :OrderList {:fields {:items {:type (list (non-null :Order))}
-                       :totalCount {:type (non-null Int)}}}}
+                       :totalCount {:type (non-null Int)}}}
+  :ContractList {:fields {:items {:type (list (non-null :Contract))}
+                          :totalCount {:type (non-null Int)}}}}
 
  :queries
  {:currentUser {:type (non-null :CurrentUser) :resolve :current-user}
   :user {:type :User
          :args {:id {:type (non-null :UUID)}}
          :resolve :user}
+  :users {:type (non-null (list (non-null :User)))
+          :args {:term {:type String}}
+          :resolve :users}
+  :models {:type (non-null (list (non-null :Model)))
+           :args {:term {:type String}}
+           :resolve :models}
   :order {:type :Order
           :args {:id {:type (non-null :UUID)}}
           :resolve :order}
+  :visit {:type :Visit
+          :args {:id {:type (non-null :UUID)}}
+          :resolve :visit}
   :visits {:type (non-null :VisitList)
            :args {:date {:type :Date}
                   :startDate {:type :Date}
@@ -93,7 +129,16 @@
                    :page {:type Int}
                   :perPage {:type Int}
                   :toBeVerified {:type Boolean}}
-           :resolve :orders}}
+           :resolve :orders}
+  :contracts {:type (non-null :ContractList)
+              :args {:state {:type :ContractStateEnum}
+                     :term {:type String}
+                     :startDate {:type :Date}
+                     :endDate {:type :Date}
+                     :page {:type Int}
+                     :perPage {:type Int}
+                     :toBeVerified {:type Boolean}}
+              :resolve :contracts}}
 
  :mutations
  {:rejectOrder {:type (non-null :Order)
@@ -104,4 +149,24 @@
                  :args {:id {:type (non-null :UUID)}
                         :force {:type Boolean}
                         :comment {:type String}}
-                 :resolve :approve-order}}}
+                 :resolve :approve-order}
+  :updateOrderPurpose {:type (non-null :Order)
+                       :args {:id {:type (non-null :UUID)}
+                              :purpose {:type (non-null :NonEmptyString)}}
+                       :resolve :update-order-purpose}
+  :swapOrderUser {:type (non-null :Order)
+                  :args {:id {:type (non-null :UUID)}
+                         :userId {:type (non-null :UUID)}
+                         :delegatedUserId {:type :UUID}}
+                  :resolve :swap-order-user}
+  :createReservation {:type (non-null :Reservation)
+                      :args {:orderId {:type :UUID}
+                             :userId {:type (non-null :UUID)}
+                             :modelId {:type (non-null :UUID)}
+                             :startDate {:type (non-null :Date)}
+                             :endDate {:type (non-null :Date)}}
+                      :resolve :create-reservation}
+  :deleteReservation {:type (non-null :UUID)
+                      :args {:id {:type (non-null :UUID)}
+                             :orderId {:type :UUID}}
+                      :resolve :delete-reservation}}}

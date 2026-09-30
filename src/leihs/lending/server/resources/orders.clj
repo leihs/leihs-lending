@@ -128,6 +128,21 @@
   [{{tx :tx} :request} {:keys [id]} _]
   (get-by-id tx id))
 
+(defn contact-details-for-contract
+  "Distinct, non-blank customer_orders.contact_details reachable from a
+  contract's reservations (reservations -> orders -> customer_orders)."
+  [tx contract-id]
+  (->> (-> (sql/select-distinct [:customer_orders.contact_details :contact_details])
+           (sql/from :customer_orders)
+           (sql/join :orders [:= :orders.customer_order_id :customer_orders.id])
+           (sql/join :reservations [:= :reservations.order_id :orders.id])
+           (sql/where [:= :reservations.contract_id contract-id])
+           (sql/where [:!= :customer_orders.contact_details nil])
+           sql-format
+           (->> (jdbc-query tx)))
+       (map :contact_details)
+       (remove str/blank?)))
+
 (defn- assert-submitted! [tx id]
   (when (not= "SUBMITTED" (:state (get-by-id tx id)))
     (throw (ex-info "Order is not in submitted state" {:status 422}))))
@@ -199,6 +214,97 @@
                      [(:id r)])
                     (:quantity r))))
           (res/get-for-open-order tx id))))
+
+(defn update-purpose!
+  [{{tx :tx} :request} {:keys [id purpose]} _]
+  (assert-submitted! tx id)
+  (-> (sql/update :orders)
+      (sql/set {:purpose purpose})
+      (sql/where [:= :orders.id id])
+      sql-format
+      (->> (execute! tx)))
+  (get-by-id tx id))
+
+(defn- assert-valid-new-user! [tx pool-id user-id]
+  (let [row (-> (sql/select
+                 [[:exists
+                   (-> (sql/select 1)
+                       (sql/from :users)
+                       (sql/where [:= :users.id user-id])
+                       (sql/where [:= :users.account_enabled true]))]
+                  :enabled]
+                 [[:exists
+                   (-> (sql/select 1)
+                       (sql/from :access_rights)
+                       (sql/where [:= :access_rights.user_id user-id])
+                       (sql/where [:= :access_rights.inventory_pool_id pool-id]))]
+                  :has_access])
+                sql-format
+                (->> (jdbc-query tx))
+                first)]
+    (when-not (:enabled row)
+      (throw (ex-info "User is deactivated" {:status 422})))
+    (when-not (:has_access row)
+      (throw (ex-info "User does not have access to this pool" {:status 422})))))
+
+(defn- get-customer-order-id [tx order-id]
+  (-> (sql/select :customer_order_id)
+      (sql/from :orders)
+      (sql/where [:= :id order-id])
+      sql-format
+      (->> (jdbc-query tx))
+      first
+      :customer_order_id))
+
+(defn- customer-order-order-count [tx customer-order-id]
+  (-> (sql/select [[:count :*] :count])
+      (sql/from :orders)
+      (sql/where [:= :customer_order_id customer-order-id])
+      sql-format
+      (->> (jdbc-query tx))
+      first
+      :count))
+
+(defn- fork-customer-order! [tx user-id purpose]
+  (-> (sql/insert-into :customer_orders)
+      (sql/values [{:user_id user-id :purpose purpose :title purpose}])
+      (sql/returning :id)
+      sql-format
+      (->> (jdbc-query tx))
+      first
+      :id))
+
+(defn swap-user!
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id user-id delegated-user-id]} _]
+  (assert-submitted! tx id)
+  (assert-valid-new-user! tx pool-id user-id)
+  (let [order (get-by-id tx id)
+        customer-order-id (get-customer-order-id tx id)]
+    (-> (sql/update :reservations)
+        (sql/set {:user_id user-id :delegated_user_id delegated-user-id})
+        (sql/where [:= :reservations.order_id id])
+        (sql/where [:= :reservations.contract_id nil])
+        sql-format
+        (->> (execute! tx)))
+    (if (= 1 (customer-order-order-count tx customer-order-id))
+      (do
+        (-> (sql/update :orders)
+            (sql/set {:user_id user-id})
+            (sql/where [:= :orders.id id])
+            sql-format
+            (->> (execute! tx)))
+        (-> (sql/update :customer_orders)
+            (sql/set {:user_id user-id})
+            (sql/where [:= :customer_orders.id customer-order-id])
+            sql-format
+            (->> (execute! tx))))
+      (let [new-customer-order-id (fork-customer-order! tx user-id (:purpose order))]
+        (-> (sql/update :orders)
+            (sql/set {:user_id user-id :customer_order_id new-customer-order-id})
+            (sql/where [:= :orders.id id])
+            sql-format
+            (->> (execute! tx))))))
+  (get-by-id tx id))
 
 (defn approve!
   [{{tx :tx} :request} {:keys [id force comment]} _]
