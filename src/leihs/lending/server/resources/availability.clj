@@ -4,6 +4,7 @@
    [honey.sql.helpers :as sql]
    [java-time :as jt]
    [leihs.core.availability.changes :as ch]
+   [leihs.core.availability.core :as av]
    [leihs.core.availability.pool :as pool]
    [leihs.core.availability.queries :as q]
    [leihs.lending.server.resources.entitlement-groups :as entitlement-groups]
@@ -49,64 +50,16 @@
         [:general entitlement-group-id])
     (cons :general (q/get-user-group-ids tx user-id))))
 
-(defn- summed-quantity
-  "Minimum over the changes of the summed in-quantities of the groups (all
-  groups when `group-ids` is nil). Not floored, negative = overbooked."
-  [changes group-ids]
-  (->> (vals changes)
-       (map (fn [allocs]
-              (->> (cond-> allocs group-ids (select-keys group-ids))
-                   vals
-                   (map :in-quantity)
-                   (apply +))))
-       (apply min)))
-
-(defn- intervals
-  "Splits [start, end] at the change dates into intervals of constant
-  availability."
-  [changes start end]
-  (let [dates (->> (keys changes)
-                   (filter #(and (jt/after? % start) (not (jt/after? % end))))
-                   sort)]
-    (map (fn [from to-next]
-           [from (if to-next (jt/minus to-next (jt/days 1)) end)])
-         (cons start dates)
-         (concat dates [nil]))))
-
-(defn- get-quantities
-  "Per-date quantity (given groups) and total quantity (all groups). Dates
-  before today get 0."
-  [changes group-ids start end]
-  (let [today (ch/local-date)
-        start* (if (jt/before? start today) today start)
-        past (when (jt/before? start today)
-               (->> (ch/explode-date-range start (jt/min end (jt/minus today (jt/days 1))))
-                    (map #(hash-map :date % :quantity 0 :total_quantity 0))))
-        upcoming (when-not (jt/before? end start*)
-                   (mapcat (fn [[from to]]
-                             (let [inner (ch/between changes from to)
-                                   quantity (summed-quantity inner group-ids)
-                                   total (summed-quantity inner nil)]
-                               (->> (ch/explode-date-range from to)
-                                    (map #(hash-map :date %
-                                                    :quantity quantity
-                                                    :total_quantity total)))))
-                           (intervals changes start* end)))]
-    (concat past upcoming)))
-
 (defn- get-pool-calendar-data
   "Workdays (incl. max_visits) and upcoming holidays of the pool."
   [tx pool-id]
-  (-> (sql/select :*)
-      (sql/from :workdays)
-      (sql/where [:= :inventory_pool_id pool-id])
-      sql-format
-      (->> (jdbc-query tx))
-      first
-      (assoc :holidays (pool/get-holidays tx pool-id))))
+  (assoc (pool/get-workdays tx pool-id)
+         :holidays (pool/get-holidays tx pool-id)))
 
 (defn- get-visits-counts
-  "Date -> number of visits (see `visits` view) in the pool."
+  "Date -> number of visits (see `visits` view) in the pool, as in legacy.
+  The view splits hand-overs by status, so a user with submitted and approved
+  reservations on the same day counts twice (borrow counts once)."
   [tx pool-id start end]
   (-> (sql/select :date [[:count :*] :visits_count])
       (sql/from :visits)
@@ -118,18 +71,13 @@
            (map (juxt :date :visits_count))
            (into {}))))
 
-(defn- visits-capacity-reached? [date visits-count pool-data]
-  (let [index (-> date .getDayOfWeek .getValue (mod 7) str keyword)]
-    (when-let [max-visits (some-> pool-data :max_visits index str parse-long)]
-      (>= visits-count max-visits))))
-
 (defn- restrictions
   "Informational only, lending managers may override them."
   [date visits-count pool-data]
   (cond-> []
     (not (pool/working-day? date pool-data)) (conj :NON_WORKDAY)
     (pool/get-holiday date pool-data) (conj :HOLIDAY)
-    (visits-capacity-reached? date visits-count pool-data) (conj :VISITS_CAPACITY_REACHED)))
+    (pool/visits-capacity-reached? date visits-count pool-data) (conj :VISITS_CAPACITY_REACHED)))
 
 (defn get-calendar
   "Booking calendar of the model in the pool. Quantity for the general group
@@ -148,4 +96,4 @@
              (assoc day
                     :start_date_restrictions rs
                     :end_date_restrictions rs)))
-         (get-quantities changes group-ids start-date end-date))))
+         (av/booking-calendar changes group-ids start-date end-date))))
