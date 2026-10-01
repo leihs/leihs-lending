@@ -12,7 +12,8 @@
    [leihs.lending.server.resources.visits :as visits]))
 
 (def resolvers
-  {:availability-changes availability/get-multiple
+  {:availability availability/get-calendar
+   :availability-changes availability/get-multiple
    :contracts contracts/get-multiple
    :current-user users/get-current
    :entitlement-group entitlement-groups/get-one

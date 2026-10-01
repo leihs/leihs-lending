@@ -8,7 +8,8 @@
  {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}
   :VisitTypeEnum {:values [:HAND_OVER :TAKE_BACK]}
   :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}
-  :ContractStateEnum {:values [:OPEN :CLOSED]}}
+  :ContractStateEnum {:values [:OPEN :CLOSED]}
+  :AvailabilityDateRestrictionEnum {:values [:NON_WORKDAY :HOLIDAY :VISITS_CAPACITY_REACHED]}}
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
@@ -33,7 +34,22 @@
                    :manufacturer {:type String}
                    :availabilityChanges {:type (list (non-null :AvailabilityChange))
                                          :description "Raw availability changes in the pool, sorted by date, starting today. Each change holds until the next one."
-                                         :resolve :availability-changes}}}
+                                         :resolve :availability-changes}
+                   :availability {:type (list (non-null :AvailabilityDate))
+                                  :description "Booking calendar in the pool. Quantity for the general group plus either the entitlement group or the user's groups (exactly one of userId/entitlementGroupId)."
+                                  :args {:startDate {:type (non-null :Date)}
+                                         :endDate {:type (non-null :Date)}
+                                         :userId {:type :UUID}
+                                         :entitlementGroupId {:type :UUID}
+                                         :excludeReservationIds {:type (list (non-null :UUID))}}
+                                  :resolve :availability}}}
+  :AvailabilityDate {:fields {:date {:type (non-null :Date)}
+                              :quantity {:type (non-null Int)
+                                         :description "Negative = overbooked, 0 for past dates"}
+                              :totalQuantity {:type (non-null Int)
+                                              :description "Summed over all groups"}
+                              :startDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}
+                              :endDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}}}
   :AvailabilityChange {:fields {:date {:type (non-null :Date)}
                                 :groups {:type (non-null (list (non-null :AvailabilityChangeGroup)))}}}
   :AvailabilityChangeGroup {:fields {:entitlementGroup {:type :EntitlementGroup
