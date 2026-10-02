@@ -44,10 +44,12 @@
                                          :excludeReservationIds {:type (list (non-null :UUID))}}
                                   :resolve :availability}}}
   :AvailabilityDate {:fields {:date {:type (non-null :Date)}
-                              :quantity {:type (non-null Int)
-                                         :description "Negative = overbooked, 0 for past dates"}
-                              :totalQuantity {:type (non-null Int)
-                                              :description "Summed over all groups"}
+                              :quantity {:type Int
+                                         :description "Model only. Negative = overbooked, 0 for past dates"}
+                              :totalQuantity {:type Int
+                                              :description "Model only. Summed over all groups"}
+                              :available {:type Boolean
+                                          :description "Reservations only. All of them available on this day"}
                               :startDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}
                               :endDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}}}
   :AvailabilityChange {:fields {:date {:type (non-null :Date)}
@@ -132,6 +134,12 @@
   :users {:type (non-null (list (non-null :User)))
           :args {:term {:type String}}
           :resolve :users}
+  :availability {:type (list (non-null :AvailabilityDate))
+                 :description "Booking calendar for the reservations (e.g. a multi-selection in an order), for their user's groups."
+                 :args {:reservationIds {:type (non-null (list (non-null :UUID)))}
+                        :startDate {:type (non-null :Date)}
+                        :endDate {:type (non-null :Date)}}
+                 :resolve :availability}
   :model {:type :Model
           :args {:id {:type (non-null :UUID)}}
           :resolve :model}

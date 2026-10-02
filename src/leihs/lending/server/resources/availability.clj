@@ -8,6 +8,7 @@
    [leihs.core.availability.pool :as pool]
    [leihs.core.availability.queries :as q]
    [leihs.lending.server.resources.entitlement-groups :as entitlement-groups]
+   [leihs.lending.server.resources.reservations :as res]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (defn- group->row
@@ -79,21 +80,66 @@
     (pool/get-holiday date pool-data) (conj :HOLIDAY)
     (pool/visits-capacity-reached? date visits-count pool-data) (conj :VISITS_CAPACITY_REACHED)))
 
-(defn get-calendar
-  "Booking calendar of the model in the pool. Quantity for the general group
-  plus either the given entitlement group or the user's groups."
-  [{{tx :tx pool-id :pool-id} :request}
-   {:keys [start-date end-date user-id entitlement-group-id exclude-reservation-ids]}
-   {model-id :id}]
-  (when (jt/before? end-date start-date)
-    (throw (ex-info "endDate must not be before startDate" {:status 422})))
-  (let [group-ids (get-group-ids tx pool-id user-id entitlement-group-id)
-        changes (ch/main tx model-id pool-id exclude-reservation-ids)
-        pool-data (get-pool-calendar-data tx pool-id)
-        visits-counts (get-visits-counts tx pool-id start-date end-date)]
+(defn- with-restrictions
+  "Adds the same start and end date restrictions to each day."
+  [tx pool-id start end days]
+  (let [pool-data (get-pool-calendar-data tx pool-id)
+        visits-counts (get-visits-counts tx pool-id start end)]
     (map (fn [{:keys [date] :as day}]
            (let [rs (restrictions date (get visits-counts date 0) pool-data)]
              (assoc day
                     :start_date_restrictions rs
                     :end_date_restrictions rs)))
-         (av/booking-calendar changes group-ids start-date end-date))))
+         days)))
+
+(defn- model-calendar
+  [tx pool-id model-id {:keys [start-date end-date user-id entitlement-group-id
+                               exclude-reservation-ids]}]
+  (av/booking-calendar (ch/main tx model-id pool-id exclude-reservation-ids)
+                       (get-group-ids tx pool-id user-id entitlement-group-id)
+                       start-date
+                       end-date))
+
+(defn- get-single-user-id [reservations]
+  (let [user-ids (distinct (map :user_id reservations))]
+    (when (> (count user-ids) 1)
+      (throw (ex-info "Reservations must belong to a single user" {:status 422})))
+    (first user-ids)))
+
+(defn- reservations-calendar
+  "A day is available when each model of the reservations has at least their
+  summed quantity, with the reservations themselves excluded. Option lines
+  are ignored."
+  [tx pool-id {:keys [reservation-ids start-date end-date]}]
+  (let [rs (res/get-in-pool tx pool-id reservation-ids)
+        group-ids (cons :general (q/get-user-group-ids tx (get-single-user-id rs)))
+        availabilities (->> rs
+                            (filter :model_id)
+                            (group-by :model_id)
+                            (map (fn [[model-id model-rs]]
+                                   (let [required (apply + (map :quantity model-rs))]
+                                     (->> (av/booking-calendar
+                                           (ch/main tx model-id pool-id reservation-ids)
+                                           group-ids
+                                           start-date
+                                           end-date)
+                                          (map #(>= (:quantity %) required)))))))]
+    (apply map
+           (fn [date & oks]
+             {:date date :available (every? true? oks)})
+           (ch/explode-date-range start-date end-date)
+           availabilities)))
+
+(defn get-calendar
+  "Booking calendar in the pool. For a model (parent): quantity for the
+  general group plus either the given entitlement group or the user's groups.
+  For `reservation-ids`: availability of all of them per day."
+  [{{tx :tx pool-id :pool-id} :request}
+   {:keys [start-date end-date] :as args}
+   {model-id :id}]
+  (when (jt/before? end-date start-date)
+    (throw (ex-info "endDate must not be before startDate" {:status 422})))
+  (->> (if model-id
+         (model-calendar tx pool-id model-id args)
+         (reservations-calendar tx pool-id args))
+       (with-restrictions tx pool-id start-date end-date)))

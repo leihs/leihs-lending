@@ -242,9 +242,8 @@
 
 (def ^:private non-editable-statuses #{"rejected" "signed" "closed" "canceled"})
 
-(defn- get-editable
-  "Fetches the pool's reservations by ids; 404 if any is missing, 422 if
-  any is in a non-editable status."
+(defn get-in-pool
+  "Fetches the pool's reservations by ids; 404 if any is missing."
   [tx pool-id ids]
   (when (empty? ids)
     (throw (ex-info "No reservation ids given" {:status 422})))
@@ -256,6 +255,12 @@
                (->> (jdbc-query tx)))]
     (when (not= (count ids) (count rs))
       (throw (ex-info "Reservation not found" {:status 404})))
+    rs))
+
+(defn- get-editable
+  "Like `get-in-pool`, plus 422 if any is in a non-editable status."
+  [tx pool-id ids]
+  (let [rs (get-in-pool tx pool-id ids)]
     (when (some (comp non-editable-statuses :status) rs)
       (throw (ex-info "Reservation is not editable" {:status 422})))
     rs))
