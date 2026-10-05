@@ -97,3 +97,38 @@
        :page page
        :per-page per-page
        :total-count total-count})))
+
+(def reject-mutation
+  "mutation ($id: UUID!, $reason: NonEmptyString!) {
+     rejectOrder(id: $id, reason: $reason) {
+       id
+       state
+       rejectReason
+     }
+   }")
+
+(defn reject-order!
+  "Rejects a submitted order; `reason` becomes part of the rejection e-mail."
+  [pool-id order-id reason]
+  (urql/run-mutation (urql/make-pool-client pool-id)
+                     reject-mutation
+                     {:id order-id :reason reason}))
+
+(def approve-mutation
+  "mutation ($id: UUID!, $force: Boolean, $comment: String) {
+     approveOrder(id: $id, force: $force, comment: $comment) {
+       id
+       state
+     }
+   }")
+
+(defn approve-order!
+  "Approves a submitted order; fails if the backend finds a blocking condition.
+   `force` overrides the conditions that allow it, `comment` becomes part of
+   the approval e-mail."
+  ([pool-id order-id]
+   (approve-order! pool-id order-id nil nil))
+  ([pool-id order-id force comment]
+   (urql/run-mutation (urql/make-pool-client pool-id)
+                      approve-mutation
+                      {:id order-id :force force :comment comment})))

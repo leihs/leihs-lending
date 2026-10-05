@@ -8,15 +8,24 @@
    ["@@/tooltip" :refer [Tooltip TooltipTrigger TooltipContent]]
    ["lucide-react" :refer [ChevronDown CircleCheck Circle CircleX]]
    ["react-i18next" :refer [useTranslation]]
+   ["react-router" :as router]
    ["sonner" :refer [toast]]
    [clojure.string :refer [lower-case]]
    [leihs.lending.client.components.entities.items-popover :refer [ItemsPopover]]
    [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
    [leihs.lending.client.lib.date-utils :refer [date-time-from-iso format-date duration-days]]
+   [leihs.lending.client.lib.urql :as urql]
+   [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.routes.pools.orders.components.approve-failed-dialog :refer [ApproveFailedDialog]]
+   [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
+   [leihs.lending.client.routes.pools.orders.data :as data]
+   [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui OrderRow [{:keys [order use-user-details use-items]}]
   (let [[t] (useTranslation)
+        {:keys [pool-id]} (jc (router/useParams))
+        revalidator (router/useRevalidator)
         user (:user order)
         name (str (:firstname user) " " (:lastname user))
         state (:state order)
@@ -26,7 +35,21 @@
         to-be-verified (:toBeVerified order)
         on-action-trigger #(.. toast (message (t "orders.actions.not-available")))
 
-        [purpose-pop-open? set-purpose-pop-open!] (uix/use-state false)]
+        [purpose-pop-open? set-purpose-pop-open!] (uix/use-state false)
+        [reject-open? set-reject-open!] (uix/use-state false)
+        [approving? set-approving!] (uix/use-state false)
+        [approve-failed-open? set-approve-failed-open!] (uix/use-state false)
+        approve! (fn []
+                   (set-approving! true)
+                   (-> (data/approve-order! pool-id (:id order))
+                       (p/then (fn [_]
+                                 (.. toast (success (t "orders.approve-success")))
+                                 (.revalidate revalidator)))
+                       (p/catch (fn [error]
+                                  (if (= 422 (urql/error-status error))
+                                    (set-approve-failed-open! true)
+                                    (.. toast (error (t "error.action.error"))))))
+                       (p/finally (fn [_ _] (set-approving! false)))))]
 
     ($ TableRow {:class-name "border-l-4 border-l-transparent"}
 
@@ -103,7 +126,9 @@
                ($ :div {:class-name "w-full flex items-stretch"}
                   ($ Button {:variant "outline"
                              :class-name "flex-1 rounded-r-none"
-                             :onClick on-action-trigger}
+                             :disabled approving?
+                             :data-test-id "approve-order"
+                             :onClick approve!}
                      (if to-be-verified
                        (t "orders.actions.verify-and-approve")
                        (t "orders.actions.approve")))
@@ -111,13 +136,22 @@
                      ($ DropdownMenuTrigger {:asChild true}
                         ($ Button {:variant "outline"
                                    :size "icon"
+                                   :data-test-id "order-actions-menu"
                                    :class-name "rounded-l-none border-l-0"}
                            ($ ChevronDown)))
                      ($ DropdownMenuContent {:align "end"}
                         ($ DropdownMenuItem {:onClick on-action-trigger}
                            (t "orders.actions.edit"))
-                        ($ DropdownMenuItem {:onClick on-action-trigger}
-                           (t "orders.actions.reject")))))
+                        ($ DropdownMenuItem {:onSelect #(set-reject-open! true)}
+                           (t "orders.actions.reject"))))
+                  ($ RejectDialog {:order order
+                                   :open? reject-open?
+                                   :set-open! set-reject-open!
+                                   :use-items use-items})
+                  ($ ApproveFailedDialog {:order order
+                                          :open? approve-failed-open?
+                                          :set-open! set-approve-failed-open!
+                                          :use-items use-items}))
 
                (= state "APPROVED")
                ($ Button {:class-name "w-full"

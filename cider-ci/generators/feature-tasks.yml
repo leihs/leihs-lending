@@ -28,6 +28,31 @@
   environment_variables:
     FEATURE_NAME: "Language 03"
     FEATURE: './spec/features/i18n/language_switcher_spec.rb[1:3]'
+'./spec/features/orders/approve_spec.rb[1:1]':
+  name: "Approve order 01"
+  environment_variables:
+    FEATURE_NAME: "Approve order 01"
+    FEATURE: './spec/features/orders/approve_spec.rb[1:1]'
+'./spec/features/orders/approve_spec.rb[1:2]':
+  name: "Approve order 02"
+  environment_variables:
+    FEATURE_NAME: "Approve order 02"
+    FEATURE: './spec/features/orders/approve_spec.rb[1:2]'
+'./spec/features/orders/approve_spec.rb[1:3]':
+  name: "Approve order 03"
+  environment_variables:
+    FEATURE_NAME: "Approve order 03"
+    FEATURE: './spec/features/orders/approve_spec.rb[1:3]'
+'./spec/features/orders/approve_spec.rb[1:4]':
+  name: "Approve order 04"
+  environment_variables:
+    FEATURE_NAME: "Approve order 04"
+    FEATURE: './spec/features/orders/approve_spec.rb[1:4]'
+'./spec/features/orders/approve_spec.rb[1:5]':
+  name: "Approve order 05"
+  environment_variables:
+    FEATURE_NAME: "Approve order 05"
+    FEATURE: './spec/features/orders/approve_spec.rb[1:5]'
 './spec/features/orders/filters_spec.rb[1:1]':
   name: "Orders filters 01"
   environment_variables:
@@ -138,6 +163,26 @@
   environment_variables:
     FEATURE_NAME: "Orders list 15"
     FEATURE: './spec/features/orders/list_spec.rb[1:15]'
+'./spec/features/orders/reject_spec.rb[1:1]':
+  name: "Reject order 01"
+  environment_variables:
+    FEATURE_NAME: "Reject order 01"
+    FEATURE: './spec/features/orders/reject_spec.rb[1:1]'
+'./spec/features/orders/reject_spec.rb[1:2]':
+  name: "Reject order 02"
+  environment_variables:
+    FEATURE_NAME: "Reject order 02"
+    FEATURE: './spec/features/orders/reject_spec.rb[1:2]'
+'./spec/features/orders/reject_spec.rb[1:3]':
+  name: "Reject order 03"
+  environment_variables:
+    FEATURE_NAME: "Reject order 03"
+    FEATURE: './spec/features/orders/reject_spec.rb[1:3]'
+'./spec/features/orders/reject_spec.rb[1:4]':
+  name: "Reject order 04"
+  environment_variables:
+    FEATURE_NAME: "Reject order 04"
+    FEATURE: './spec/features/orders/reject_spec.rb[1:4]'
 './spec/features/sign_in_out_spec.rb[1:1]':
   name: "Sign-in / Sign-out 01"
   environment_variables:

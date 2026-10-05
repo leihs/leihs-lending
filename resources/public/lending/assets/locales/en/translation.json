@@ -6,11 +6,12 @@
       "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}",
       "formatDateTime": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric; hour: 2-digit; minute: 2-digit)}}"
     },
-    "load-error": "Could not be loaded"
+    "load-error": "Could not be loaded",
+    "cancel": "Cancel"
   },
   "components": {
     "entities": {
-      "items-popover": {
+      "items": {
         "date-range_one": "{{- startDate}} - {{- endDate}} ({{count}} day)",
         "date-range_other": "{{- startDate}} - {{- endDate}} ({{count}} days)",
         "title": "Items"
@@ -120,6 +121,19 @@
       "edit": "Edit",
       "hand-over": "Hand over",
       "not-available": "Action not available yet"
+    },
+    "approve-success": "Order approved",
+    "approve-error": "This order is not approvable because some reserved models are not available.",
+    "approve-failed-dialog": {
+      "title": "Approval failed",
+      "edit-order": "Edit order",
+      "comment": "Write a comment. The comment will be part of the confirmation e-mail.",
+      "force-approve": "Approve anyway"
+    },
+    "reject-dialog": {
+      "title": "Reject order",
+      "comment": "Write a comment. The comment will be part of the rejection e-mail.",
+      "comment-required": "Specification of a comment is required"
     }
   },
   "visits": {

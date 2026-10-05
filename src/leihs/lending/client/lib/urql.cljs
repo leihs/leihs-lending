@@ -74,6 +74,14 @@
       (throw error))
     (jc (.-data result))))
 
+(defn error-status
+  "Status code the backend attached to the first GraphQL error of a thrown
+   urql error, nil for network errors and other failures."
+  [^js error]
+  (let [^js gql-error (some-> error .-graphQLErrors first)
+        ^js extensions (some-> gql-error .-extensions)]
+    (some-> extensions .-code)))
+
 ;; --- applying the client from the surrounding Provider ---
 
 (defn use-lazy-query
