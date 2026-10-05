@@ -8,7 +8,8 @@
  {:OrderStateEnum {:values [:SUBMITTED :APPROVED :REJECTED :CANCELED]}
   :VisitTypeEnum {:values [:HAND_OVER :TAKE_BACK]}
   :VerificationEnum {:values [:IRRELEVANT :NONE_REQUIRED :USER :USER_AND_MODEL]}
-  :ContractStateEnum {:values [:OPEN :CLOSED]}}
+  :ContractStateEnum {:values [:OPEN :CLOSED]}
+  :AvailabilityDateRestrictionEnum {:values [:NON_WORKDAY :HOLIDAY :VISITS_CAPACITY_REACHED]}}
 
  :objects
  {:CurrentUser {:fields {:id {:type (non-null :UUID)}
@@ -30,7 +31,38 @@
                   :delegatorUser {:type :User :resolve :user}}}
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}
-                   :manufacturer {:type String}}}
+                   :manufacturer {:type String}
+                   :availabilityChanges {:type (list (non-null :AvailabilityChange))
+                                         :description "Raw availability changes in the pool, sorted by date, starting today. Each change holds until the next one."
+                                         :resolve :availability-changes}
+                   :availability {:type (list (non-null :AvailabilityDate))
+                                  :description "Booking calendar in the pool. Quantity for the general group plus either the entitlement group or the user's groups (exactly one of userId/entitlementGroupId)."
+                                  :args {:startDate {:type (non-null :Date)}
+                                         :endDate {:type (non-null :Date)}
+                                         :userId {:type :UUID}
+                                         :entitlementGroupId {:type :UUID}
+                                         :excludeReservationIds {:type (list (non-null :UUID))}}
+                                  :resolve :availability}}}
+  :AvailabilityDate {:fields {:date {:type (non-null :Date)}
+                              :quantity {:type Int
+                                         :description "Model only. Negative = overbooked, 0 for past dates"}
+                              :totalQuantity {:type Int
+                                              :description "Model only. Summed over all groups"}
+                              :available {:type Boolean
+                                          :description "Reservations only. All of them available on this day"}
+                              :startDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}
+                              :endDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}}}
+  :AvailabilityChange {:fields {:date {:type (non-null :Date)}
+                                :groups {:type (non-null (list (non-null :AvailabilityChangeGroup)))}}}
+  :AvailabilityChangeGroup {:fields {:entitlementGroup {:type :EntitlementGroup
+                                                        :description "null = general group"
+                                                        :resolve :entitlement-group}
+                                     :inQuantity {:type (non-null Int)
+                                                  :description "Negative = overbooked"}
+                                     :reservations {:type (non-null (list (non-null :Reservation)))
+                                                    :resolve :reservations}}}
+  :EntitlementGroup {:fields {:id {:type (non-null :UUID)}
+                              :name {:type (non-null String)}}}
   :Option {:fields {:id {:type (non-null :UUID)}
                     :name {:type String}
                     :manufacturer {:type String}}}
@@ -39,7 +71,8 @@
                          :endDate {:type :Date}
                          :quantity {:type Int}
                          :model {:type :Model :resolve :model}
-                         :option {:type :Option :resolve :option}}}
+                         :option {:type :Option :resolve :option}
+                         :user {:type (non-null :User) :resolve :user}}}
   :ReservationLine {:fields {:model {:type :Model :resolve :model}
                              :quantity {:type (non-null Int)}
                              :availableQuantity {:type (non-null Int)}
@@ -101,6 +134,15 @@
   :users {:type (non-null (list (non-null :User)))
           :args {:term {:type String}}
           :resolve :users}
+  :availability {:type (list (non-null :AvailabilityDate))
+                 :description "Booking calendar for the reservations (e.g. a multi-selection in an order), for their user's groups."
+                 :args {:reservationIds {:type (non-null (list (non-null :UUID)))}
+                        :startDate {:type (non-null :Date)}
+                        :endDate {:type (non-null :Date)}}
+                 :resolve :availability}
+  :model {:type :Model
+          :args {:id {:type (non-null :UUID)}}
+          :resolve :model}
   :models {:type (non-null (list (non-null :Model)))
            :args {:term {:type String}}
            :resolve :models}
@@ -159,14 +201,33 @@
                          :userId {:type (non-null :UUID)}
                          :delegatedUserId {:type :UUID}}
                   :resolve :swap-order-user}
-  :createReservation {:type (non-null :Reservation)
-                      :args {:orderId {:type :UUID}
-                             :userId {:type (non-null :UUID)}
-                             :modelId {:type (non-null :UUID)}
-                             :startDate {:type (non-null :Date)}
-                             :endDate {:type (non-null :Date)}}
-                      :resolve :create-reservation}
-  :deleteReservation {:type (non-null :UUID)
-                      :args {:id {:type (non-null :UUID)}
-                             :orderId {:type :UUID}}
-                      :resolve :delete-reservation}}}
+  :createModelReservation {:type (non-null :Reservation)
+                           :description "Model must have an item the pool is responsible for, not retired and not inside a package."
+                           :args {:orderId {:type :UUID}
+                                  :userId {:type (non-null :UUID)}
+                                  :modelId {:type (non-null :UUID)}
+                                  :startDate {:type (non-null :Date)}
+                                  :endDate {:type (non-null :Date)}}
+                           :resolve :create-model-reservation}
+  :createOptionReservation {:type (non-null :Reservation)
+                            :description "Pool's option. No orderId: options can't be added to an order."
+                            :args {:userId {:type (non-null :UUID)}
+                                   :optionId {:type (non-null :UUID)}
+                                   :startDate {:type (non-null :Date)}
+                                   :endDate {:type (non-null :Date)}}
+                            :resolve :create-option-reservation}
+  :createReservationByInventoryCode {:type (non-null :Reservation)
+                                     :description "Case-insensitive code of an item the pool is responsible for (reserves its model, item not assigned) or of the pool's option (not allowed with orderId)."
+                                     :args {:orderId {:type :UUID}
+                                            :userId {:type (non-null :UUID)}
+                                            :inventoryCode {:type (non-null :NonEmptyString)}
+                                            :startDate {:type (non-null :Date)}
+                                            :endDate {:type (non-null :Date)}}
+                                     :resolve :create-reservation-by-inventory-code}
+  :deleteReservations {:type (non-null (list (non-null :UUID)))
+                       :args {:ids {:type (non-null (list (non-null :UUID)))}}
+                       :resolve :delete-reservations}
+  :swapModel {:type (non-null (list (non-null :Reservation)))
+              :args {:ids {:type (non-null (list (non-null :UUID)))}
+                     :modelId {:type (non-null :UUID)}}
+              :resolve :swap-model}}}

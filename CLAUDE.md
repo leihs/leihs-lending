@@ -4,14 +4,18 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 
 ## Backend
 
+- Clojure style: follow the [Clojure Style Guide](https://guide.clojure.style) unless a rule here says otherwise.
 - Resolver signature: `[{{tx :tx pool-id :pool-id user :authenticated-entity} :request} args value]`
 - Resource modules: one file per domain in `resources/`. Use `get-one` / `get-multiple` as canonical names for fetchers.
+- Queries: build on the resource's `base-sqlmap` whenever possible (also across resources, e.g. `items/base-sqlmap` in a subquery) instead of ad-hoc `select`/`from`.
 - Registry: flat kebab-case keyword → fn maps in `graphql/queries.clj` and `graphql/mutations.clj`. Keys must be `get-one`/`get-multiple` only — combine logic for different parent contexts (e.g. `order_id` vs `reservation_ids`) inside one function rather than adding new keys.
 - Resolver wrappers (innermost → outermost): kebab-case → camelCase → error. Never add try/catch inside resolvers.
 - Errors: `(throw (ex-info "msg" {:status 403}))` — never return nil for failures
+- Mutations: scope writes by `pool-id`; throw 404 when given ids don't all match. Derive context (order, status) from the rows rather than taking extra args like `orderId`.
 - Two GraphQL endpoints: `/lending/graphql` (root, no auth) and `/lending/:pool-id/graphql` (pool-scoped, auth required). Default to pool schema.
 - Schema: custom scalars `UUID`, `NonEmptyString`; non-null via `(non-null :Type)`; field resolvers inline via `:resolve :key`
 - HoneySQL: minimize `[:raw "..."]` and `[:cast ...]`; prefer the DSL (subqueries as maps, `[:any ...]`, etc.). Avoid casts in resolvers — use GraphQL scalars to parse args into the right JVM type (e.g. `:Date` → `LocalDate`) so next.jdbc binds them correctly without explicit casting.
+- Naming `!`: only for fns that write (DB, atoms, mail) and for `assert-*!` validators. Read-only lookups that may throw get no `!` (e.g. `get-editable`, `resolve-record`).
 - Comments: use docstrings (`"..."` between fn name and args), not line comments (`;`)
 - HTML pages (non-GraphQL): resource-tied pages go in `html/`, one namespace per page (e.g. `html/contracts.clj`, fn named after the action like `show`), mirroring `resources/`'s one-file-per-domain split. Cross-cutting pages (`sign_in.clj`, `home.clj`, `graphiql.clj`) stay at the `server/` top level. Use `hiccup2.core` + a manual `"<!DOCTYPE html>"` string; do resource-dependent auth (e.g. ownership checks) in the handler itself, not via `authorize/wrap` (pool-role only).
 

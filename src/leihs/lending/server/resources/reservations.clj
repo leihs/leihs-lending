@@ -3,6 +3,9 @@
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [leihs.core.availability.core :as av]
+   [leihs.lending.server.resources.items :as items]
+   [leihs.lending.server.resources.models :as models]
+   [leihs.lending.server.resources.options :as options]
    [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
@@ -11,17 +14,22 @@
       (sql/from :reservations)))
 
 (defn get-multiple
+  "By the parent's order, contract or `reservation-ids`. An empty id list means
+  a parent without reservations (e.g. an availability change group holding
+  none), not an absent filter -- HoneySQL would render it as `IN ()`."
   [{{tx :tx} :request} _ {order-id :id contract-id :contract-id reservation-ids :reservation-ids}]
-  (-> base-sqlmap
-      (cond->
-       (and order-id (not reservation-ids) (not contract-id))
-        (sql/where [:= :reservations.order_id order-id])
-        contract-id
-        (sql/where [:= :reservations.contract_id contract-id])
-        reservation-ids
-        (sql/where [:in :reservations.id reservation-ids]))
-      sql-format
-      (->> (jdbc-query tx))))
+  (if (and reservation-ids (empty? reservation-ids))
+    []
+    (-> base-sqlmap
+        (cond->
+         (and order-id (not reservation-ids) (not contract-id))
+          (sql/where [:= :reservations.order_id order-id])
+          contract-id
+          (sql/where [:= :reservations.contract_id contract-id])
+          reservation-ids
+          (sql/where [:in :reservations.id reservation-ids]))
+        sql-format
+        (->> (jdbc-query tx)))))
 
 (defn get-with-details-for-contract
   "Contract-show lines: one row per reservation, with item/model display fields
@@ -128,53 +136,155 @@
                  :end_date end_date
                  :reservation_ids ids})))))
 
-(defn- assert-order-submitted! [tx order-id]
+(defn- assert-order-submitted!
+  "Order must belong to the pool (404) and be in submitted state (422)."
+  [tx pool-id order-id]
   (when order-id
-    (let [state (-> (sql/select [[:upper :state] :state])
+    (let [order (-> (sql/select [[:upper :state] :state])
                     (sql/from :orders)
                     (sql/where [:= :id order-id])
+                    (sql/where [:= :inventory_pool_id pool-id])
                     sql-format
                     (->> (jdbc-query tx))
-                    first
-                    :state)]
-      (when (not= "SUBMITTED" state)
+                    first)]
+      (when-not order
+        (throw (ex-info "Order not found" {:status 404})))
+      (when (not= "SUBMITTED" (:state order))
         (throw (ex-info "Order is not in submitted state" {:status 422}))))))
 
-(defn- assert-not-removing-all! [tx order-id excluded-id]
-  (when order-id
-    (let [remaining (->> (get-for-open-order tx order-id)
-                         (remove #(= excluded-id (:id %)))
-                         count)]
-      (when (zero? remaining)
+(defn- assert-not-removing-all!
+  "Only for submitted reservations -- an order under review must keep at
+  least one; approved (hand-over) ones may be removed freely."
+  [tx reservations]
+  (let [ids (set (map :id reservations))]
+    (doseq [order-id (->> reservations
+                          (filter #(= "submitted" (:status %)))
+                          (map :order_id)
+                          distinct)]
+      (when (->> (get-for-open-order tx order-id)
+                 (remove #(ids (:id %)))
+                 empty?)
         (throw (ex-info "Cannot remove the last reservation — reject the order instead"
                         {:status 422}))))))
 
-(defn create!
-  [{{tx :tx pool-id :pool-id} :request}
-   {:keys [order-id user-id model-id start-date end-date]} _]
-  (assert-order-submitted! tx order-id)
+(defn- assert-pool-option-exists! [tx pool-id option-id]
+  (when-not (-> options/base-sqlmap
+                (sql/where [:= :options.id option-id])
+                (sql/where [:= :options.inventory_pool_id pool-id])
+                sql-format
+                (->> (jdbc-query tx))
+                seq)
+    (throw (ex-info "Option not found" {:status 422}))))
+
+(defn- resolve-inventory-code
+  "Mirrors legacy inventory#find: the item the pool is responsible for, else
+  the pool's option. Returns reservation columns ({:model_id :item_id} or
+  {:option_id}). Throws 422 if the item is retired, inside a package or only
+  owned by the pool; 404 otherwise."
+  [tx pool-id code]
+  (let [item (items/get-by-inventory-code tx code)]
+    (if (= pool-id (:inventory_pool_id item))
+      (do (when (:retired item)
+            (throw (ex-info "Item is retired" {:status 422})))
+          (when (:parent_id item)
+            (throw (ex-info "Item is part of a package" {:status 422})))
+          {:model_id (:model_id item) :item_id (:id item)})
+      (or (some->> (options/get-by-inventory-code tx pool-id code)
+                   :id
+                   (hash-map :option_id))
+          (when (= pool-id (:owner_id item))
+            (throw (ex-info (str "Not responsible for this item, responsible pool is "
+                                 (:inventory_pool_name item))
+                            {:status 422})))
+          (throw (ex-info "Inventory code not found" {:status 404}))))))
+
+(defn- insert!
+  "Quantity 1; submitted when on an order, else approved (hand over)."
+  [tx pool-id {:keys [order-id user-id start-date end-date]} record]
   (-> (sql/insert-into :reservations)
-      (sql/values [{:inventory_pool_id pool-id
-                    :user_id user-id
-                    :order_id order-id
-                    :model_id model-id
-                    :quantity 1
-                    :start_date start-date
-                    :end_date end-date
-                    :status (if order-id "submitted" "approved")
-                    :created_at [:now]
-                    :updated_at [:now]}])
+      (sql/values [(merge record
+                          {:inventory_pool_id pool-id
+                           :user_id user-id
+                           :order_id order-id
+                           :type (if (:option_id record) "OptionLine" "ItemLine")
+                           :quantity 1
+                           :start_date start-date
+                           :end_date end-date
+                           :status (if order-id "submitted" "approved")
+                           :created_at [:now]
+                           :updated_at [:now]})])
       (sql/returning :*)
       sql-format
       (->> (jdbc-query tx))
       first))
 
+(defn create-for-model!
+  [{{tx :tx pool-id :pool-id} :request} {:keys [order-id model-id] :as args} _]
+  (assert-order-submitted! tx pool-id order-id)
+  (models/assert-lendable-in-pool! tx pool-id model-id)
+  (insert! tx pool-id args {:model_id model-id}))
+
+(defn create-for-option!
+  "No order -- options can't be added to one (DB constraint)."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [option-id] :as args} _]
+  (assert-pool-option-exists! tx pool-id option-id)
+  (insert! tx pool-id args {:option_id option-id}))
+
+(defn create-by-inventory-code!
+  "Reserves the item's model (item not assigned) or the option."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [order-id inventory-code] :as args} _]
+  (assert-order-submitted! tx pool-id order-id)
+  (let [record (-> (resolve-inventory-code tx pool-id inventory-code)
+                   (select-keys [:model_id :option_id]))]
+    (when (and order-id (:option_id record))
+      (throw (ex-info "Options cannot be added to an order" {:status 422})))
+    (insert! tx pool-id args record)))
+
+(def ^:private non-editable-statuses #{"rejected" "signed" "closed" "canceled"})
+
+(defn get-in-pool
+  "Fetches the pool's reservations by ids; 404 if any is missing."
+  [tx pool-id ids]
+  (when (empty? ids)
+    (throw (ex-info "No reservation ids given" {:status 422})))
+  (let [ids (distinct ids)
+        rs (-> base-sqlmap
+               (sql/where [:in :id ids])
+               (sql/where [:= :inventory_pool_id pool-id])
+               sql-format
+               (->> (jdbc-query tx)))]
+    (when (not= (count ids) (count rs))
+      (throw (ex-info "Reservation not found" {:status 404})))
+    rs))
+
+(defn- get-editable
+  "Like `get-in-pool`, plus 422 if any is in a non-editable status."
+  [tx pool-id ids]
+  (let [rs (get-in-pool tx pool-id ids)]
+    (when (some (comp non-editable-statuses :status) rs)
+      (throw (ex-info "Reservation is not editable" {:status 422})))
+    rs))
+
 (defn delete!
-  [{{tx :tx} :request} {:keys [id order-id]} _]
-  (assert-order-submitted! tx order-id)
-  (assert-not-removing-all! tx order-id id)
-  (-> (sql/delete-from :reservations)
-      (sql/where [:= :id id])
+  [{{tx :tx pool-id :pool-id} :request} {:keys [ids]} _]
+  (->> (get-editable tx pool-id ids)
+       (assert-not-removing-all! tx))
+  (let [ids (distinct ids)]
+    (-> (sql/delete-from :reservations)
+        (sql/where [:in :id ids])
+        sql-format
+        (->> (execute! tx)))
+    ids))
+
+(defn swap-model!
+  "Sets model for the given reservations and unassigns their items,
+  mirroring legacy reservations#swap_model."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [ids model-id]} _]
+  (models/assert-lendable-in-pool! tx pool-id model-id)
+  (get-editable tx pool-id ids)
+  (-> (sql/update :reservations)
+      (sql/set {:model_id model-id :item_id nil :updated_at [:now]})
+      (sql/where [:in :id (distinct ids)])
+      (sql/returning :*)
       sql-format
-      (->> (execute! tx)))
-  id)
+      (->> (jdbc-query tx))))
