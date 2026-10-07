@@ -82,6 +82,12 @@
         ^js extensions (some-> gql-error .-extensions)]
     (some-> extensions .-code)))
 
+(defn unauthenticated?
+  "Whether a thrown urql error stems from a missing or expired session."
+  [^js error]
+  (or (= 401 (some-> error .-response .-status))
+      (= "UNAUTHENTICATED" (error-status error))))
+
 ;; --- applying the client from the surrounding Provider ---
 
 (defn use-lazy-query

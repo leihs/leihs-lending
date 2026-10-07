@@ -21,7 +21,8 @@
         current-pool (detect #(= pool-id (:id %)) available-pools)
         pool-name (:name current-pool)
         base (str "/lending/" pool-id "/")
-        route-name (-> (.-pathname location) (split #"/") last)]
+        ;; /lending/<pool-id>/<route-name>[/...]
+        route-name (-> (.-pathname location) (split #"/") (nth 3 nil))]
     ($ :section {:class-name "mb-8"}
        ($ Breadcrumb {:className "my-8"}
           ($ BreadcrumbList

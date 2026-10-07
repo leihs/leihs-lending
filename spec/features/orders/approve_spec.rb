@@ -25,16 +25,18 @@ feature "Approve order" do
     )
   end
 
-  def create_order(target_user: borrower)
+  def create_order(target_user: borrower, periods: [[next_monday, next_monday + 7]])
     order = create(:order, user: target_user, inventory_pool: pool, state: "submitted")
-    create(:reservation,
-      user: target_user,
-      inventory_pool: pool,
-      leihs_model: model,
-      order: order,
-      status: "submitted",
-      start_date: next_monday.to_s,
-      end_date: (next_monday + 7).to_s)
+    periods.each do |start_date, end_date|
+      create(:reservation,
+        user: target_user,
+        inventory_pool: pool,
+        leihs_model: model,
+        order: order,
+        status: "submitted",
+        start_date: start_date.to_s,
+        end_date: end_date.to_s)
+    end
     order
   end
 
@@ -68,7 +70,7 @@ feature "Approve order" do
     click_on "Orders"
     approve_button_of("Ernst Einmalig").click
 
-    dialog = find("[data-test-id='approve-failed-dialog']")
+    dialog = find("[data-test-id='approve-order-dialog']")
     expect(dialog).to have_content("Approval failed")
     expect(dialog).to have_content("Ernst Einmalig")
     expect(dialog).to have_content(
@@ -89,10 +91,10 @@ feature "Approve order" do
     approve_button_of("Ernst Einmalig").click
 
     find("[data-test-id='approve-order-comment']").set("Pick up at desk B")
-    find("[data-test-id='approve-order-force']").click
+    find("[data-test-id='approve-order-submit']").click
 
     expect(page).to have_content("Order approved")
-    expect(page).not_to have_css("[data-test-id='approve-failed-dialog']")
+    expect(page).not_to have_css("[data-test-id='approve-order-dialog']")
     expect(Order[order.id].state).to eq("approved")
   end
 
@@ -103,21 +105,78 @@ feature "Approve order" do
     click_on "Orders"
     approve_button_of("Ernst Einmalig").click
 
-    within("[data-test-id='approve-failed-dialog']") { click_on "Cancel" }
+    within("[data-test-id='approve-order-dialog']") { click_on "Cancel" }
 
-    expect(page).not_to have_css("[data-test-id='approve-failed-dialog']")
+    expect(page).not_to have_css("[data-test-id='approve-order-dialog']")
     expect(Order[order.id].state).to eq("submitted")
     expect(find("tbody tr", text: "Ernst Einmalig")).to have_content("Approve")
   end
 
-  scenario "editing the order is not available yet" do
-    create_order
+  scenario "opens the order's edit page from the failure dialog" do
+    order = create_order
     create_competing_order
 
     click_on "Orders"
     approve_button_of("Ernst Einmalig").click
     find("[data-test-id='approve-order-edit']").click
 
-    expect(page).to have_content("Action not available yet")
+    expect(page).to have_current_path("/lending/#{pool.id}/orders/#{order.id}")
+    expect(page).to have_content("Edit order")
+  end
+
+  context "with reservations in the past" do
+    let(:past_period) { [Date.today - 14, Date.today - 7] }
+
+    scenario "shows the expired message without approve anyway when all reservations have ended" do
+      order = create_order(periods: [past_period, [Date.today - 3, Date.today - 1]])
+
+      click_on "Orders"
+      approve_button_of("Ernst Einmalig").click
+
+      dialog = find("[data-test-id='approve-order-dialog']")
+      expect(dialog).to have_content("Approval failed")
+      expect(dialog).to have_content(
+        "This order is not approvable because all reservations have already ended."
+      )
+      expect(dialog).not_to have_content("some reserved models are not available")
+      expect(dialog).to have_content("Edit order")
+      expect(dialog).not_to have_css("[data-test-id='approve-order-submit']")
+      expect(dialog).not_to have_css("[data-test-id='approve-order-comment']")
+
+      expect(Order[order.id].state).to eq("submitted")
+    end
+
+    scenario "shows the expired message on the edit page when all reservations have ended" do
+      order = create_order(periods: [past_period])
+
+      visit "/lending/#{pool.id}/orders/#{order.id}"
+      find("[data-test-id='approve-order']").click
+
+      dialog = find("[data-test-id='approve-order-dialog']")
+      expect(dialog).to have_content(
+        "This order is not approvable because all reservations have already ended."
+      )
+      expect(dialog).not_to have_css("[data-test-id='approve-order-submit']")
+      expect(Order[order.id].state).to eq("submitted")
+    end
+
+    scenario "approves anyway when only some reservations have ended" do
+      order = create_order(periods: [past_period, [next_monday, next_monday + 7]])
+      create_competing_order
+
+      click_on "Orders"
+      approve_button_of("Ernst Einmalig").click
+
+      dialog = find("[data-test-id='approve-order-dialog']")
+      expect(dialog).to have_content(
+        "This order is not approvable because some reserved models are not available."
+      )
+      expect(dialog).not_to have_content("all reservations have already ended")
+      find("[data-test-id='approve-order-submit']").click
+
+      expect(page).to have_content("Order approved")
+      expect(Order[order.id].state).to eq("approved")
+      expect(Reservation.where(order_id: order.id).map(&:status)).to all(eq("approved"))
+    end
   end
 end

@@ -13,7 +13,7 @@
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
 (def base-sqlmap
-  (-> (sql/select :*)
+  (-> (sql/select :reservations.*)
       (sql/from :reservations)))
 
 (defn get-multiple
@@ -112,13 +112,12 @@
 
 (defn get-for-open-order [tx order-id]
   (-> (open-order-sqlmap order-id)
-      sql-format
-      (->> (jdbc-query tx))))
-
-(defn get-for-open-order-with-model-names [tx order-id]
-  (-> (open-order-sqlmap order-id)
       (sql/select [:models.name :model_name])
       (sql/join :models [:= :reservations.model_id :models.id])
+      (sql/order-by :model_name
+                    :start_date
+                    :end_date
+                    :reservations.id)
       sql-format
       (->> (jdbc-query tx))))
 
