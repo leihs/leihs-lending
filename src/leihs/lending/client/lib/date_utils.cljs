@@ -30,6 +30,15 @@
         (date-fns/isYesterday d) (str date-string " (" (t "common.date.yesterday") ")")
         :else date-string))))
 
+(defn format-weekday-date
+  "Format JS date object as weekday plus date, e.g. \"Dienstag 02.12.2025\".
+   Returns nil for nil input."
+  [t d]
+  (when d
+    (str (t "common.date.formatWeekday" #js{:val d})
+         " "
+         (t "common.date.formatDate" #js{:val d}))))
+
 (defn format-date-time
   "Format JS date object with date and time in a human readable way. Returns nil for nil input."
   [t d]
