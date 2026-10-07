@@ -22,7 +22,7 @@
         (not pool) (log-mail-failure (:user_id order) (ex-info "Pool not found" {}))
         (not tmpl) (log-mail-failure (:user_id order)
                                      (ex-info (str "No 'approved' mail template for pool " (:id pool)) {}))
-        :else (let [reservations (res/get-for-open-order-with-model-names tx (:id order))
+        :else (let [reservations (res/get-for-open-order tx (:id order))
                     email-body (wet/render
                                 (wet/parse (:body tmpl))
                                 {:params {:user user
