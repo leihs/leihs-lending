@@ -4,10 +4,12 @@
       "today": "heute",
       "yesterday": "gestern",
       "formatDate": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric)}}",
-      "formatDateTime": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric; hour: 2-digit; minute: 2-digit)}}"
+      "formatDateTime": "{{- val, datetime(day: 2-digit; month: 2-digit; year: numeric; hour: 2-digit; minute: 2-digit)}}",
+      "formatWeekday": "{{- val, datetime(weekday: long)}}"
     },
     "load-error": "Konnte nicht geladen werden",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "save": "Speichern"
   },
   "components": {
     "entities": {
@@ -134,6 +136,44 @@
       "title": "Bestellung ablehnen",
       "comment": "Schreiben Sie einen Kommentar. Der Kommentar wird Teil des Ablehnungs-E-Mails",
       "comment-required": "Die Angabe eines Kommentars ist zwingend"
+    },
+    "purpose-dialog": {
+      "purpose": "Zweck",
+      "purpose-required": "Die Angabe eines Zwecks ist zwingend"
+    },
+    "approve-dialog": {
+      "title": "Bestellung genehmigen",
+      "approve": "Genehmigen"
+    },
+    "edit": {
+      "title": "Bestellung bearbeiten",
+      "purpose-placeholder": "Zweck Bestellung",
+      "swap-user": "Benutzer:in wechseln",
+      "edit-purpose": "Zweck bearbeiten",
+      "reject": "Bestellung ablehnen",
+      "approve": "Bestellung genehmigen",
+      "approve-with-comment": "Mit Kommentar genehmigen",
+      "start-date": "Von",
+      "end-date": "Bis",
+      "search-placeholder": "Inventarcode, Modellname, Suchwort",
+      "add-via-catalog": "Hinzufügen via Katalog",
+      "edit-selection": "Auswahl editieren",
+      "print-selection": "Auswahl ausdrucken",
+      "delete-selection": "Auswahl löschen",
+      "date-range": "{{- startDate}} – {{- endDate}}",
+      "select-range": "Alle Einträge des Zeitraums auswählen",
+      "select-line": "Eintrag auswählen",
+      "line-actions": "Eintrag ändern",
+      "line-timeline": "Zeitleiste",
+      "line-swap-model": "Modell tauschen",
+      "line-delete": "Löschen",
+      "empty": "Keine Reservationen"
+    },
+    "calendar": {
+      "title": "Reservation bearbeiten",
+      "quantity": "Anzahl",
+      "borrower": "Ausleihende/r",
+      "save": "Speichern"
     }
   },
   "visits": {
@@ -189,6 +229,19 @@
         "title": "Keine Verbindung",
         "description": "Bitte überprüfen Sie Ihre Internetverbindung."
       }
+    }
+  },
+  "calendar": {
+    "title": "Buchungskalender",
+    "week-number": "KW",
+    "month": "Monat",
+    "year": "Jahr",
+    "previous-month": "Vorheriger Monat",
+    "next-month": "Nächster Monat",
+    "restrictions": {
+      "NON_WORKDAY": "Gerätepark geschlossen",
+      "HOLIDAY": "Feiertag",
+      "VISITS_CAPACITY_REACHED": "Keine Termine mehr frei"
     }
   }
 }

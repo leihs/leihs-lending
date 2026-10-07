@@ -15,6 +15,22 @@
    [next.jdbc :refer [execute!] :as jdbc]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
+(def to-be-verified-sqlmap
+  "Whether the order holds a reservation of a model its user is only entitled to
+  through a group requiring verification. Correlates on `orders.id`, so it fits
+  any query selecting from `orders`."
+  [[:exists
+    (-> (sql/select 1)
+        (sql/from [:reservations :r])
+        (sql/join [:entitlements :e] [:= :e.model_id :r.model_id])
+        (sql/join [:entitlement_groups :eg] [:= :e.entitlement_group_id :eg.id])
+        (sql/join [:entitlement_groups_users :egu] [:= :eg.id :egu.entitlement_group_id])
+        (sql/where [:= :r.order_id :orders.id])
+        (sql/where [:= :eg.is_verification_required true])
+        (sql/where [:= :egu.user_id :r.user_id])
+        (sql/where [:= :eg.inventory_pool_id :r.inventory_pool_id]))]
+   :to_be_verified])
+
 (defn base-sqlmap [pool-id]
   (-> (sql/select :orders.id
                   :orders.user_id
@@ -36,17 +52,7 @@
                        (sql/where [:= :reservations.order_id :orders.id]))
                    :end_date]
                   [[:over [[:count :*] {}]] :total_count]
-                  [[:exists
-                    (-> (sql/select 1)
-                        (sql/from [:reservations :r])
-                        (sql/join [:entitlements :e] [:= :e.model_id :r.model_id])
-                        (sql/join [:entitlement_groups :eg] [:= :e.entitlement_group_id :eg.id])
-                        (sql/join [:entitlement_groups_users :egu] [:= :eg.id :egu.entitlement_group_id])
-                        (sql/where [:= :r.order_id :orders.id])
-                        (sql/where [:= :eg.is_verification_required true])
-                        (sql/where [:= :egu.user_id :r.user_id])
-                        (sql/where [:= :eg.inventory_pool_id :r.inventory_pool_id]))]
-                   :to_be_verified])
+                  to-be-verified-sqlmap)
       (sql/from :orders)
       (sql/join [:users :u] [:= :u.id :orders.user_id])
       (sql/where [:= :orders.inventory_pool_id pool-id])
@@ -118,7 +124,8 @@
                   [[:upper :orders.state] :state]
                   :orders.reject_reason
                   :orders.created_at
-                  :orders.updated_at)
+                  :orders.updated_at
+                  to-be-verified-sqlmap)
       (sql/from :orders)
       (sql/where [:= :orders.id id])
       sql-format

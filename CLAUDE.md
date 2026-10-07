@@ -22,3 +22,8 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 ## Frontend
 
 - Never modify the vendored components in `src/leihs/lending/client/components/ui/` (coming from https://ui.shadcn.com/), except those in the `customized` subfolder
+- When adding a new component from shadcn, run e.g. `npx shadcn@latest add checkbox` (replace "checkbox" with the wanted component).
+
+## Specs
+
+- Do not edit `cider-ci/generators/feature-tasks.yml` by hand, but generate it with the `cider-ci/generators/bin/feature-tasks-create` script

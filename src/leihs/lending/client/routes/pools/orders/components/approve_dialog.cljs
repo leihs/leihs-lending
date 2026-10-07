@@ -1,4 +1,4 @@
-(ns leihs.lending.client.routes.pools.orders.components.approve-failed-dialog
+(ns leihs.lending.client.routes.pools.orders.components.approve-dialog
   (:require
    ["@@/alert" :refer [Alert AlertDescription]]
    ["@@/button" :refer [Button]]
@@ -13,16 +13,15 @@
    ["sonner" :refer [toast]]
    [clojure.string :refer [trim]]
    [leihs.lending.client.components.entities.items-list :refer [ItemsList]]
+   [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.routes.pools.orders.components.styles :refer [approve-class]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
 
-(defui ApproveFailedDialog
-  "Shown when approving an order was refused by the backend; offers approving
-   it anyway. `use-items` is a hook `[id enabled?]` loading the items once the
-   dialog opens."
-  [{:keys [order open? set-open! use-items]}]
+(defui ApproveDialog
+  [{:keys [order open? set-open! use-items failed? on-edit on-success]}]
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
@@ -31,34 +30,46 @@
         name (str (:firstname user) " " (:lastname user))
         [comment set-comment!] (uix/use-state "")
         [approving? set-approving!] (uix/use-state false)
+        [refused? set-refused!] (uix/use-state false)
+        force? (boolean (or failed? refused?))
         close! (fn [open?]
                  (set-open! open?)
-                 (when-not open? (set-comment! "")))
+                 (when-not open?
+                   (set-comment! "")
+                   (set-refused! false)))
         approve! (fn []
                    (set-approving! true)
-                   (-> (data/approve-order! pool-id (:id order) true
+                   (-> (data/approve-order! pool-id (:id order) force?
                                             (not-empty (trim comment)))
                        (p/then (fn [_]
                                  (close! false)
                                  (.. toast (success (t "orders.approve-success")))
-                                 (.revalidate revalidator)))
-                       (p/catch (fn [_]
-                                  (.. toast (error (t "error.action.error")))))
+                                 (if on-success
+                                   (on-success)
+                                   (.revalidate revalidator))))
+                       (p/catch (fn [error]
+                                  (if (and (not force?)
+                                           (= 422 (urql/error-status error)))
+                                    (set-refused! true)
+                                    (.. toast (error (t "error.action.error"))))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
     ($ Dialog {:open open? :on-open-change close!}
        ($ DialogContent {:class-name "sm:max-w-[780px]"
-                         :data-test-id "approve-failed-dialog"}
+                         :data-test-id "approve-order-dialog"}
 
           ($ DialogHeader
-             ($ DialogTitle (t "orders.approve-failed-dialog.title"))
+             ($ DialogTitle (if force?
+                              (t "orders.approve-failed-dialog.title")
+                              (t "orders.approve-dialog.title")))
              ($ DialogDescription name))
 
           ($ :div {:class-name "grid gap-4"}
 
-             ($ Alert {:variant "destructive"}
-                ($ TriangleAlert)
-                ($ AlertDescription (t "orders.approve-error")))
+             (when force?
+               ($ Alert {:variant "destructive"}
+                  ($ TriangleAlert)
+                  ($ AlertDescription (t "orders.approve-error"))))
 
              ($ :div
                 ($ :div {:class-name "font-semibold text-sm mb-2"}
@@ -80,7 +91,7 @@
                 ($ Label {:html-for "approve-comment"}
                    (t "orders.approve-failed-dialog.comment"))
                 ($ Textarea {:id "approve-comment"
-                             :rows 4
+                             :class-name "min-h-24"
                              :data-test-id "approve-order-comment"
                              :value comment
                              :on-change #(set-comment! (.. % -target -value))})))
@@ -89,13 +100,17 @@
              ($ DialogClose {:as-child true}
                 ($ Button {:type "button" :variant "outline"}
                    (t "common.cancel")))
+             (when (and force? on-edit)
+               ($ Button {:type "button"
+                          :variant "outline"
+                          :data-test-id "approve-order-edit"
+                          :onClick on-edit}
+                  (t "orders.approve-failed-dialog.edit-order")))
              ($ Button {:type "button"
-                        :variant "outline"
-                        :data-test-id "approve-order-edit"
-                        :onClick #(.. toast (message (t "orders.actions.not-available")))}
-                (t "orders.approve-failed-dialog.edit-order"))
-             ($ Button {:type "button"
+                        :class-name approve-class
                         :disabled approving?
-                        :data-test-id "approve-order-force"
+                        :data-test-id "approve-order-submit"
                         :onClick approve!}
-                (t "orders.approve-failed-dialog.force-approve")))))))
+                (if force?
+                  (t "orders.approve-failed-dialog.force-approve")
+                  (t "orders.approve-dialog.approve"))))))))

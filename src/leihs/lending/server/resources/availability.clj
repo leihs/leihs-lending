@@ -74,20 +74,23 @@
 
 (defn- restrictions
   "Informational only, lending managers may override them."
-  [date visits-count pool-data]
+  [date holiday visits-count pool-data]
   (cond-> []
     (not (pool/working-day? date pool-data)) (conj :NON_WORKDAY)
-    (pool/get-holiday date pool-data) (conj :HOLIDAY)
+    holiday (conj :HOLIDAY)
     (pool/visits-capacity-reached? date visits-count pool-data) (conj :VISITS_CAPACITY_REACHED)))
 
 (defn- with-restrictions
-  "Adds the same start and end date restrictions to each day."
+  "Adds the same start and end date restrictions to each day, plus the name of
+  the holiday it falls on."
   [tx pool-id start end days]
   (let [pool-data (get-pool-calendar-data tx pool-id)
         visits-counts (get-visits-counts tx pool-id start end)]
     (map (fn [{:keys [date] :as day}]
-           (let [rs (restrictions date (get visits-counts date 0) pool-data)]
+           (let [holiday (pool/get-holiday date pool-data)
+                 rs (restrictions date holiday (get visits-counts date 0) pool-data)]
              (assoc day
+                    :holiday_name (:name holiday)
                     :start_date_restrictions rs
                     :end_date_restrictions rs)))
          days)))
