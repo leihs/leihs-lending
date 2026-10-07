@@ -9,6 +9,7 @@
    [leihs.core.availability.pool :as pool]
    [leihs.core.db :as db]
    [leihs.core.mails :refer [log-mail-failure]]
+   [leihs.core.time-zone :as tz]
    [leihs.lending.server.mails :as mails]
    [leihs.lending.server.resources.reservations :as res]
    [next.jdbc :refer [execute!] :as jdbc]
@@ -185,7 +186,7 @@
   (get-by-id tx id))
 
 (defn- all-reservations-expired? [tx id]
-  (let [today (local-date)
+  (let [today (tz/today tx)
         reservations (res/get-for-open-order tx id)]
     (and (seq reservations)
          (every? #(not (t/before? today (local-date (:end_date %))))
@@ -204,7 +205,7 @@
 (defn- any-unavailable? [tx id]
   (let [order (get-by-id tx id)
         user-id (:user_id order)
-        today (local-date)]
+        today (tz/today tx)]
     (some (fn [r]
             (and (t/before? today (local-date (:end_date r)))
                  (< (av/maximum-available-in-pool-and-period-summed-for-groups
