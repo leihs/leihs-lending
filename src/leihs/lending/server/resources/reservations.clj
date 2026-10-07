@@ -6,6 +6,7 @@
    [leihs.lending.server.resources.items :as items]
    [leihs.lending.server.resources.models :as models]
    [leihs.lending.server.resources.options :as options]
+   [leihs.lending.server.resources.users :as users]
    [next.jdbc :refer [execute!]]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
@@ -74,10 +75,14 @@
       sql-format
       (->> (jdbc-query tx))))
 
-(defn contract-delegated-user-id [tx contract-id]
+(defn delegated-user-id
+  "First non-empty delegated user among the order's or contract's reservations."
+  [tx {:keys [order-id contract-id]}]
   (-> (sql/select :delegated_user_id)
       (sql/from :reservations)
-      (sql/where [:= :contract_id contract-id])
+      (sql/where (if order-id
+                   [:= :order_id order-id]
+                   [:= :contract_id contract-id]))
       (sql/where [:!= :delegated_user_id nil])
       (sql/limit 1)
       sql-format
@@ -198,25 +203,49 @@
                             {:status 422})))
           (throw (ex-info "Inventory code not found" {:status 404}))))))
 
+(defn assert-valid-delegated-user!
+  "Delegation: a member is required. Normal user: must be empty."
+  [tx user-id delegated-user-id]
+  (let [delegation? (-> (users/get-by-id tx user-id) :delegator_user_id some?)]
+    (cond
+      (and (not delegation?) delegated-user-id)
+      (throw (ex-info "Delegated user must be empty for a normal user" {:status 422}))
+      (and delegation?
+           (or (nil? delegated-user-id)
+               (not (users/delegated-user-of? tx delegated-user-id user-id))))
+      (throw (ex-info "Delegated user is not a member of the delegation" {:status 422})))))
+
+(defn- default-delegated-user-id
+  "For a delegation: the order's delegated user, else the responsible user.
+  Mirrors legacy Reservation before_validation."
+  [tx user-id order-id]
+  (when-let [delegator-id (:delegator_user_id (users/get-by-id tx user-id))]
+    (or (when order-id
+          (delegated-user-id tx {:order-id order-id}))
+        delegator-id)))
+
 (defn- insert!
   "Quantity 1; submitted when on an order, else approved (hand over)."
   [tx pool-id {:keys [order-id user-id start-date end-date]} record]
-  (-> (sql/insert-into :reservations)
-      (sql/values [(merge record
-                          {:inventory_pool_id pool-id
-                           :user_id user-id
-                           :order_id order-id
-                           :type (if (:option_id record) "OptionLine" "ItemLine")
-                           :quantity 1
-                           :start_date start-date
-                           :end_date end-date
-                           :status (if order-id "submitted" "approved")
-                           :created_at [:now]
-                           :updated_at [:now]})])
-      (sql/returning :*)
-      sql-format
-      (->> (jdbc-query tx))
-      first))
+  (let [delegated-user-id (default-delegated-user-id tx user-id order-id)]
+    (assert-valid-delegated-user! tx user-id delegated-user-id)
+    (-> (sql/insert-into :reservations)
+        (sql/values [(merge record
+                            {:inventory_pool_id pool-id
+                             :user_id user-id
+                             :delegated_user_id delegated-user-id
+                             :order_id order-id
+                             :type (if (:option_id record) "OptionLine" "ItemLine")
+                             :quantity 1
+                             :start_date start-date
+                             :end_date end-date
+                             :status (if order-id "submitted" "approved")
+                             :created_at [:now]
+                             :updated_at [:now]})])
+        (sql/returning :*)
+        sql-format
+        (->> (jdbc-query tx))
+        first)))
 
 (defn create-for-model!
   [{{tx :tx pool-id :pool-id} :request} {:keys [order-id model-id] :as args} _]

@@ -95,6 +95,60 @@ describe "creating reservations" do
       expect_graphql_error(create_for(model.id, order_id: order.id), status: 404)
     end
 
+    describe "for a delegation" do
+      let(:responsible) { create(:user) }
+      let(:member) { create(:user) }
+      let(:delegation) { create(:user, delegator_user_id: responsible.id) }
+
+      before do
+        grant_pool_access(delegation, pool)
+        database[:delegations_direct_users].insert(
+          id: SecureRandom.uuid, delegation_id: delegation.id, user_id: member.id
+        )
+      end
+
+      it "takes the delegated user of the order" do
+        order = create(:order, user: delegation, inventory_pool: pool, state: "submitted")
+        create(:reservation,
+          user: delegation,
+          delegated_user: member,
+          inventory_pool: pool,
+          leihs_model: model,
+          order: order,
+          status: "submitted")
+
+        result = mutate(:createModelReservation,
+          userId: delegation.id, modelId: lendable_model.id, orderId: order.id)
+        expect(created(result, :createModelReservation).delegated_user_id).to eq(member.id)
+      end
+
+      it "fails when the order's delegated user is no longer a member" do
+        order = create(:order, user: delegation, inventory_pool: pool, state: "submitted")
+        create(:reservation,
+          user: delegation,
+          delegated_user: member,
+          inventory_pool: pool,
+          leihs_model: model,
+          order: order,
+          status: "submitted")
+        database[:delegations_direct_users].where(user_id: member.id).delete
+
+        result = mutate(:createModelReservation,
+          userId: delegation.id, modelId: lendable_model.id, orderId: order.id)
+        expect_graphql_error(result, status: 422)
+      end
+
+      it "takes the responsible user without an order" do
+        result = mutate(:createModelReservation, userId: delegation.id, modelId: model.id)
+        expect(created(result, :createModelReservation).delegated_user_id).to eq(responsible.id)
+      end
+    end
+
+    it "leaves the delegated user empty for a normal user" do
+      result = create_for(model.id)
+      expect(created(result, :createModelReservation).delegated_user_id).to be_nil
+    end
+
     describe "model availability in pool" do
       it "accepts a model whose item is owned by another pool" do
         m = create(:leihs_model)

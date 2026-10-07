@@ -44,15 +44,45 @@ describe "swapOrderUser" do
     expect(reservation_user_ids).to all(eq(new_user.id))
   end
 
-  it "sets delegatedUserId on open reservations when given" do
+  describe "to a delegation" do
+    let(:member) { create(:user) }
+    let(:delegation) { create(:user, delegator_user_id: create(:user).id) }
+
+    before do
+      grant_pool_access(delegation, pool)
+      database[:delegations_direct_users].insert(
+        id: SecureRandom.uuid, delegation_id: delegation.id, user_id: member.id
+      )
+    end
+
+    it "sets delegatedUserId on open reservations" do
+      order = create_order
+
+      swap_order_user(order.id, delegation.id, user.id, delegated_user_id: member.id)
+      delegated_ids = Reservation.where(order_id: order.id).map(&:delegated_user_id)
+      expect(delegated_ids).to all(eq(member.id))
+    end
+
+    it "fails without delegatedUserId" do
+      result = swap_order_user(create_order.id, delegation.id, user.id)
+      expect_graphql_error(result, status: 422)
+    end
+
+    it "fails when delegatedUserId is not a member" do
+      result = swap_order_user(create_order.id, delegation.id, user.id,
+        delegated_user_id: create(:user).id)
+      expect_graphql_error(result, status: 422)
+    end
+  end
+
+  it "fails when delegatedUserId is given for a normal user" do
     order = create_order
     new_user = create(:user)
     grant_pool_access(new_user, pool)
-    delegate = create(:user)
 
-    swap_order_user(order.id, new_user.id, user.id, delegated_user_id: delegate.id)
-    delegated_ids = Reservation.where(order_id: order.id).map(&:delegated_user_id)
-    expect(delegated_ids).to all(eq(delegate.id))
+    result = swap_order_user(order.id, new_user.id, user.id,
+      delegated_user_id: create(:user).id)
+    expect_graphql_error(result, status: 422)
   end
 
   it "updates the customer_order in place when it has no other orders" do

@@ -278,6 +278,7 @@
   [{{tx :tx pool-id :pool-id} :request} {:keys [id user-id delegated-user-id]} _]
   (assert-submitted! tx id)
   (assert-valid-new-user! tx pool-id user-id)
+  (res/assert-valid-delegated-user! tx user-id delegated-user-id)
   (let [order (get-by-id tx id)
         customer-order-id (get-customer-order-id tx id)]
     (-> (sql/update :reservations)

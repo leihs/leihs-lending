@@ -84,7 +84,7 @@
 (defn- contract-data [tx pool-id contract locale]
   (let [contract-id (:id contract)
         user (users/get-by-id tx (:user_id contract))
-        delegated-user-id (reservations/contract-delegated-user-id tx contract-id)
+        delegated-user-id (reservations/delegated-user-id tx {:contract-id contract-id})
         delegated-user (when delegated-user-id
                          (users/get-by-id tx delegated-user-id))
         handed-over-by-user-id (reservations/contract-handed-over-by-user-id tx contract-id)
