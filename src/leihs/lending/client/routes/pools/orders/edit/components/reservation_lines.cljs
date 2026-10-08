@@ -53,7 +53,7 @@
                 (t "orders.duration.days" (cj {:count days}))))))))
 
 (defui LineRow
-  [{:keys [line selected? toggle! on-edit]}]
+  [{:keys [line selected? toggle! on-edit on-delete]}]
   (let [[t] (useTranslation)
         model (:model line)
         stub! #(.. toast (message (t "orders.actions.not-available")))]
@@ -92,14 +92,15 @@
                       (t "orders.edit.line-timeline"))
                    ($ DropdownMenuItem {:onSelect stub!}
                       (t "orders.edit.line-swap-model"))
-                   ($ DropdownMenuItem {:onSelect stub!}
+                   ($ DropdownMenuItem {:onSelect on-delete
+                                        :data-test-id "delete-line"}
                       (t "orders.edit.line-delete")))))))))
 
 (defui ReservationLines
   "The order's reservation lines, grouped by date range.
    `selected` is the set of selected line keys, `on-edit-line` opens a line's
-   calendar."
-  [{:keys [lines selected toggle! toggle-many! on-edit-line]}]
+   calendar, `on-delete-line` deletes a line."
+  [{:keys [lines selected toggle! toggle-many! on-edit-line on-delete-line]}]
   (let [[t] (useTranslation)]
     (if (empty? lines)
       ($ :div {:class-name "p-4 text-center text-sm text-muted-foreground"}
@@ -119,4 +120,5 @@
                                   :line line
                                   :selected? (contains? selected (line-key line))
                                   :toggle! #(toggle! (line-key line) %)
-                                  :on-edit #(on-edit-line line)}))))))))))
+                                  :on-edit #(on-edit-line line)
+                                  :on-delete #(on-delete-line line)}))))))))))

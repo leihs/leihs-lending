@@ -121,6 +121,81 @@
                                :ids (vec (mapcat :reservationIds lines))}
                               (zipmap (map keyword var-names) model-ids)))))
 
+(def model-search-query
+  "query ($term: String!) {
+     models(term: $term) {
+       id
+       name
+       type
+       isPackage
+     }
+   }")
+
+(defn- stub-availability
+  "STUB: fake `X(Y)/Z` numbers, stable per model, until the backend provides
+   them for the date range and the order's user."
+  [{:keys [id] :as model}]
+  (let [n (mod (hash id) 5)
+        total (mod (hash (str id "total")) 3)]
+    (assoc model
+           :availableQuantity n
+           :availableTotalQuantity (+ n total)
+           :borrowableQuantity (+ n total (mod (hash (str id "borrowable")) 2)))))
+
+(defn- stub-templates
+  "STUB: one fake template per search term, until the backend provides them."
+  [term]
+  [{:id (str "stub-template-" term)
+    :name (str "Vorlage «" term "» (stub)")}])
+
+(defn use-model-search
+  "Models and templates matching `term`, as groups `{:label :items}` for the
+   search field of the add-reservation form."
+  [term enabled?]
+  (let [{:keys [data] :as result} (urql/use-lazy-query model-search-query
+                                                       {:term term}
+                                                       enabled?)]
+    (assoc result :data
+           (when data
+             [{:label :models
+               :items (mapv #(assoc (stub-availability %) :kind :model)
+                            (:models data))}
+              {:label :templates
+               :items (mapv #(assoc % :kind :template) (stub-templates term))}]))))
+
+(def create-model-reservation-mutation
+  "mutation ($orderId: UUID!, $userId: UUID!, $modelId: UUID!,
+             $startDate: Date!, $endDate: Date!) {
+     createModelReservation(orderId: $orderId, userId: $userId,
+                            modelId: $modelId, startDate: $startDate,
+                            endDate: $endDate) {
+       id
+     }
+   }")
+
+(defn create-model-reservation!
+  "Adds one reservation of the model to the order, for the order's user."
+  [pool-id order model-id {:keys [start-date end-date]}]
+  (urql/run-mutation (urql/make-pool-client pool-id)
+                     create-model-reservation-mutation
+                     {:orderId (:id order)
+                      :userId (get-in order [:user :id])
+                      :modelId model-id
+                      :startDate start-date
+                      :endDate end-date}))
+
+(def delete-reservations-mutation
+  "mutation ($ids: [UUID!]!) {
+     deleteReservations(ids: $ids)
+   }")
+
+(defn delete-lines!
+  "Deletes all reservations of the given lines."
+  [pool-id lines]
+  (urql/run-mutation (urql/make-pool-client pool-id)
+                     delete-reservations-mutation
+                     {:ids (vec (mapcat :reservationIds lines))}))
+
 (def update-purpose-mutation
   "mutation ($id: UUID!, $purpose: NonEmptyString!) {
      updateOrderPurpose(id: $id, purpose: $purpose) {

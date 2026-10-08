@@ -21,6 +21,7 @@
    [leihs.lending.client.routes.pools.orders.edit.components.calendar-dialog :refer [CalendarDialog]]
    [leihs.lending.client.routes.pools.orders.edit.components.purpose-dialog :refer [PurposeDialog]]
    [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [ReservationLines line-key]]
+   [leihs.lending.client.routes.pools.orders.edit.data :as edit-data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
 
@@ -70,7 +71,16 @@
                  ;; saved lines come back with new reservation ids
                  (set-selected! #{})
                  (.revalidate revalidator))
-        selected-lines (filterv #(contains? selected (line-key %)) lines)]
+        selected-lines (filterv #(contains? selected (line-key %)) lines)
+        delete-lines! (fn [to-delete]
+                        (if (= (count to-delete) (count lines))
+                          (.. toast (error (t "orders.edit.delete-all-error")))
+                          (-> (edit-data/delete-lines! pool-id to-delete)
+                              (p/then (fn [_]
+                                        (set-selected! #(apply disj % (map line-key to-delete)))
+                                        (.revalidate revalidator)))
+                              (p/catch (fn [_]
+                                         (.. toast (error (t "error.action.error"))))))))]
 
     ($ Card
        ($ CardHeader
@@ -137,7 +147,8 @@
           ($ :div {:class-name "grid gap-8"}
              ($ :div {:class-name "flex flex-wrap items-center justify-between gap-2"}
 
-                ($ AddReservationForm)
+                ($ AddReservationForm {:order order
+                                       :on-added #(.revalidate revalidator)})
 
                 ($ :div {:class-name "flex items-stretch"}
                    ($ Button {:class-name "rounded-r-none"
@@ -156,14 +167,16 @@
                       ($ DropdownMenuContent {:align "end"}
                          ($ DropdownMenuItem {:onSelect stub!}
                             (t "orders.edit.print-selection"))
-                         ($ DropdownMenuItem {:onSelect stub!}
+                         ($ DropdownMenuItem {:onSelect #(delete-lines! selected-lines)
+                                              :data-test-id "delete-selection"}
                             (t "orders.edit.delete-selection"))))))
 
              ($ ReservationLines {:lines lines
                                   :selected selected
                                   :toggle! toggle!
                                   :toggle-many! toggle-many!
-                                  :on-edit-line #(open-calendar! [%])})))
+                                  :on-edit-line #(open-calendar! [%])
+                                  :on-delete-line #(delete-lines! [%])})))
 
        ($ PurposeDialog {:order order
                          :open? purpose-open?
