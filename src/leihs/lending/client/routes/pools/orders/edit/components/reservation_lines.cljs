@@ -22,10 +22,11 @@
   (first (:reservationIds line)))
 
 (defn group-lines
-  "Date-range groups in chronological order, with the lines sorted by model name."
+  "Date-range groups in chronological order, keeping the lines' order (by model
+   name) within each group."
   [lines]
   (->> lines
-       (sort-by (juxt :startDate :endDate #(or (get-in % [:model :name]) "")))
+       (sort-by (juxt :startDate :endDate))
        (partition-by (juxt :startDate :endDate))
        (map (fn [range-lines]
               {:start-date (:startDate (first range-lines))

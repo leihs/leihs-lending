@@ -122,24 +122,36 @@
 
 (defn get-lines
   "Groups an open order's reservations into model+pool+date-range lines,
-  summing desired quantity and computing available quantity per line.
+  summing desired quantity and computing available quantity per line, ordered
+  by model name (database collation) and date range.
   Drops OptionLine rows (model_id nil) -- not quantity/entitlement-limited,
   and today never present on an open order, but kept explicit since
   hand-over/contract work may attach option lines before contract_id is set."
   [{{tx :tx} :request} _ {order-id :id}]
-  (->> (get-for-open-order tx order-id)
-       (remove #(nil? (:model_id %)))
-       (group-by (juxt :model_id :inventory_pool_id :start_date :end_date))
-       (map (fn [[_ rs]]
-              (let [{:keys [model_id inventory_pool_id user_id start_date end_date]} (first rs)
-                    ids (mapv :id rs)]
-                {:model_id model_id
-                 :quantity (->> rs (map :quantity) (apply +))
-                 :available_quantity (av/maximum-available-in-pool-and-period-summed-for-groups
-                                      tx model_id user_id start_date end_date inventory_pool_id ids)
-                 :start_date start_date
-                 :end_date end_date
-                 :reservation_ids ids})))))
+  (let [line-key (juxt :model_id :inventory_pool_id :start_date :end_date)
+        rows (-> (open-order-sqlmap order-id)
+                 (sql/where [:!= :model_id nil])
+                 (sql/order-by [(-> (sql/select :name)
+                                    (sql/from :models)
+                                    (sql/where [:= :models.id :reservations.model_id]))]
+                               :start_date
+                               :end_date
+                               :model_id)
+                 sql-format
+                 (->> (jdbc-query tx)))
+        groups (group-by line-key rows)]
+    (->> (distinct (map line-key rows))
+         (map groups)
+         (map (fn [rs]
+                (let [{:keys [model_id inventory_pool_id user_id start_date end_date]} (first rs)
+                      ids (mapv :id rs)]
+                  {:model_id model_id
+                   :quantity (->> rs (map :quantity) (apply +))
+                   :available_quantity (av/maximum-available-in-pool-and-period-summed-for-groups
+                                        tx model_id user_id start_date end_date inventory_pool_id ids)
+                   :start_date start_date
+                   :end_date end_date
+                   :reservation_ids ids}))))))
 
 (defn- assert-order-submitted!
   "Order must belong to the pool (404) and be in submitted state (422)."

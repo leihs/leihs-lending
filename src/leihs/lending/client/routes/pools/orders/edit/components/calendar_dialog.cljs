@@ -119,68 +119,69 @@
      [open? start-iso end-iso single-line])
 
     ($ Dialog {:open open? :on-open-change set-open!}
-       ($ DialogContent {:class-name "sm:max-w-[980px]"
+       ($ DialogContent {:class-name "flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-[980px]"
                          :data-test-id "calendar-dialog"}
 
           ($ DialogHeader
              ($ DialogTitle (t "orders.calendar.title"))
              ($ DialogDescription (str (:firstname user) " " (:lastname user))))
 
-          ;; bottom aligned so the labelled quantity field lines up with the rest
-          ($ :div {:class-name "flex items-end gap-2"}
-             ($ MonthNav {:month month :set-month! set-month! :min-date today})
-             ($ :div {:class-name "ml-auto flex items-end gap-2"}
-                ($ DateField {:t t
-                              :date start-date
-                              :label (t "orders.edit.start-date")
-                              :test-id "calendar-start-date"})
-                ($ :span {:class-name "mb-2 text-muted-foreground"} "–")
-                ($ DateField {:t t
-                              :date end-date
-                              :label (t "orders.edit.end-date")
-                              :test-id "calendar-end-date"})
-                (when single-line?
-                  ($ :div {:class-name "grid gap-1"}
-                     ($ :label {:class-name "text-xs text-muted-foreground"
-                                :html-for "calendar-quantity"}
-                        (t "orders.calendar.quantity"))
-                     ($ Input {:id "calendar-quantity"
-                               :type "number"
-                               :min 1
-                               :class-name "w-18"
-                               :data-test-id "calendar-quantity"
-                               :value quantity
-                               :on-change #(let [n (js/parseInt (.. % -target -value))]
-                                             (set-quantity! (if (js/isNaN n) 1 (max 1 n))))})))
-                ;; TODO entitlement groups once the backend exposes them
-                ($ Select {:value "user" :disabled true}
-                   ($ SelectTrigger {:class-name "w-44"
-                                     :aria-label (t "orders.calendar.borrower")}
-                      ($ SelectValue))
-                   ($ SelectContent
-                      ($ SelectItem {:value "user"} (t "orders.calendar.borrower"))))))
+          ($ :div {:class-name "-mx-6 grid min-h-0 flex-1 gap-4 overflow-y-auto px-6"}
+             ;; bottom aligned so the labelled quantity field lines up with the rest
+             ($ :div {:class-name "flex items-end gap-2"}
+                ($ MonthNav {:month month :set-month! set-month! :min-date today})
+                ($ :div {:class-name "ml-auto flex items-end gap-2"}
+                   ($ DateField {:t t
+                                 :date start-date
+                                 :label (t "orders.edit.start-date")
+                                 :test-id "calendar-start-date"})
+                   ($ :span {:class-name "mb-2 text-muted-foreground"} "–")
+                   ($ DateField {:t t
+                                 :date end-date
+                                 :label (t "orders.edit.end-date")
+                                 :test-id "calendar-end-date"})
+                   (when single-line?
+                     ($ :div {:class-name "grid gap-1"}
+                        ($ :label {:class-name "text-xs text-muted-foreground"
+                                   :html-for "calendar-quantity"}
+                           (t "orders.calendar.quantity"))
+                        ($ Input {:id "calendar-quantity"
+                                  :type "number"
+                                  :min 1
+                                  :class-name "w-18"
+                                  :data-test-id "calendar-quantity"
+                                  :value quantity
+                                  :on-change #(let [n (js/parseInt (.. % -target -value))]
+                                                (set-quantity! (if (js/isNaN n) 1 (max 1 n))))})))
+                   ;; TODO entitlement groups once the backend exposes them
+                   ($ Select {:value "user" :disabled true}
+                      ($ SelectTrigger {:class-name "w-44"
+                                        :aria-label (t "orders.calendar.borrower")}
+                         ($ SelectValue))
+                      ($ SelectContent
+                         ($ SelectItem {:value "user"} (t "orders.calendar.borrower"))))))
 
-          ($ :div {:class-name "relative"}
-             (when-not ready?
-               ($ :div {:class-name "absolute inset-0 z-10 flex items-center justify-center bg-background/60"
-                        :aria-busy true}
-                  ($ Spinner)))
-             (if error?
-               ($ :div {:class-name "p-4 text-center text-sm text-destructive"}
-                  (t "common.load-error"))
-               ($ BookingCalendar {:month month
-                                   :set-month! set-month!
-                                   :days (cal/index-by-date days)
-                                   :start-date start-date
-                                   :end-date end-date
-                                   :on-range-change change-range!
-                                   :single-line? single-line?
-                                   :available? available?
-                                   :min-date today})))
+             ($ :div {:class-name "relative"}
+                (when-not ready?
+                  ($ :div {:class-name "absolute inset-0 z-10 flex items-center justify-center bg-background/60"
+                           :aria-busy true}
+                     ($ Spinner)))
+                (if error?
+                  ($ :div {:class-name "p-4 text-center text-sm text-destructive"}
+                     (t "common.load-error"))
+                  ($ BookingCalendar {:month month
+                                      :set-month! set-month!
+                                      :days (cal/index-by-date days)
+                                      :start-date start-date
+                                      :end-date end-date
+                                      :on-range-change change-range!
+                                      :single-line? single-line?
+                                      :available? available?
+                                      :min-date today})))
 
-          ($ :div {:class-name "rounded-md border text-sm"}
-             (for [line lines]
-               ($ LineSummary {:key (first (:reservationIds line)) :line line})))
+             ($ :div {:class-name "rounded-md border text-sm"}
+                (for [line lines]
+                  ($ LineSummary {:key (first (:reservationIds line)) :line line}))))
 
           ($ DialogFooter
              ($ DialogClose {:as-child true}
