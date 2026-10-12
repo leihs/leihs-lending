@@ -71,6 +71,7 @@
                                   (str "%" token "%")]))
                     sqlmap
                     (remove str/blank? (str/split (str/trim (or term "")) #"\s+"))))
+      (sql/order-by :models.name)
       (sql/limit 20)
       sql-format
       (->> (jdbc-query tx))))
