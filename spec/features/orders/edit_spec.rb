@@ -79,6 +79,15 @@ feature "Edit order" do
     find("[data-test-id='order-purpose-dialog']")
   end
 
+  def search_model(term)
+    find("[data-test-id='new-reservation-term']").set(term)
+  end
+
+  def delete_line(model)
+    line_of(model).find("[data-test-id='line-actions-menu']").click
+    find("[data-test-id='delete-line']").click
+  end
+
   scenario "shows the order's lines grouped by date range" do
     2.times { create_reservation(camera) }
     create_reservation(tripod, end_date: next_monday + 1)
@@ -214,5 +223,98 @@ feature "Edit order" do
     expect(page).not_to have_css("[data-test-id='order-purpose-dialog']")
     expect(page).to have_content("Semester project")
     expect(Order[order.id].purpose).to eq("Semester project")
+  end
+
+  scenario "adds a model found by the search field" do
+    create_reservation(tripod)
+    camera
+
+    visit_edit_page
+    search_model("Kamera")
+    find("[data-test-id='model-search-item']", text: /^Kamera/).click
+
+    expect(page).to have_content("Kamera added")
+    expect(page).to have_content(date_range_text(Date.today, Date.today))
+    expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^1 / })
+    expect(find("[data-test-id='new-reservation-term']").value).to eq("")
+
+    cameras = reservations_of(camera)
+    expect(cameras.size).to eq(1)
+    expect(cameras.first.start_date).to eq(Date.today)
+    expect(cameras.first.end_date).to eq(Date.today)
+    expect(cameras.first.status).to eq("submitted")
+    expect(cameras.first.user_id).to eq(borrower.id)
+  end
+
+  scenario "adding a model of an existing line raises its quantity" do
+    create_reservation(camera, start_date: Date.today, end_date: Date.today)
+
+    visit_edit_page
+    search_model("Kamera")
+    find("[data-test-id='model-search-item']", text: /^Kamera/).click
+
+    expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^2 / })
+    expect(page).to have_css("[data-test-id='reservation-line']", count: 1)
+    expect(reservations_of(camera).size).to eq(2)
+  end
+
+  scenario "deletes a single line" do
+    2.times { create_reservation(camera) }
+    create_reservation(tripod)
+
+    visit_edit_page
+    delete_line(camera)
+
+    expect(page).to have_css("[data-test-id='reservation-line']", count: 1)
+    expect(page).not_to have_css("[data-test-id='reservation-line']", text: camera.product)
+    expect(reservations_of(camera)).to be_empty
+    expect(reservations_of(tripod).size).to eq(1)
+  end
+
+  scenario "deletes the selected lines" do
+    create_reservation(camera)
+    create_reservation(tripod)
+    other = lendable_model("Mikrofon")
+    create_reservation(other, end_date: next_monday + 1)
+
+    visit_edit_page
+    line_of(camera).find("[data-test-id='select-line']").click
+    line_of(tripod).find("[data-test-id='select-line']").click
+    expect(find("[data-test-id='edit-selection']")).to have_content("2")
+    find("[data-test-id='selection-actions-menu']").click
+    find("[data-test-id='delete-selection']").click
+
+    expect(page).to have_css("[data-test-id='reservation-line']", count: 1)
+    expect(line_of(other)).to be_present
+    expect(find("[data-test-id='edit-selection']")).to have_content("0")
+    expect(reservations_of(camera)).to be_empty
+    expect(reservations_of(tripod)).to be_empty
+    expect(reservations_of(other).size).to eq(1)
+  end
+
+  scenario "refuses to delete all lines of the order" do
+    create_reservation(camera)
+    create_reservation(tripod)
+
+    visit_edit_page
+    find("[data-test-id='select-range']").click
+    find("[data-test-id='selection-actions-menu']").click
+    find("[data-test-id='delete-selection']").click
+
+    expect(page).to have_content("You cannot delete all reservations of an order")
+    expect(page).to have_css("[data-test-id='reservation-line']", count: 2)
+    expect(reservations_of(camera).size).to eq(1)
+    expect(reservations_of(tripod).size).to eq(1)
+  end
+
+  scenario "refuses to delete the only line of the order" do
+    create_reservation(camera)
+
+    visit_edit_page
+    delete_line(camera)
+
+    expect(page).to have_content("You cannot delete all reservations of an order")
+    expect(line_of(camera)).to be_present
+    expect(reservations_of(camera).size).to eq(1)
   end
 end
