@@ -142,6 +142,10 @@ Applied in `graphql/resolvers.clj` to all resolvers (innermost → outermost):
 
 Never add try/catch inside individual resolvers — let the error wrapper handle it.
 
+### Pool scoping
+
+Pool-owned tables carry `inventory_pool_id`. Each resolver scopes ids it receives to the request's `:pool-id` in its own SQL — through `base-sqlmap pool-id` (e.g. `visits/get-one`) or the resource's `get-in-pool` (e.g. `orders/get-in-pool`, `reservations/get-in-pool`), throwing 404 when not found. Nested field resolvers get an already-scoped parent. Never take `poolId` as an arg. Cover each id-taking field with a spec asserting 404 for an id from another pool.
+
 ### Error handling
 
 ```clojure

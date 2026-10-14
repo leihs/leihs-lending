@@ -11,6 +11,7 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 - Registry: flat kebab-case keyword → fn maps in `graphql/queries.clj` and `graphql/mutations.clj`. Keys must be `get-one`/`get-multiple` only — combine logic for different parent contexts (e.g. `order_id` vs `reservation_ids`) inside one function rather than adding new keys.
 - Resolver wrappers (innermost → outermost): kebab-case → camelCase → error. Never add try/catch inside resolvers.
 - Errors: `(throw (ex-info "msg" {:status 403}))` — never return nil for failures
+- Pool scoping: every query/mutation taking ids checks in its own SQL that they belong to the request's `:pool-id` (`inventory_pool_id`) — via `base-sqlmap pool-id` or the resource's `get-in-pool` (404 when missing). Never take `poolId` as an arg. Each such field gets a spec: id from another pool → 404.
 - Mutations: scope writes by `pool-id`; throw 404 when given ids don't all match. Derive context (order, status) from the rows rather than taking extra args like `orderId`.
 - Two GraphQL endpoints: `/lending/graphql` (root, no auth) and `/lending/:pool-id/graphql` (pool-scoped, auth required). Default to pool schema.
 - Schema: custom scalars `UUID`, `NonEmptyString`; non-null via `(non-null :Type)`; field resolvers inline via `:resolve :key`

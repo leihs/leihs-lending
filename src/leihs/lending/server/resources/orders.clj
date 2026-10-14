@@ -92,8 +92,8 @@
                 (-> (sql/select :order_id) (sql/from :verifiable_orders))])))
 
 (defn get-multiple
-  [{{tx :tx} :request}
-   {:keys [pool-id states start-date end-date term to-be-verified page per-page]}
+  [{{tx :tx pool-id :pool-id} :request}
+   {:keys [states start-date end-date term to-be-verified page per-page]}
    _]
   (let [rows (-> (cond-> (base-sqlmap pool-id)
                    (some? to-be-verified)
@@ -110,7 +110,9 @@
     {:items rows
      :total-count (-> rows first :total_count (or 0))}))
 
-(defn get-by-id [tx id]
+(defn get-by-id
+  "The pool's order, nil if missing or in another pool."
+  [tx pool-id id]
   (-> (sql/select :orders.id
                   :orders.user_id
                   :orders.inventory_pool_id
@@ -121,13 +123,20 @@
                   :orders.updated_at)
       (sql/from :orders)
       (sql/where [:= :orders.id id])
+      (sql/where [:= :orders.inventory_pool_id pool-id])
       sql-format
       (->> (jdbc-query tx))
       first))
 
+(defn get-in-pool
+  "The pool's order; 404 if missing or in another pool."
+  [tx pool-id id]
+  (or (get-by-id tx pool-id id)
+      (throw (ex-info "Order not found" {:status 404}))))
+
 (defn get-one
-  [{{tx :tx} :request} {:keys [id]} _]
-  (get-by-id tx id))
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id]} _]
+  (get-in-pool tx pool-id id))
 
 (defn contact-details-for-contract
   "Distinct, non-blank customer_orders.contact_details reachable from a
@@ -144,8 +153,10 @@
        (map :contact_details)
        (remove str/blank?)))
 
-(defn- assert-submitted! [tx id]
-  (when (not= "SUBMITTED" (:state (get-by-id tx id)))
+(defn- assert-submitted!
+  "Order must belong to the pool (404) and be in submitted state (422)."
+  [tx pool-id id]
+  (when (not= "SUBMITTED" (:state (get-in-pool tx pool-id id)))
     (throw (ex-info "Order is not in submitted state" {:status 422}))))
 
 (defn- any-suspended? [tx id]
@@ -170,8 +181,8 @@
       :suspended))
 
 (defn reject!
-  [{{tx :tx} :request} {:keys [id reason]} _]
-  (assert-submitted! tx id)
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id reason]} _]
+  (assert-submitted! tx pool-id id)
   (-> (sql/update :orders)
       (sql/set {:state "rejected" :reject_reason reason})
       (sql/where [:= :orders.id id])
@@ -183,7 +194,7 @@
       (sql/where [:= :reservations.contract_id nil])
       sql-format
       (->> (execute! tx)))
-  (get-by-id tx id))
+  (get-by-id tx pool-id id))
 
 (defn- all-reservations-expired? [tx id]
   (let [today (tz/today tx)
@@ -202,8 +213,8 @@
                 (pool/close-time? (:end_date r) pool-data))))
         (res/get-for-open-order tx id)))
 
-(defn- any-unavailable? [tx id]
-  (let [order (get-by-id tx id)
+(defn- any-unavailable? [tx pool-id id]
+  (let [order (get-by-id tx pool-id id)
         user-id (:user_id order)
         today (tz/today tx)]
     (some (fn [r]
@@ -217,14 +228,14 @@
           (res/get-for-open-order tx id))))
 
 (defn update-purpose!
-  [{{tx :tx} :request} {:keys [id purpose]} _]
-  (assert-submitted! tx id)
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id purpose]} _]
+  (assert-submitted! tx pool-id id)
   (-> (sql/update :orders)
       (sql/set {:purpose purpose})
       (sql/where [:= :orders.id id])
       sql-format
       (->> (execute! tx)))
-  (get-by-id tx id))
+  (get-by-id tx pool-id id))
 
 (defn- assert-valid-new-user! [tx pool-id user-id]
   (let [row (-> (sql/select
@@ -277,10 +288,10 @@
 
 (defn swap-user!
   [{{tx :tx pool-id :pool-id} :request} {:keys [id user-id delegated-user-id]} _]
-  (assert-submitted! tx id)
+  (assert-submitted! tx pool-id id)
   (assert-valid-new-user! tx pool-id user-id)
   (res/assert-valid-delegated-user! tx user-id delegated-user-id)
-  (let [order (get-by-id tx id)
+  (let [order (get-by-id tx pool-id id)
         customer-order-id (get-customer-order-id tx id)]
     (-> (sql/update :reservations)
         (sql/set {:user_id user-id :delegated_user_id delegated-user-id})
@@ -306,18 +317,18 @@
             (sql/where [:= :orders.id id])
             sql-format
             (->> (execute! tx))))))
-  (get-by-id tx id))
+  (get-by-id tx pool-id id))
 
 (defn approve!
-  [{{tx :tx} :request} {:keys [id force comment]} _]
-  (assert-submitted! tx id)
+  [{{tx :tx pool-id :pool-id} :request} {:keys [id force comment]} _]
+  (assert-submitted! tx pool-id id)
   (when (all-reservations-expired? tx id)
     (throw (ex-info "All reservations have already ended" {:status 422})))
   (when (and (not force) (any-suspended? tx id))
     (throw (ex-info "A suspended user is associated with this order" {:status 422})))
   (when (and (not force) (any-pool-closed? tx id))
     (throw (ex-info "Pool is closed on reservation start or end date" {:status 422})))
-  (when (and (not force) (any-unavailable? tx id))
+  (when (and (not force) (any-unavailable? tx pool-id id))
     (throw (ex-info "Some reservations are not available" {:status 422})))
   (-> (sql/update :orders)
       (sql/set {:state "approved"})
@@ -330,7 +341,7 @@
       (sql/where [:= :reservations.contract_id nil])
       sql-format
       (->> (execute! tx)))
-  (let [order (get-by-id tx id)]
+  (let [order (get-by-id tx pool-id id)]
     (try
       (jdbc/with-transaction+options [mail-tx (db/get-ds)]
         (mails/send-approved mail-tx order comment))

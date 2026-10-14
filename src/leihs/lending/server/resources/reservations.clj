@@ -179,7 +179,7 @@
                 sql-format
                 (->> (jdbc-query tx))
                 seq)
-    (throw (ex-info "Option not found" {:status 422}))))
+    (throw (ex-info "Option not found" {:status 404}))))
 
 (defn- resolve-inventory-code
   "Mirrors legacy inventory#find: the item the pool is responsible for, else

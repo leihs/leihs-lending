@@ -163,8 +163,7 @@
                   :perPage {:type Int}}
            :resolve :visits}
    :orders {:type (non-null :OrderList)
-            :args {:poolId {:type (non-null :UUID)}
-                   :states {:type (list (non-null :OrderStateEnum))}
+            :args {:states {:type (list (non-null :OrderStateEnum))}
                    :startDate {:type :Date}
                    :endDate {:type :Date}
                    :term {:type String}

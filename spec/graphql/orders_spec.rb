@@ -22,7 +22,7 @@ describe "orders" do
   it "returns orders for pool" do
     order = create_order
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}") { items { id state purpose } totalCount } }
+      { orders { items { id state purpose } totalCount } }
     GQL
     expect_graphql_result(result, {
       orders: {
@@ -36,7 +36,7 @@ describe "orders" do
     create_order(state: "submitted")
     approved = create_order(state: "approved")
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}", states: [APPROVED]) { items { id } totalCount } }
+      { orders(states: [APPROVED]) { items { id } totalCount } }
     GQL
     expect_graphql_result(result, {orders: {items: [{id: approved.id.to_s}], totalCount: 1}})
   end
@@ -44,7 +44,7 @@ describe "orders" do
   it "paginates" do
     3.times { create_order }
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}", page: 1, perPage: 2) { items { id } totalCount } }
+      { orders(page: 1, perPage: 2) { items { id } totalCount } }
     GQL
     expect(result[:errors]).to be_nil
     expect(result.dig(:data, :orders, :items).size).to eq(2)
@@ -55,7 +55,7 @@ describe "orders" do
     order = create_order
     reservation = Reservation.where(order_id: order.id).first
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}") { items { reservations { id quantity model { id name } user { id } } } totalCount } }
+      { orders { items { reservations { id quantity model { id name } user { id } } } totalCount } }
     GQL
     expect_graphql_result(result, {
       orders: {
@@ -84,7 +84,7 @@ describe "orders" do
       status: "submitted")
     reservation = Reservation.where(order_id: order.id).first
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}") { items { reservations { id option { id name } } } totalCount } }
+      { orders { items { reservations { id option { id name } } } totalCount } }
     GQL
     expect_graphql_result(result, {
       orders: {
@@ -102,7 +102,7 @@ describe "orders" do
   it "returns user on order" do
     create_order
     result = query(<<~GQL, user.id, pool_id: pool.id)
-      { orders(poolId: "#{pool.id}") { items { user { id email } } totalCount } }
+      { orders { items { user { id email } } totalCount } }
     GQL
     expect_graphql_result(result, {
       orders: {items: [{user: {id: user.id.to_s, email: user.email}}], totalCount: 1}

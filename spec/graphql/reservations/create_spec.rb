@@ -214,7 +214,7 @@ describe "creating reservations" do
 
     it "fails for another pool's option" do
       option = create(:option, inventory_pool: create(:inventory_pool))
-      expect_graphql_error(create_for(option.id), status: 422)
+      expect_graphql_error(create_for(option.id), status: 404)
     end
   end
 

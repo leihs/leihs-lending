@@ -5,10 +5,10 @@
    [promesa.core :as p]))
 
 (def list-query
-  "query ($poolId: UUID!, $states: [OrderStateEnum!], $startDate: Date,
+  "query ($states: [OrderStateEnum!], $startDate: Date,
                 $endDate: Date, $term: String, $toBeVerified: Boolean,
                 $page: Int, $perPage: Int) {
-     orders(poolId: $poolId, states: $states, startDate: $startDate,
+     orders(states: $states, startDate: $startDate,
             endDate: $endDate, term: $term, toBeVerified: $toBeVerified,
             page: $page, perPage: $perPage) {
        items {
@@ -82,7 +82,7 @@
         per-page (js/parseInt (or (get-param "size") "50"))
         states (when-let [s (get-param "states")]
                  (clj->js (split s #",")))
-        variables (cond-> {:poolId pool-id :page page :perPage per-page}
+        variables (cond-> {:page page :perPage per-page}
                     states (assoc :states states)
                     (get-param "startDate") (assoc :startDate (get-param "startDate"))
                     (get-param "endDate") (assoc :endDate (get-param "endDate"))
