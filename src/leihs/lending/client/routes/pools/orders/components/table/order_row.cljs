@@ -16,7 +16,7 @@
    [leihs.lending.client.lib.date-utils :refer [date-time-from-iso format-date duration-days]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
-   [leihs.lending.client.routes.pools.orders.components.approve-failed-dialog :refer [ApproveFailedDialog]]
+   [leihs.lending.client.routes.pools.orders.components.approve-dialog :refer [ApproveDialog]]
    [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
@@ -26,6 +26,8 @@
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
+        navigate (router/useNavigate)
+        edit! #(navigate (str "/lending/" pool-id "/orders/" (:id order)))
         user (:user order)
         name (str (:firstname user) " " (:lastname user))
         state (:state order)
@@ -102,7 +104,7 @@
        ($ TableCell
           (let [status-class (cond
                                (= state "SUBMITTED") "text-blue-600"
-                               (= state "APPROVED")  "text-green-600"
+                               (= state "APPROVED")  "text-lime-600"
                                (= state "REJECTED")  "text-destructive")]
             ($ :div {:class-name (str "flex justify-center " status-class)}
                ($ Tooltip
@@ -140,7 +142,8 @@
                                    :class-name "rounded-l-none border-l-0"}
                            ($ ChevronDown)))
                      ($ DropdownMenuContent {:align "end"}
-                        ($ DropdownMenuItem {:onClick on-action-trigger}
+                        ($ DropdownMenuItem {:onSelect edit!
+                                             :data-test-id "edit-order"}
                            (t "orders.actions.edit"))
                         ($ DropdownMenuItem {:onSelect #(set-reject-open! true)}
                            (t "orders.actions.reject"))))
@@ -148,10 +151,12 @@
                                    :open? reject-open?
                                    :set-open! set-reject-open!
                                    :use-items use-items})
-                  ($ ApproveFailedDialog {:order order
-                                          :open? approve-failed-open?
-                                          :set-open! set-approve-failed-open!
-                                          :use-items use-items}))
+                  ($ ApproveDialog {:order order
+                                    :open? approve-failed-open?
+                                    :set-open! set-approve-failed-open!
+                                    :use-items use-items
+                                    :failed? true
+                                    :on-edit edit!}))
 
                (= state "APPROVED")
                ($ Button {:class-name "w-full"

@@ -32,6 +32,11 @@
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}
                    :manufacturer {:type String}
+                   :type {:type String :description "\"Model\" or \"Software\""}
+                   :isPackage {:type Boolean}
+                   :thumbnailUrl {:type String
+                                  :description "Base64 data URL of the model's thumbnail image"
+                                  :resolve :model-thumbnail-url}
                    :availabilityChanges {:type (list (non-null :AvailabilityChange))
                                          :description "Raw availability changes in the pool, sorted by date, starting today. Each change holds until the next one."
                                          :resolve :availability-changes}
@@ -50,6 +55,8 @@
                                               :description "Model only. Summed over all groups"}
                               :available {:type Boolean
                                           :description "Reservations only. All of them available on this day"}
+                              :holidayName {:type String
+                                            :description "Name of the holiday the day falls on"}
                               :startDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}
                               :endDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}}}
   :AvailabilityChange {:fields {:date {:type (non-null :Date)}

@@ -3,6 +3,7 @@
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [leihs.core.resources.images.core :as images]
    [leihs.lending.server.resources.items :as items]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
@@ -39,6 +40,25 @@
             first)
         (when id (throw (ex-info "Model not found" {:status 404}))))))
 
+(defn get-thumbnail-url
+  "Base64 data URL of the model's thumbnail -- the cover image's thumbnail when
+  a cover is set, else any thumbnail attached to the model itself."
+  [{{tx :tx} :request} _ {:keys [id cover-image-id]}]
+  (some-> (-> (sql/select :images.content)
+              (sql/from :images)
+              (sql/where [:= :images.thumbnail true])
+              (sql/where (if cover-image-id
+                           [:or
+                            [:= :images.id cover-image-id]
+                            [:= :images.parent_id cover-image-id]]
+                           [:= :images.target_id id]))
+              (sql/limit 1)
+              sql-format
+              (->> (jdbc-query tx))
+              first
+              :content)
+          images/prefix-with-data-url))
+
 (defn get-multiple
   [{{tx :tx pool-id :pool-id} :request} {:keys [term]} _]
   (-> base-sqlmap
@@ -51,6 +71,7 @@
                                   (str "%" token "%")]))
                     sqlmap
                     (remove str/blank? (str/split (str/trim (or term "")) #"\s+"))))
+      (sql/order-by :models.name)
       (sql/limit 20)
       sql-format
       (->> (jdbc-query tx))))

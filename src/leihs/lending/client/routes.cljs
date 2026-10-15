@@ -11,6 +11,7 @@
    [leihs.lending.client.routes.pools.contracts.page :rename {page contracts-page}]
    [leihs.lending.client.routes.pools.daily.page :rename {page daily-page}]
    [leihs.lending.client.routes.pools.orders.page :rename {page orders-page}]
+   [leihs.lending.client.routes.pools.orders.edit.page :rename {page order-edit-page}]
    [leihs.lending.client.routes.pools.visits.page :rename {page visits-page}]
    [leihs.lending.client.provider.pool-provider :refer [pool-provider]]
    [uix.core :as uix :refer [$]]))
@@ -44,8 +45,14 @@
             :element ($ daily-page)}
 
            {:path "orders"
-            :loader loader/orders-page
-            :element ($ orders-page)}
+            :children
+            [{:index true
+              :loader loader/orders-page
+              :element ($ orders-page)}
+
+             {:path ":order-id"
+              :loader loader/order-edit-page
+              :element ($ order-edit-page)}]}
 
            {:path "visits"
             :loader loader/visits-page
