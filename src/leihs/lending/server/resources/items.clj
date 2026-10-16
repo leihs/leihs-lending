@@ -17,6 +17,14 @@
       (sql/where [:= :items.parent_id nil])
       (sql/where [:= :items.retired nil])))
 
+(defn where-borrowable
+  "Lendable items (see where-lendable) flagged as borrowable -- what the
+  availability computation counts."
+  [sqlmap pool-id]
+  (-> sqlmap
+      (where-lendable pool-id)
+      (sql/where [:= :items.is_borrowable true])))
+
 (defn children-by-parent-id
   "Item children (package contents) per parent item, keyed by parent_id."
   [tx item-ids]

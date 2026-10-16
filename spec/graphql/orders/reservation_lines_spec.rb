@@ -24,7 +24,7 @@ describe "reservationLines" do
 
   def reservation_lines_for(order)
     query(<<~GQL, user.id, pool_id: pool.id)
-      { order(id: "#{order.id}") { reservationLines { quantity availableQuantity reservationIds } } }
+      { order(id: "#{order.id}") { reservationLines { quantity availableQuantity totalAvailableQuantity reservationIds } } }
     GQL
   end
 
@@ -69,5 +69,38 @@ describe "reservationLines" do
     line = result.dig(:data, :order, :reservationLines, 0)
     expect(line[:quantity]).to eq(1)
     expect(line[:availableQuantity]).to eq(1)
+    expect(line[:totalAvailableQuantity]).to eq(1)
+  end
+
+  it "shows negative available quantity when overbooked" do
+    start_date = (Date.today + 7).to_s
+    end_date = (Date.today + 9).to_s
+    create(:item, leihs_model: model, inventory_pool: pool, owner: pool)
+    other_user = create(:user)
+    other_order = create(:order, user: other_user, inventory_pool: pool, state: "submitted")
+    2.times do
+      create(:reservation, user: other_user, inventory_pool: pool, leihs_model: model,
+        order: other_order, status: "submitted", start_date: start_date, end_date: end_date)
+    end
+    order = create_order
+    add_reservation(order, start_date: start_date, end_date: end_date)
+
+    line = reservation_lines_for(order).dig(:data, :order, :reservationLines, 0)
+    expect(line[:availableQuantity]).to eq(-1)
+    expect(line[:totalAvailableQuantity]).to eq(-1)
+  end
+
+  it "total available quantity includes groups the user is not member of" do
+    start_date = (Date.today + 7).to_s
+    end_date = (Date.today + 9).to_s
+    2.times { create(:item, leihs_model: model, inventory_pool: pool, owner: pool) }
+    group = create(:entitlement_group, inventory_pool: pool)
+    create(:entitlement, leihs_model: model, entitlement_group: group, quantity: 2)
+    order = create_order
+    add_reservation(order, start_date: start_date, end_date: end_date)
+
+    line = reservation_lines_for(order).dig(:data, :order, :reservationLines, 0)
+    expect(line[:availableQuantity]).to eq(0)
+    expect(line[:totalAvailableQuantity]).to eq(2)
   end
 end

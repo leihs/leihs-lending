@@ -14,6 +14,7 @@
 (def resolvers
   {:availability availability/get-calendar
    :availability-changes availability/get-multiple
+   :borrowable-quantity models/get-borrowable-quantity
    :contracts contracts/get-multiple
    :current-user users/get-current
    :entitlement-group entitlement-groups/get-one
@@ -22,6 +23,7 @@
    :option options/get-one
    :order orders/get-one
    :orders orders/get-multiple
+   :period-availability availability/get-period
    :reminders reminders/get-multiple
    :reservation-lines reservations/get-lines
    :reservations reservations/get-multiple

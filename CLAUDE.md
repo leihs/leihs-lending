@@ -18,6 +18,7 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 - HoneySQL: minimize `[:raw "..."]` and `[:cast ...]`; prefer the DSL (subqueries as maps, `[:any ...]`, etc.). Avoid casts in resolvers — use GraphQL scalars to parse args into the right JVM type (e.g. `:Date` → `LocalDate`) so next.jdbc binds them correctly without explicit casting.
 - Naming `!`: only for fns that write (DB, atoms, mail) and for `assert-*!` validators. Read-only lookups that may throw get no `!` (e.g. `get-editable`, `resolve-record`).
 - Comments: use docstrings (`"..."` between fn name and args), not line comments (`;`)
+- Item terms: **lendable** (`items/where-lendable`: responsible pool, not retired, not in a package; incl. unborrowable — for search/add/swap) vs **borrowable** (`items/where-borrowable`: lendable + `is_borrowable` — what availability counts). Use only these two names; compose filters from them.
 - HTML pages (non-GraphQL): resource-tied pages go in `html/`, one namespace per page (e.g. `html/contracts.clj`, fn named after the action like `show`), mirroring `resources/`'s one-file-per-domain split. Cross-cutting pages (`sign_in.clj`, `home.clj`, `graphiql.clj`) stay at the `server/` top level. Use `hiccup2.core` + a manual `"<!DOCTYPE html>"` string; do resource-dependent auth (e.g. ownership checks) in the handler itself, not via `authorize/wrap` (pool-role only).
 
 ## Frontend

@@ -38,7 +38,7 @@ describe "availability for reservations" do
     ids = reservations.map { |r| "\"#{r.id}\"" }.join(", ")
     query(<<~GQL, user.id, pool_id: pool.id)
       { availability(reservationIds: [#{ids}], startDate: "#{start_date}", endDate: "#{end_date}") {
-          date available quantity totalQuantity startDateRestrictions endDateRestrictions } }
+          date available totalAvailable availableQuantity totalAvailableQuantity startDateRestrictions endDateRestrictions } }
     GQL
   end
 
@@ -63,8 +63,8 @@ describe "availability for reservations" do
 
     days = availability(rs)
     expect(days.map { |d| d[:date] }).to eq(dates)
-    expect(days.map { |d| d.slice(:available, :quantity, :totalQuantity) })
-      .to all(eq(available: true, quantity: nil, totalQuantity: nil))
+    expect(days.map { |d| d.slice(:available, :totalAvailable, :availableQuantity, :totalAvailableQuantity) })
+      .to all(eq(available: true, totalAvailable: true, availableQuantity: nil, totalAvailableQuantity: nil))
   end
 
   it "is unavailable on days one of the models is short" do
@@ -80,6 +80,24 @@ describe "availability for reservations" do
       [dates[1], false],
       [dates[2], true]
     ])
+  end
+
+  it "is total available when only groups the user is not member of have quantity left" do
+    create_items(model_a, 1)
+    group = create(:entitlement_group, inventory_pool: pool)
+    create(:entitlement, leihs_model: model_a, entitlement_group: group, quantity: 1)
+    rs = [add_reservation(model_a)]
+
+    expect(availability(rs).map { |d| d.slice(:available, :totalAvailable) })
+      .to all(eq(available: false, totalAvailable: true))
+  end
+
+  it "is not total available when the pool has too few items" do
+    create_items(model_a, 1)
+    rs = [add_reservation(model_a), add_reservation(model_a)]
+
+    expect(availability(rs).map { |d| d.slice(:available, :totalAvailable) })
+      .to all(eq(available: false, totalAvailable: false))
   end
 
   it "requires the summed quantity per model" do

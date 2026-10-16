@@ -32,34 +32,51 @@
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}
                    :manufacturer {:type String}
+                   :borrowableQuantity {:type (non-null Int)
+                                        :description "Borrowable items (not retired, not inside a package) of the model in the pool. Ignores dates and reservations."
+                                        :resolve :borrowable-quantity}
                    :availabilityChanges {:type (list (non-null :AvailabilityChange))
                                          :description "Raw availability changes in the pool, sorted by date, starting today. Each change holds until the next one."
                                          :resolve :availability-changes}
                    :availability {:type (list (non-null :AvailabilityDate))
-                                  :description "Booking calendar in the pool. Quantity for the general group plus either the entitlement group or the user's groups (exactly one of userId/entitlementGroupId)."
+                                  :description "Booking calendar in the pool. Available quantity for the general group plus either the entitlement group or the user's groups (exactly one of userId/entitlementGroupId), and total available quantity over all groups."
                                   :args {:startDate {:type (non-null :Date)}
                                          :endDate {:type (non-null :Date)}
                                          :userId {:type :UUID}
                                          :entitlementGroupId {:type :UUID}
                                          :excludeReservationIds {:type (list (non-null :UUID))}}
-                                  :resolve :availability}}}
+                                  :resolve :availability}
+                   :periodAvailability {:type (non-null :PeriodAvailability)
+                                        :description "Availability in the pool over the whole period, for the user's groups."
+                                        :args {:startDate {:type (non-null :Date)}
+                                               :endDate {:type (non-null :Date)}
+                                               :userId {:type (non-null :UUID)}}
+                                        :resolve :period-availability}}}
+  :PeriodAvailability {:fields {:availableQuantity {:type (non-null Int)
+                                                    :description "Quantity available to the user (general group plus user's groups) over the whole period. Negative = overbooked"}
+                                :totalAvailableQuantity {:type (non-null Int)
+                                                         :description "Quantity available over all groups, general included, over the whole period. Negative = overbooked"}}}
   :AvailabilityDate {:fields {:date {:type (non-null :Date)}
-                              :quantity {:type Int
-                                         :description "Model only. Negative = overbooked, 0 for past dates"}
-                              :totalQuantity {:type Int
-                                              :description "Model only. Summed over all groups"}
+                              :availableQuantity {:type Int
+                                                  :description "Quantity available on this day to the general group plus the chosen groups (user's groups or the entitlement group). Negative = overbooked, 0 for past dates"}
+                              :totalAvailableQuantity {:type Int
+                                                       :description "Quantity available on this day over all groups, general included. Negative = overbooked, 0 for past dates"}
                               :available {:type Boolean
-                                          :description "Reservations only. All of them available on this day"}
+                                          :description "Case of multiple reservation lines. Each of their models has at least the required quantity available to the user on this day, the reservations themselves excluded"}
+                              :totalAvailable {:type Boolean
+                                               :description "Case of multiple reservation lines. Each of their models has at least the required quantity available over all groups, general included, on this day, the reservations themselves excluded"}
                               :startDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}
                               :endDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}}}
-  :AvailabilityChange {:fields {:date {:type (non-null :Date)}
+  :AvailabilityChange {:fields {:date {:type (non-null :Date)
+                                       :description "The groups' quantities hold from this date until the next change"}
                                 :groups {:type (non-null (list (non-null :AvailabilityChangeGroup)))}}}
   :AvailabilityChangeGroup {:fields {:entitlementGroup {:type :EntitlementGroup
                                                         :description "null = general group"
                                                         :resolve :entitlement-group}
                                      :inQuantity {:type (non-null Int)
-                                                  :description "Negative = overbooked"}
+                                                  :description "Quantity still available to the group: its entitled quantity (general group: borrowable items minus all entitlements) minus the running reservations allocated to it. Negative = overbooked"}
                                      :reservations {:type (non-null (list (non-null :Reservation)))
+                                                    :description "Running reservations allocated to the group"
                                                     :resolve :reservations}}}
   :EntitlementGroup {:fields {:id {:type (non-null :UUID)}
                               :name {:type (non-null String)}}}
@@ -74,8 +91,12 @@
                          :option {:type :Option :resolve :option}
                          :user {:type (non-null :User) :resolve :user}}}
   :ReservationLine {:fields {:model {:type :Model :resolve :model}
-                             :quantity {:type (non-null Int)}
-                             :availableQuantity {:type (non-null Int)}
+                             :quantity {:type (non-null Int)
+                                        :description "Requested quantity, summed over the line's reservations"}
+                             :availableQuantity {:type (non-null Int)
+                                                 :description "Quantity available to the user (general group plus user's groups) over the whole period, the line's reservations excluded. Negative = overbooked"}
+                             :totalAvailableQuantity {:type (non-null Int)
+                                                      :description "Quantity available over all groups, general included, over the whole period, the line's reservations excluded. Negative = overbooked"}
                              :startDate {:type (non-null :Date)}
                              :endDate {:type (non-null :Date)}
                              :reservationIds {:type (list (non-null :UUID))}}}

@@ -39,6 +39,20 @@
             first)
         (when id (throw (ex-info "Model not found" {:status 404}))))))
 
+(defn get-borrowable-quantity
+  "Borrowable items (see items/where-borrowable) of the parent model in the
+  pool. Ignores dates and reservations."
+  [{{tx :tx pool-id :pool-id} :request} _ {model-id :id}]
+  (-> (sql/select [[:count :*] :count])
+      (sql/from [(-> items/base-sqlmap
+                     (sql/where [:= :items.model_id model-id])
+                     (items/where-borrowable pool-id))
+                 :items])
+      sql-format
+      (->> (jdbc-query tx))
+      first
+      :count))
+
 (defn get-multiple
   [{{tx :tx pool-id :pool-id} :request} {:keys [term]} _]
   (-> base-sqlmap

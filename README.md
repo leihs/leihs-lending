@@ -146,6 +146,11 @@ Never add try/catch inside individual resolvers — let the error wrapper handle
 
 Pool-owned tables carry `inventory_pool_id`. Each resolver scopes ids it receives to the request's `:pool-id` in its own SQL — through `base-sqlmap pool-id` (e.g. `visits/get-one`) or the resource's `get-in-pool` (e.g. `orders/get-in-pool`, `reservations/get-in-pool`), throwing 404 when not found. Nested field resolvers get an already-scoped parent. Never take `poolId` as an arg. Cover each id-taking field with a spec asserting 404 for an id from another pool.
 
+### Item terms
+
+- **Lendable** (`items/where-lendable`): the pool is responsible for the item, not retired, not inside a package. What a manager can add or swap to (model search, `createModelReservation`, `swapModel`). Includes unborrowable items, as in legacy.
+- **Borrowable** (`items/where-borrowable`): lendable and `is_borrowable`. What availability counts (`Model.borrowableQuantity`, the general group in the availability changes).
+
 ### Error handling
 
 ```clojure

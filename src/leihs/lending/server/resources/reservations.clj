@@ -2,7 +2,9 @@
   (:require
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [leihs.core.availability.changes :as ch]
    [leihs.core.availability.core :as av]
+   [leihs.core.availability.queries :as q]
    [leihs.lending.server.resources.items :as items]
    [leihs.lending.server.resources.models :as models]
    [leihs.lending.server.resources.options :as options]
@@ -120,9 +122,25 @@
       sql-format
       (->> (jdbc-query tx))))
 
+(defn get-available-quantities
+  "Quantities available in the pool over the period, the given reservations
+  excluded: to the user (general plus user's groups) and in total (all
+  groups). Not floored, negative = overbooked."
+  [tx model-id user-id pool-id start-date end-date exclude-ids]
+  (let [inner-changes (ch/between (ch/main tx model-id pool-id exclude-ids)
+                                  (ch/local-date start-date)
+                                  (ch/local-date end-date))]
+    (if (empty? inner-changes)
+      {:available_quantity 0 :total_available_quantity 0}
+      {:available_quantity (av/summed-for-groups
+                            inner-changes
+                            (cons :general (q/get-user-group-ids tx user-id)))
+       :total_available_quantity (av/summed-for-groups inner-changes nil)})))
+
 (defn get-lines
   "Groups an open order's reservations into model+pool+date-range lines,
-  summing desired quantity and computing available quantity per line.
+  summing desired quantity and computing available and total available
+  quantity per line.
   Drops OptionLine rows (model_id nil) -- not quantity/entitlement-limited,
   and today never present on an open order, but kept explicit since
   hand-over/contract work may attach option lines before contract_id is set."
@@ -133,13 +151,14 @@
        (map (fn [[_ rs]]
               (let [{:keys [model_id inventory_pool_id user_id start_date end_date]} (first rs)
                     ids (mapv :id rs)]
-                {:model_id model_id
-                 :quantity (->> rs (map :quantity) (apply +))
-                 :available_quantity (av/maximum-available-in-pool-and-period-summed-for-groups
-                                      tx model_id user_id start_date end_date inventory_pool_id ids)
-                 :start_date start_date
-                 :end_date end_date
-                 :reservation_ids ids})))))
+                (merge {:model_id model_id
+                        :quantity (->> rs (map :quantity) (apply +))
+                        :start_date start_date
+                        :end_date end_date
+                        :reservation_ids ids}
+                       (get-available-quantities tx model_id user_id
+                                                 inventory_pool_id
+                                                 start_date end_date ids)))))))
 
 (defn- assert-order-submitted!
   "Order must belong to the pool (404) and be in submitted state (422)."

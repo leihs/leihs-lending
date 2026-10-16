@@ -47,7 +47,7 @@ describe "Model.availability" do
     query(<<~GQL, user.id, pool_id: pool.id)
       { model(id: "#{model.id}") {
           availability(startDate: "#{from}", endDate: "#{to}", #{args}) {
-            date quantity totalQuantity startDateRestrictions endDateRestrictions } } }
+            date availableQuantity totalAvailableQuantity startDateRestrictions endDateRestrictions } } }
     GQL
   end
 
@@ -58,7 +58,7 @@ describe "Model.availability" do
   end
 
   def quantities(days)
-    days.map { |d| [d[:date], d[:quantity], d[:totalQuantity]] }
+    days.map { |d| [d[:date], d[:availableQuantity], d[:totalAvailableQuantity]] }
   end
 
   it "returns quantities per date, reduced by reservations" do
@@ -72,11 +72,11 @@ describe "Model.availability" do
     ])
   end
 
-  it "shows negative quantity when overbooked" do
+  it "shows negative available quantity when overbooked" do
     create_items(1)
     2.times { add_reservation }
 
-    expect(availability.map { |d| d[:quantity] }).to all(eq(-1))
+    expect(availability.map { |d| d[:availableQuantity] }).to all(eq(-1))
   end
 
   it "returns 0 for past dates" do
@@ -94,7 +94,7 @@ describe "Model.availability" do
     reservation = add_reservation
 
     days = availability(args: "userId: \"#{customer.id}\", excludeReservationIds: [\"#{reservation.id}\"]")
-    expect(days.map { |d| d[:quantity] }).to all(eq(1))
+    expect(days.map { |d| d[:availableQuantity] }).to all(eq(1))
   end
 
   context "with entitlement groups" do
@@ -104,7 +104,7 @@ describe "Model.availability" do
       create_group_with(1, member: customer)
       create_group_with(1)
 
-      expect(availability.map { |d| [d[:quantity], d[:totalQuantity]] }).to all(eq([2, 3]))
+      expect(availability.map { |d| [d[:availableQuantity], d[:totalAvailableQuantity]] }).to all(eq([2, 3]))
     end
 
     it "sums general and the given group" do
@@ -112,7 +112,7 @@ describe "Model.availability" do
       create_group_with(1)
 
       days = availability(args: "entitlementGroupId: \"#{group.id}\"")
-      expect(days.map { |d| [d[:quantity], d[:totalQuantity]] }).to all(eq([2, 3]))
+      expect(days.map { |d| [d[:availableQuantity], d[:totalAvailableQuantity]] }).to all(eq([2, 3]))
     end
 
     it "returns 404 for a group of another pool" do
@@ -120,6 +120,23 @@ describe "Model.availability" do
 
       result = availability_result(args: "entitlementGroupId: \"#{group.id}\"")
       expect(result[:errors].first[:message]).to eq("Entitlement group not found")
+    end
+  end
+
+  context "with entitled quantity higher than borrowable items" do
+    # 2 items, group entitled for 5 => general group = 2 - 5 = -3
+    before { create_items(2) }
+
+    it "member gets all items, total equals the items" do
+      create_group_with(5, member: customer)
+
+      expect(availability.map { |d| [d[:availableQuantity], d[:totalAvailableQuantity]] }).to all(eq([2, 2]))
+    end
+
+    it "non-member gets the negative general group, total equals the items" do
+      create_group_with(5)
+
+      expect(availability.map { |d| [d[:availableQuantity], d[:totalAvailableQuantity]] }).to all(eq([-3, 2]))
     end
   end
 

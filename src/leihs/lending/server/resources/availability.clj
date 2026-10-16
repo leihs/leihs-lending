@@ -1,5 +1,6 @@
 (ns leihs.lending.server.resources.availability
   (:require
+   [clojure.set :as set]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
    [java-time :as jt]
@@ -95,10 +96,12 @@
 (defn- model-calendar
   [tx pool-id model-id {:keys [start-date end-date user-id entitlement-group-id
                                exclude-reservation-ids]}]
-  (av/booking-calendar (ch/main tx model-id pool-id exclude-reservation-ids)
-                       (get-group-ids tx pool-id user-id entitlement-group-id)
-                       start-date
-                       end-date))
+  (->> (av/booking-calendar (ch/main tx model-id pool-id exclude-reservation-ids)
+                            (get-group-ids tx pool-id user-id entitlement-group-id)
+                            start-date
+                            end-date)
+       (map #(set/rename-keys % {:quantity :available_quantity
+                                 :total_quantity :total_available_quantity}))))
 
 (defn- get-single-user-id [reservations]
   (let [user-ids (distinct (map :user_id reservations))]
@@ -108,8 +111,9 @@
 
 (defn- reservations-calendar
   "A day is available when each model of the reservations has at least their
-  summed quantity, with the reservations themselves excluded. Option lines
-  are ignored."
+  summed quantity available to the user, and total available when over all
+  groups, with the reservations themselves excluded. Option lines are
+  ignored."
   [tx pool-id {:keys [reservation-ids start-date end-date]}]
   (let [rs (res/get-in-pool tx pool-id reservation-ids)
         group-ids (cons :general (q/get-user-group-ids tx (get-single-user-id rs)))
@@ -123,16 +127,30 @@
                                            group-ids
                                            start-date
                                            end-date)
-                                          (map #(>= (:quantity %) required)))))))]
+                                          (map #(hash-map
+                                                 :available (>= (:quantity %) required)
+                                                 :total_available (>= (:total_quantity %)
+                                                                      required))))))))]
     (apply map
-           (fn [date & oks]
-             {:date date :available (every? true? oks)})
+           (fn [date & days]
+             {:date date
+              :available (every? :available days)
+              :total_available (every? :total_available days)})
            (ch/explode-date-range start-date end-date)
            availabilities)))
 
+(defn get-period
+  "For the parent model in the pool over the whole period: quantity available
+  to the user and in total."
+  [{{tx :tx pool-id :pool-id} :request} {:keys [start-date end-date user-id]} {model-id :id}]
+  (when (jt/before? end-date start-date)
+    (throw (ex-info "endDate must not be before startDate" {:status 422})))
+  (res/get-available-quantities tx model-id user-id pool-id start-date end-date nil))
+
 (defn get-calendar
-  "Booking calendar in the pool. For a model (parent): quantity for the
-  general group plus either the given entitlement group or the user's groups.
+  "Booking calendar in the pool. For a model (parent): available quantity for
+  the general group plus either the given entitlement group or the user's
+  groups, and total available quantity over all groups.
   For `reservation-ids`: availability of all of them per day."
   [{{tx :tx pool-id :pool-id} :request}
    {:keys [start-date end-date] :as args}
