@@ -2,12 +2,12 @@
  :deps {leihs-core/leihs-core    {:local/root "./shared-clj"}
         metosin/reitit            {:mvn/version "0.10.0"}
         hiccup/hiccup             {:mvn/version "2.0.0"}
-        com.google.zxing/core     {:mvn/version "3.5.3"}
-        com.google.zxing/javase   {:mvn/version "3.5.3"}}
+        com.google.zxing/core     {:mvn/version "3.5.4"}
+        com.google.zxing/javase   {:mvn/version "3.5.4"}}
 
  :aliases {:build {:deps {io.github.clojure/tools.build
-                          {:git/tag "v0.10.5"
-                           :git/sha "2a21b7a"}}
+                          {:git/tag "v0.10.14"
+                           :git/sha "1176afd"}}
                    :ns-default scripts.build}
 
            :cljfmt {:extra-deps {io.github.weavejester/cljfmt
