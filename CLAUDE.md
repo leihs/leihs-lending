@@ -21,6 +21,10 @@ See `README.md` → **Backend Guidelines** for full detail. Key rules:
 - Item terms: **lendable** (`items/where-lendable`: responsible pool, not retired, not in a package; incl. unborrowable — for search/add/swap) vs **borrowable** (`items/where-borrowable`: lendable + `is_borrowable` — what availability counts). Use only these two names; compose filters from them.
 - HTML pages (non-GraphQL): resource-tied pages go in `html/`, one namespace per page (e.g. `html/contracts.clj`, fn named after the action like `show`), mirroring `resources/`'s one-file-per-domain split. Cross-cutting pages (`sign_in.clj`, `home.clj`, `graphiql.clj`) stay at the `server/` top level. Use `hiccup2.core` + a manual `"<!DOCTYPE html>"` string; do resource-dependent auth (e.g. ownership checks) in the handler itself, not via `authorize/wrap` (pool-role only).
 
+## Review
+
+- Before requesting human PR review, run `/pre-review`. Review-only rules: `REVIEW.md`.
+
 ## Frontend
 
 - Never modify the vendored components in `src/leihs/lending/client/components/ui/` (coming from https://ui.shadcn.com/), except those in the `customized` subfolder

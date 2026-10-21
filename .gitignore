@@ -13,3 +13,6 @@ resources/public/lending/assets/js/
 resources/public/lending/assets/css/style.css
 dev/gen/
 tmp/
+!.claude/
+.claude/*
+!.claude/skills/

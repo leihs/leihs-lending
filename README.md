@@ -44,6 +44,18 @@ clojure -M:cljfmt check
 bin/rblint
 ```
 
+## Pre-review
+
+Before requesting human review on a PR, run in Claude Code:
+
+```
+/pre-review [low|medium|high|xhigh|max]
+```
+
+Effort defaults to `medium`.
+
+Runs repo path rules, `/code-review` (fresh-context fork, `REVIEW.md` rules applied) and `/security-review`; prints a local report. Review-only rules live in `REVIEW.md`.
+
 ## Backend Guidelines
 
 ### Project layout
