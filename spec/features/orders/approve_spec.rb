@@ -68,7 +68,7 @@ feature "Approve order" do
     click_on "Orders"
     approve_button_of("Ernst Einmalig").click
 
-    dialog = find("[data-test-id='approve-failed-dialog']")
+    dialog = find("[data-test-id='approve-order-dialog']")
     expect(dialog).to have_content("Approval failed")
     expect(dialog).to have_content("Ernst Einmalig")
     expect(dialog).to have_content(
@@ -89,10 +89,10 @@ feature "Approve order" do
     approve_button_of("Ernst Einmalig").click
 
     find("[data-test-id='approve-order-comment']").set("Pick up at desk B")
-    find("[data-test-id='approve-order-force']").click
+    find("[data-test-id='approve-order-submit']").click
 
     expect(page).to have_content("Order approved")
-    expect(page).not_to have_css("[data-test-id='approve-failed-dialog']")
+    expect(page).not_to have_css("[data-test-id='approve-order-dialog']")
     expect(Order[order.id].state).to eq("approved")
   end
 
@@ -103,21 +103,22 @@ feature "Approve order" do
     click_on "Orders"
     approve_button_of("Ernst Einmalig").click
 
-    within("[data-test-id='approve-failed-dialog']") { click_on "Cancel" }
+    within("[data-test-id='approve-order-dialog']") { click_on "Cancel" }
 
-    expect(page).not_to have_css("[data-test-id='approve-failed-dialog']")
+    expect(page).not_to have_css("[data-test-id='approve-order-dialog']")
     expect(Order[order.id].state).to eq("submitted")
     expect(find("tbody tr", text: "Ernst Einmalig")).to have_content("Approve")
   end
 
-  scenario "editing the order is not available yet" do
-    create_order
+  scenario "opens the order's edit page from the failure dialog" do
+    order = create_order
     create_competing_order
 
     click_on "Orders"
     approve_button_of("Ernst Einmalig").click
     find("[data-test-id='approve-order-edit']").click
 
-    expect(page).to have_content("Action not available yet")
+    expect(page).to have_current_path("/lending/#{pool.id}/orders/#{order.id}")
+    expect(page).to have_content("Edit order")
   end
 end
