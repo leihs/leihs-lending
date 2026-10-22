@@ -3,6 +3,7 @@
    [clojure.string :as str]
    [honey.sql :refer [format] :rename {format sql-format}]
    [honey.sql.helpers :as sql]
+   [leihs.core.resources.categories.descendents :as descendents]
    [leihs.lending.server.resources.items :as items]
    [next.jdbc.sql :refer [query] :rename {query jdbc-query}]))
 
@@ -17,6 +18,18 @@
                      (-> items/base-sqlmap
                          (sql/where [:= :items.model_id :models.id])
                          (items/where-lendable pool-id))]))
+
+(defn- where-in-category
+  "Models linked to the category or any of its descendants."
+  [sqlmap category-id]
+  (sql/where sqlmap [:exists
+                     (-> (sql/select 1)
+                         (sql/from :model_links)
+                         (sql/where [:= :model_links.model_id :models.id]
+                                    [:or
+                                     [:= :model_links.model_group_id category-id]
+                                     [:in :model_links.model_group_id
+                                      (descendents/descendent-ids-sqlmap category-id)]]))]))
 
 (defn assert-lendable-in-pool! [tx pool-id model-id]
   (when-not (-> base-sqlmap
@@ -54,9 +67,10 @@
       :count))
 
 (defn get-multiple
-  [{{tx :tx pool-id :pool-id} :request} {:keys [term]} _]
+  [{{tx :tx pool-id :pool-id} :request} {:keys [term category-id]} _]
   (-> base-sqlmap
       (where-lendable-in-pool pool-id)
+      (cond-> category-id (where-in-category category-id))
       (as-> sqlmap
             (reduce (fn [sqlmap token]
                       (sql/where sqlmap
@@ -65,6 +79,7 @@
                                   (str "%" token "%")]))
                     sqlmap
                     (remove str/blank? (str/split (str/trim (or term "")) #"\s+"))))
+      (sql/order-by :models.name)
       (sql/limit 20)
       sql-format
       (->> (jdbc-query tx))))

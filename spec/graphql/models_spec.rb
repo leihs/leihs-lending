@@ -7,10 +7,29 @@ describe "models" do
 
   before { grant_pool_access(requester, pool) }
 
-  def search_models(term)
+  def search_models(term, category_id: nil)
+    category_arg = category_id ? %(, categoryId: "#{category_id}") : ""
     query(<<~GQL, requester.id, pool_id: pool.id)
-      { models(term: "#{term}") { id name manufacturer } }
+      { models(term: "#{term}"#{category_arg}) { id name manufacturer } }
     GQL
+  end
+
+  def model_with_item(product)
+    create(:leihs_model, product: product).tap do |model|
+      create(:item, leihs_model: model, inventory_pool: pool)
+    end
+  end
+
+  def link(category, model)
+    ModelLink.create(model_group_id: category.id, model_id: model.id)
+  end
+
+  def nest(parent, child)
+    ModelGroupLink.create(parent_id: parent.id, child_id: child.id)
+  end
+
+  def model_ids(result)
+    result.dig(:data, :models).map { |m| m[:id] }
   end
 
   it "returns models with an item in the pool matching the term" do
@@ -73,6 +92,76 @@ describe "models" do
     GQL
     ids = result.dig(:data, :models).map { |m| m[:id] }
     expect(ids).to include(model.id.to_s)
+  end
+
+  it "orders by name" do
+    b = model_with_item("Bravo")
+    a = model_with_item("Alpha")
+
+    expect(model_ids(search_models(""))).to eq([a.id, b.id].map(&:to_s))
+  end
+
+  describe "categoryId" do
+    let(:root) { create(:category) }
+    let(:child) { create(:category) }
+    let(:grandchild) { create(:category) }
+
+    before do
+      nest(root, child)
+      nest(child, grandchild)
+    end
+
+    it "includes models of the category itself" do
+      model = model_with_item("Direct")
+      link(root, model)
+
+      expect(model_ids(search_models("", category_id: root.id))).to eq([model.id.to_s])
+    end
+
+    it "includes models of descendant categories" do
+      model = model_with_item("Deep")
+      link(grandchild, model)
+
+      expect(model_ids(search_models("", category_id: root.id))).to eq([model.id.to_s])
+    end
+
+    it "excludes models of ancestor and unrelated categories" do
+      link(root, model_with_item("Ancestor"))
+      link(create(:category), model_with_item("Unrelated"))
+
+      expect(model_ids(search_models("", category_id: child.id))).to eq([])
+    end
+
+    it "returns a model linked to several matching categories once" do
+      model = model_with_item("Twice")
+      link(root, model)
+      link(grandchild, model)
+
+      expect(model_ids(search_models("", category_id: root.id))).to eq([model.id.to_s])
+    end
+
+    it "terminates on cyclic links" do
+      nest(grandchild, root)
+      model = model_with_item("Cycle")
+      link(child, model)
+
+      expect(model_ids(search_models("", category_id: root.id))).to eq([model.id.to_s])
+    end
+
+    it "combines with term" do
+      match = model_with_item("Alpha Cam")
+      link(root, match)
+      link(root, model_with_item("Bravo Cam"))
+      model_with_item("Alpha Outside")
+
+      expect(model_ids(search_models("Alpha", category_id: root.id))).to eq([match.id.to_s])
+    end
+
+    it "returns nothing for an unknown category" do
+      model_with_item("Any")
+
+      expect(model_ids(search_models("", category_id: SecureRandom.uuid))).to eq([])
+    end
   end
 
   describe "model(id)" do
