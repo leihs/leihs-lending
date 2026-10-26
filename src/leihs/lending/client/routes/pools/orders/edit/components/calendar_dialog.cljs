@@ -68,6 +68,7 @@
         [end-date set-end-date!] (uix/use-state nil)
         [month set-month!] (uix/use-state #(date-fns/startOfMonth (js/Date.)))
         [quantity set-quantity!] (uix/use-state 1)
+        [quantity-input set-quantity-input!] (uix/use-state "1")
         [saving? set-saving!] (uix/use-state false)
 
         today (date-fns/startOfDay (js/Date.))
@@ -114,7 +115,9 @@
          (let [from (date-from-iso start-iso)]
            (set-start-date! from)
            (set-end-date! (date-from-iso end-iso))
-           (set-quantity! (or (:quantity single-line) 1))
+           (let [n (or (:quantity single-line) 1)]
+             (set-quantity! n)
+             (set-quantity-input! (str n)))
            (set-month! (date-fns/startOfMonth (or from (js/Date.)))))))
      [open? start-iso end-iso single-line])
 
@@ -150,9 +153,12 @@
                                   :min 1
                                   :class-name "w-18"
                                   :data-test-id "calendar-quantity"
-                                  :value quantity
-                                  :on-change #(let [n (js/parseInt (.. % -target -value))]
-                                                (set-quantity! (if (js/isNaN n) 1 (max 1 n))))})))
+                                  :value quantity-input
+                                  :on-change #(let [value (.. % -target -value)
+                                                    n (js/parseInt value)]
+                                                (set-quantity-input! value)
+                                                (when (>= n 1) (set-quantity! n)))
+                                  :on-blur #(set-quantity-input! (str quantity))})))
                    ;; TODO entitlement groups once the backend exposes them
                    ($ Select {:value "user" :disabled true}
                       ($ SelectTrigger {:class-name "w-44"

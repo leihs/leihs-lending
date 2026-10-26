@@ -9,7 +9,8 @@
     },
     "load-error": "Konnte nicht geladen werden",
     "cancel": "Abbrechen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "more-actions": "Weitere Aktionen"
   },
   "components": {
     "entities": {
@@ -171,6 +172,7 @@
       "delete-all-error": "Sie können nicht alle Reservationen einer Bestellung löschen. Möchten Sie die Bestellung stattdessen ablehnen?",
       "date-range": "{{- startDate}} – {{- endDate}}",
       "select-range": "Alle Einträge des Zeitraums auswählen",
+      "apply-range": "Zeitraum für «Hinzufügen» übernehmen",
       "select-line": "Eintrag auswählen",
       "line-actions": "Eintrag ändern",
       "line-timeline": "Zeitleiste",
@@ -178,9 +180,11 @@
       "line-delete": "Löschen",
       "ordered": "Bestellt",
       "available": "Verfügbar",
-      "available-title": "Anzahl verfügbare Gegenstände im Zeitraum",
-      "available-overbooked-title": "Anzahl verfügbare Gegenstände im Zeitraum, vorbestehende Überbuchung um {{quantity}}!",
-      "total-available-title": "(Total verfügbar, wenn Gegenstände aus anderen Gruppen genommen werden)",
+      "available-in-period": "Verfügbar im Zeitraum",
+      "difference": "Differenz",
+      "pre-existing-overbooking": "Vorbestehende Überbuchung",
+      "available-in-other-groups": "Zusätzlich verfügbar in anderen Gruppen",
+      "borrowable": "Total verleihbar: {{quantity}}",
       "empty": "Keine Reservationen"
     },
     "calendar": {
@@ -253,7 +257,7 @@
     "previous-month": "Vorheriger Monat",
     "next-month": "Nächster Monat",
     "restrictions": {
-      "NON_WORKDAY": "Gerätepark geschlossen",
+      "NON_WORKDAY": "{{- val, datetime(weekday: long)}} geschlossen",
       "HOLIDAY": "Feiertag",
       "VISITS_CAPACITY_REACHED": "Keine Termine mehr frei"
     }

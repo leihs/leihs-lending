@@ -27,6 +27,7 @@
     ($ :div {:class-name "flex items-center gap-1"}
        ($ Button {:variant "ghost"
                   :size "icon"
+                  :title (t "calendar.previous-month")
                   :disabled at-min?
                   :aria-label (t "calendar.previous-month")
                   :data-test-id "calendar-previous-month"
@@ -56,6 +57,7 @@
 
        ($ Button {:variant "ghost"
                   :size "icon"
+                  :title (t "calendar.next-month")
                   :aria-label (t "calendar.next-month")
                   :data-test-id "calendar-next-month"
                   :onClick #(go! (date-fns/addMonths month 1))}

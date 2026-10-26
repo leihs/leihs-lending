@@ -9,7 +9,8 @@
     },
     "load-error": "Could not be loaded",
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "more-actions": "More actions"
   },
   "components": {
     "entities": {
@@ -171,6 +172,7 @@
       "delete-all-error": "You cannot delete all reservations of an order. Perhaps you want to reject it instead?",
       "date-range": "{{- startDate}} – {{- endDate}}",
       "select-range": "Select all entries of the period",
+      "apply-range": "Use period for adding",
       "select-line": "Select entry",
       "line-actions": "Change entry",
       "line-timeline": "Timeline",
@@ -178,9 +180,11 @@
       "line-delete": "Delete",
       "ordered": "Ordered",
       "available": "Available",
-      "available-title": "Number of items available in the period",
-      "available-overbooked-title": "Number of items available in the period, already overbooked by {{quantity}}!",
-      "total-available-title": "(Total available when taking items from other groups)",
+      "available-in-period": "Available in the period",
+      "difference": "Difference",
+      "pre-existing-overbooking": "Pre-existing overbooking",
+      "available-in-other-groups": "Additionally available in other groups",
+      "borrowable": "Total borrowable: {{quantity}}",
       "empty": "No reservations"
     },
     "calendar": {
@@ -253,7 +257,7 @@
     "previous-month": "Previous month",
     "next-month": "Next month",
     "restrictions": {
-      "NON_WORKDAY": "Inventory pool closed",
+      "NON_WORKDAY": "Closed on {{- val, datetime(weekday: long)}}",
       "HOLIDAY": "Holiday",
       "VISITS_CAPACITY_REACHED": "No visit slots left"
     }

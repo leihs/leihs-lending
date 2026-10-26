@@ -11,13 +11,14 @@
    ["react-router" :as router]
    ["sonner" :refer [toast]]
    [clojure.string :refer [blank?]]
+   [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.routes.pools.orders.components.approve-dialog :refer [ApproveDialog]]
    [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
-   [leihs.lending.client.routes.pools.orders.components.styles :refer [approve-class]]
+   [leihs.lending.client.routes.pools.orders.components.styles :refer [approve-class reject-class]]
    [leihs.lending.client.routes.pools.orders.data :as data]
-   [leihs.lending.client.routes.pools.orders.edit.components.add-reservation-form :refer [AddReservationForm]]
+   [leihs.lending.client.routes.pools.orders.edit.components.add-reservation-form :refer [AddReservationForm use-dates]]
    [leihs.lending.client.routes.pools.orders.edit.components.calendar-dialog :refer [CalendarDialog]]
    [leihs.lending.client.routes.pools.orders.edit.components.purpose-dialog :refer [PurposeDialog]]
    [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [ReservationLines line-key]]
@@ -59,6 +60,7 @@
                                 (set-approve-open! true))
 
         lines (:reservationLines order)
+        add-dates (use-dates lines)
         [selected set-selected!] (uix/use-state #{})
         toggle! (fn [line-key on?]
                   (set-selected! #((if on? conj disj) % line-key)))
@@ -94,14 +96,18 @@
           ($ :div {:class-name "flex flex-wrap justify-between gap-4"}
              ($ :div
                 ($ :div {:class-name "flex items-center gap-3"}
-                   ($ :h1 {:class-name "text-2xl"}
+                   ($ :h1 {:class-name "text-2xl flex items-center gap-2"}
                       (t "orders.edit.title")
-                      " "
-                      ($ :span {:class-name "font-bold"} name))
-                   (when (:isSuspended user)
-                     ($ UserX {:class-name "size-5 text-destructive"}))
+                      ($ UserPopover {:user user
+                                      :name name
+                                      :use-details data/use-user-details
+                                      :test-id "order-user-popover-trigger"}
+                         ($ :span {:class-name "font-bold"} name)
+                         (when (:isSuspended user)
+                           ($ UserX {:class-name "size-5 text-destructive"}))))
                    ($ Button {:variant "outline"
                               :size "icon-sm"
+                              :title (t "orders.edit.swap-user")
                               :aria-label (t "orders.edit.swap-user")
                               :data-test-id "swap-order-user"
                               :onClick stub!}
@@ -114,13 +120,14 @@
                         purpose))
                    ($ Button {:variant "outline"
                               :size "icon-sm"
+                              :title (t "orders.edit.edit-purpose")
                               :aria-label (t "orders.edit.edit-purpose")
                               :data-test-id "edit-order-purpose"
                               :onClick #(set-purpose-open! true)}
                       ($ SquarePen))))
 
              ($ :div {:class-name "flex items-stretch gap-2"}
-                ($ Button {:variant "destructive"
+                ($ Button {:class-name reject-class
                            :data-test-id "reject-order"
                            :onClick #(set-reject-open! true)}
                    (t "orders.edit.reject"))
@@ -133,7 +140,9 @@
                    ($ DropdownMenu
                       ($ DropdownMenuTrigger {:asChild true}
                          ($ Button {:size "icon"
-                                    :class-name (str approve-class " rounded-l-none border-l border-l-lime-600")
+                                    :aria-label (t "common.more-actions")
+                                    :title (t "common.more-actions")
+                                    :class-name (str approve-class " rounded-l-none border-l border-l-background/25")
                                     :data-test-id "approve-order-menu"}
                             ($ ChevronDown)))
                       ($ DropdownMenuContent {:align "end"}
@@ -148,6 +157,7 @@
              ($ :div {:class-name "flex flex-wrap items-center justify-between gap-2"}
 
                 ($ AddReservationForm {:order order
+                                       :dates add-dates
                                        :on-added #(.revalidate revalidator)})
 
                 ($ :div {:class-name "flex items-stretch"}
@@ -160,6 +170,8 @@
                    ($ DropdownMenu
                       ($ DropdownMenuTrigger {:asChild true}
                          ($ Button {:size "icon"
+                                    :aria-label (t "common.more-actions")
+                                    :title (t "common.more-actions")
                                     :class-name "rounded-l-none border-l border-l-background/25"
                                     :disabled (empty? selected)
                                     :data-test-id "selection-actions-menu"}
@@ -175,6 +187,8 @@
                                   :selected selected
                                   :toggle! toggle!
                                   :toggle-many! toggle-many!
+                                  :applied-range (:range add-dates)
+                                  :on-apply-range (:set-range! add-dates)
                                   :on-edit-line #(open-calendar! [%])
                                   :on-delete-line #(delete-lines! [%])})))
 

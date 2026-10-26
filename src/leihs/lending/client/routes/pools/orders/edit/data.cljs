@@ -28,6 +28,7 @@
            type
            isPackage
            thumbnailUrl
+           borrowableQuantity
          }
        }
      }

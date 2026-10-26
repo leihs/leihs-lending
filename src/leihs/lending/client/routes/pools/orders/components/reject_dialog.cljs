@@ -17,6 +17,7 @@
    [clojure.string :refer [blank?]]
    [leihs.lending.client.components.entities.items-list :refer [ItemsList]]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.routes.pools.orders.components.styles :refer [reject-class]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -109,7 +110,7 @@
                     ($ Button {:type "button" :variant "outline"}
                        (t "common.cancel")))
                  ($ Button {:type "submit"
-                            :variant "destructive"
+                            :class-name reject-class
                             :disabled (.. form -formState -isSubmitting)
                             :data-test-id "reject-order-submit"}
                     (t "orders.actions.reject")))))))))

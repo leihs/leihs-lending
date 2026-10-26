@@ -4,7 +4,7 @@
                           ComboboxEmpty ComboboxGroup ComboboxInput
                           ComboboxItem ComboboxLabel ComboboxList]]
    ["@@/input-group" :refer [InputGroupAddon]]
-   ["lucide-react" :refer [Search]]
+   ["lucide-react" :refer [Search X]]
    ["react-i18next" :refer [useTranslation]]
    [clojure.string :as str]
    [leihs.lending.client.components.entities.model-badge :refer [ModelBadge]]
@@ -21,18 +21,23 @@
                 borrowableQuantity]} item
         unavailable? (and (= kind :model) (< availableQuantity 1))]
     ($ ComboboxItem {:value item
-                     :class-name (str "items-start justify-between gap-4 pr-2"
-                                      (when unavailable? " text-destructive"))
+                     :class-name "items-start justify-between gap-4 pr-2"
                      :data-test-id "model-search-item"}
-       ($ :span {:class-name "font-medium"} (:name item))
-       ($ :span {:class-name "flex shrink-0 flex-col items-end gap-1"}
-          (if (= kind :model)
-            ($ :<>
-               ($ :span {:class-name "tabular-nums"}
-                  (str availableQuantity " (" totalAvailableQuantity ") | " borrowableQuantity))
-               ($ ModelBadge {:type (if isPackage "Package" type)}))
-            ($ :span {:class-name "text-xs text-muted-foreground"}
-               (t "orders.edit.search.template")))))))
+       ($ :span {:class-name "flex items-start gap-2"}
+          (when (= kind :model)
+            ($ :span {:class-name "shrink-0"}
+               ($ ModelBadge {:type (if isPackage "Package" type)})))
+          ($ :span {:class-name "font-medium"} (:name item)))
+       (if (= kind :model)
+         ($ :span {:class-name "flex shrink-0 items-center gap-2"}
+            ($ :span {:class-name "tabular-nums"}
+               (str availableQuantity " (" totalAvailableQuantity ") | " borrowableQuantity))
+            ($ :span {:class-name "size-5"}
+               (when unavailable?
+                 ($ X {:class-name "size-5 text-destructive"
+                       :data-test-id "model-search-item-unavailable"}))))
+         ($ :span {:class-name "shrink-0 text-xs text-muted-foreground"}
+            (t "orders.edit.search.template"))))))
 
 (defui ModelSearchField
   "Search field offering models and templates as you type. `on-select` gets

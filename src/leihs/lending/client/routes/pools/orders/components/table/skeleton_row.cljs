@@ -5,7 +5,7 @@
    [uix.core :as uix :refer [$ defui]]))
 
 (defui SkeletonRow []
-  ($ TableRow {:class-name "shadow-[0_-0.5px_0_var(--border)] h-[53px]"}
+  ($ TableRow {:class-name "shadow-[0_-0.5px_0_var(--border)] h-[53px] even:bg-muted/30"}
      ($ TableCell {:class-name "w-[20%]"}
         ($ Skeleton {:class-name "w-40 h-6"}))
 

@@ -1,19 +1,21 @@
 (ns leihs.lending.client.components.booking-calendar.grid
   (:require
+   ["@@/tooltip" :refer [Tooltip TooltipContent TooltipTrigger]]
    ["date-fns" :as date-fns]
-   ["lucide-react" :refer [CircleCheck CircleX EyeClosed Users]]
+   ["lucide-react" :refer [CircleCheck CircleX EyeClosed TreePalm TriangleAlert]]
    ["react-i18next" :refer [useTranslation]]
-   [clojure.string :refer [join]]
    [leihs.lending.client.lib.calendar :as cal]
    [leihs.lending.client.lib.utils :refer [cj]]
    [uix.core :as uix :refer [$ defui]]))
 
 (def ^:private closed-restrictions
-  "Restrictions that close the pool for the day, sharing one icon."
+  "Restrictions that close the pool for the day."
   #{"NON_WORKDAY" "HOLIDAY"})
 
 (def ^:private restriction-icons
-  {"VISITS_CAPACITY_REACHED" Users})
+  {"NON_WORKDAY" EyeClosed
+   "HOLIDAY" TreePalm
+   "VISITS_CAPACITY_REACHED" TriangleAlert})
 
 (defn- stepped-date
   "Target of a keyboard navigation key, nil for keys that don't navigate."
@@ -31,16 +33,26 @@
 
 (defui DayCell
   "One day of the grid"
-  [{:keys [date day month-label outside? disabled? in-range? range-start?
-           range-end? available? focused? single-line? on-select on-preview]}]
+  [{:keys [date day month-label outside? disabled? in-range? range-edge?
+           inner-sides available? focused? single-line? on-select on-preview]}]
   (let [[t] (useTranslation)
         restrictions (:startDateRestrictions day)
-        closed (filter closed-restrictions restrictions)
-        closed? (seq closed)
-        label (fn [restriction] (t (str "calendar.restrictions." restriction)))]
+        closed? (some closed-restrictions restrictions)
+        availability-color (cond
+                             (and in-range? closed?) "text-foreground/55"
+                             in-range? "text-foreground"
+                             closed? "text-foreground/25"
+                             :else "text-foreground/60")
+        label (fn [restriction]
+                (or (when (= restriction "HOLIDAY") (:holidayName day))
+                    (t (str "calendar.restrictions." restriction) (cj {:val date}))))]
     ($ :td {:role "gridcell"
             :aria-selected in-range?
-            :class-name "h-28 border border-border p-0 align-top"}
+            :class-name (str "h-28 border border-border p-0 align-top"
+                             (when (:left inner-sides) " border-l-background")
+                             (when (:right inner-sides) " border-r-background")
+                             (when (:top inner-sides) " border-t-background")
+                             (when (:bottom inner-sides) " border-b-background"))}
        ($ :button
           {:type "button"
            :data-day (cal/day-key date)
@@ -52,7 +64,7 @@
            :on-mouse-enter #(on-preview date)
            :class-name (str "flex size-full flex-col "
                             (cond
-                              disabled? "cursor-default text-muted-foreground"
+                              disabled? "cursor-default text-muted-foreground bg-hatched"
                               (and in-range? (true? available?)) "bg-lime-200 dark:bg-lime-950"
                               (and in-range? (false? available?)) "bg-red-100 dark:bg-red-950"
                               in-range? "bg-accent"
@@ -61,28 +73,23 @@
                               (cond
                                 closed? " text-muted-foreground/40"
                                 outside? " text-muted-foreground"))
-                            (when (or range-start? range-end?) " ring-2 ring-inset ring-ring"))}
+                            (when range-edge? " ring-2 ring-inset ring-ring/60"))}
 
-          ;; label of the cell: day, month, icon when date is closed
-          ($ :span {:class-name "flex w-full items-center gap-1 text-xs"}
-             ($ :span {:class-name "rounded-br-sm bg-muted-foreground/25 px-1.5 pt-[3px] pb-0.5 text-foreground tabular-nums"}
+          ;; label of the cell: day, month, restriction icons
+          ($ :span {:class-name "flex w-full items-center gap-1 text-sm"}
+             ($ :span {:class-name "w-7 shrink-0 rounded-br-sm bg-muted-foreground/25 text-center pt-[3px] pb-0.5 text-foreground"}
                 (.getDate date))
-             ($ :span {:class-name "text-muted-foreground/60"} month-label)
+             ($ :span {:class-name "text-muted-foreground/45"} month-label)
              (when-not disabled?
                ($ :span {:class-name "ml-auto flex items-center gap-0.5 pr-1 text-foreground"}
-                  (when closed?
-                    ($ EyeClosed {:class-name "size-4"
-                                  :aria-label (join ", " (map label closed))}))
-                  (for [restriction (remove closed-restrictions restrictions)]
+                  (for [restriction restrictions]
                     (when-let [icon (restriction-icons restriction)]
-                      ($ icon {:key restriction
-                               :class-name "size-3.5"
-                               :aria-label (label restriction)}))))))
-
-          ;; holiday name (when given)
-          ($ :span {:class-name "h-3 w-full truncate px-1 text-center text-[10px] leading-3 text-muted-foreground"
-                    :title (:holidayName day)}
-             (:holidayName day))
+                      ($ Tooltip {:key restriction}
+                         ($ TooltipTrigger {:as-child true}
+                            ($ :span {:data-test-id "calendar-restriction"}
+                               ($ icon {:class-name "size-4"
+                                        :aria-label (label restriction)})))
+                         ($ TooltipContent (label restriction))))))))
 
           ;; availability
           (when-not disabled?
@@ -93,33 +100,26 @@
                  (let [available-quantity (:availableQuantity day)
                        total-available-quantity (:totalAvailableQuantity day)]
                    ($ :<>
-                      ($ :span {:class-name (str "text-3xl font-light tabular-nums "
-                                                 (if (and available-quantity (neg? available-quantity))
-                                                   "text-destructive"
-                                                   "text-foreground")
-                                                 (cond
-                                                   in-range? ""
-                                                   closed? " opacity-25"
-                                                   :else " opacity-50"))
+                      ($ :span {:class-name (str "mt-2 text-[40px] leading-none font-light tabular-nums " availability-color)
                                 :data-test-id "calendar-day-quantity"}
                          (if (some? available-quantity) available-quantity "–"))
                       (when (and (some? total-available-quantity)
                                  (not= total-available-quantity available-quantity))
                         ($ :span {:class-name "flex flex-1 items-center text-sm text-muted-foreground tabular-nums"}
-                           (str "(" total-available-quantity ")")))))
+                           total-available-quantity))))
 
                  ;; multi-line mode: icon to indicate whether the total of all reservation lines are fulfillable on this day
                  ($ :span {:class-name "flex flex-1 items-center mb-[10%]"}
                     (if (:available day)
-                      ($ CircleCheck {:class-name "size-7 stroke-1"
+                      ($ CircleCheck {:class-name (str "size-10 stroke-1 " availability-color)
                                       :data-test-id "calendar-day-available"})
-                      ($ CircleX {:class-name "size-7 stroke-1 text-destructive"
+                      ($ CircleX {:class-name (str "size-10 stroke-1 " availability-color)
                                   :data-test-id "calendar-day-unavailable"}))))))))))
 
 (defui BookingCalendar
   "Grid with 6 x 7 cells showing one month (+ days of adjacent months).
-   A range is picked by clicking its start or end date, which starts a hover preview, 
-   and clicking another date. Escape abandons it.
+   Clicking a date picks it as a one-day range and starts a hover preview;
+   clicking another date extends the range to it. Escape ends the preview.
    Days before `min-date` cannot be picked."
   [{:keys [month set-month! days start-date end-date on-range-change
            single-line? available? min-date]}]
@@ -147,6 +147,16 @@
                       [(cal/earlier anchor other) (cal/later anchor other)])
                     [start-date end-date])
 
+        in-range? (fn [date] (cal/within? date from to))
+        inner-sides (fn [date]
+                      (let [weekday (date-fns/getISODay date)
+                            in-grid-range? #(and (cal/within? % grid-start grid-end)
+                                                 (in-range? %))]
+                        (cond-> #{}
+                          (and (> weekday 1) (in-range? (date-fns/addDays date -1))) (conj :left)
+                          (and (< weekday 7) (in-range? (date-fns/addDays date 1))) (conj :right)
+                          (in-grid-range? (date-fns/addDays date -7)) (conj :top)
+                          (in-grid-range? (date-fns/addDays date 7)) (conj :bottom))))
         disabled? (fn [date]
                     (boolean (and min-date
                                   (date-fns/isBefore date (date-fns/startOfDay min-date)))))
@@ -157,7 +167,8 @@
                   (if anchor
                     (do (on-range-change (cal/earlier anchor date) (cal/later anchor date))
                         (abandon!))
-                    (do (set-anchor! date)
+                    (do (on-range-change date date)
+                        (set-anchor! date)
                         (set-preview! date))))
         move-to! (fn [date]
                    (when-not (disabled? date)
@@ -217,10 +228,19 @@
                                   :month-label (nth months (.getMonth date))
                                   :outside? (not (date-fns/isSameMonth date month))
                                   :disabled? (disabled? date)
-                                  :in-range? (cal/within? date from to)
-                                  :range-start? (boolean (and from (date-fns/isSameDay date from)))
-                                  :range-end? (boolean (and to (date-fns/isSameDay date to)))
-                                  :available? (when day (boolean (and available? (available? day))))
+                                  :in-range? (in-range? date)
+                                  :inner-sides (when (in-range? date) (inner-sides date))
+                                  :range-edge? (boolean (and anchor
+                                                             (or (date-fns/isSameDay date from)
+                                                                 (date-fns/isSameDay date to))))
+                                  :available? (when day
+                                                (boolean
+                                                 (and available?
+                                                      (available? day)
+                                                      (not (and from (date-fns/isSameDay date from)
+                                                                (seq (:startDateRestrictions day))))
+                                                      (not (and to (date-fns/isSameDay date to)
+                                                                (seq (:endDateRestrictions day)))))))
                                   :focused? (= date-key focus-key)
                                   :single-line? single-line?
                                   :on-select select!

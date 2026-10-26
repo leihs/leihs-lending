@@ -11,8 +11,9 @@
    `[user-id enabled?]` returning `{:data :ready? :error?}`. Opening the trigger
    starts the query; the popover itself only opens once the data is ready, so it
    never resizes under the cursor. A failed query shows a message in place of
-   the details the list does not already carry."
-  [{:keys [user name use-details test-id]}]
+   the details the list does not already carry. `children` replace the default
+   trigger content."
+  [{:keys [user name use-details test-id children]}]
   (let [[t] (useTranslation)
         [requested? set-requested!] (uix/use-state false)
         {details :data ready? :ready? error? :error?} (use-details (:id user) requested?)
@@ -23,9 +24,11 @@
                 :on-open-change set-requested!}
        ($ PopoverTrigger {:data-test-id test-id}
           ($ :div {:class-name "flex items-center gap-3"}
-             ($ :span {:class-name "font-semibold"} name)
-             (when suspended?
-               ($ UserX {:class-name "size-4 text-destructive"}))))
+             (or children
+                 ($ :<>
+                    ($ :span {:class-name "font-semibold"} name)
+                    (when suspended?
+                      ($ UserX {:class-name "size-4 text-destructive"}))))))
        ($ PopoverContent {:align "start" :class-name "w-[400px] text-sm"}
           ($ :div {:class-name "flex gap-3"}
              (if avatar-url

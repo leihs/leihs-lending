@@ -9,9 +9,10 @@
    ["react-router" :as router]
    ["sonner" :refer [toast]]
    [leihs.lending.client.lib.calendar :as cal]
-   [leihs.lending.client.lib.date-utils :refer [format-date]]
+   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date]]
    [leihs.lending.client.lib.utils :refer [cj jc]]
    [leihs.lending.client.routes.pools.orders.edit.components.model-search-field :refer [ModelSearchField]]
+   [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [group-lines]]
    [leihs.lending.client.routes.pools.orders.edit.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -40,14 +41,44 @@
                        :endMonth (date-fns/addYears (js/Date.) 50)
                        :onSelect select!})))))
 
+(defn- default-range
+  "Date range of the first group in the reservation list, today when there is
+   none."
+  [lines]
+  (let [today (cal/day-key (js/Date.))]
+    (if-let [{:keys [start-date end-date]} (first (group-lines lines))]
+      [start-date end-date]
+      [today today])))
+
+(defn use-dates
+  "Dates of the add form, reset to the first group of `lines` whenever its
+   range changes. `range` and `set-range!` use \"yyyy-MM-dd\" strings."
+  [lines]
+  (let [[default-start default-end] (default-range lines)
+        [start-date set-start-date!] (uix/use-state #(date-from-iso default-start))
+        [end-date set-end-date!] (uix/use-state #(date-from-iso default-end))
+        set-range! (uix/use-callback
+                    (fn [start end]
+                      (set-start-date! (date-from-iso start))
+                      (set-end-date! (date-from-iso end)))
+                    [])]
+    (uix/use-effect
+     #(set-range! default-start default-end)
+     [set-range! default-start default-end])
+    {:start-date start-date
+     :end-date end-date
+     :range [(cal/day-key start-date) (cal/day-key end-date)]
+     :set-start-date! set-start-date!
+     :set-end-date! set-end-date!
+     :set-range! set-range!}))
+
 (defui AddReservationForm
   "Form adding the model picked in the search field to the order, over the
-   chosen date range. `on-added` runs after a successful add."
-  [{:keys [order on-added]}]
+   `dates` from `use-dates`. `on-added` runs after a successful add."
+  [{:keys [order dates on-added]}]
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
-        [start-date set-start-date!] (uix/use-state (js/Date.))
-        [end-date set-end-date!] (uix/use-state (js/Date.))
+        {:keys [start-date end-date set-start-date! set-end-date!]} dates
         date-range {:start-date (cal/day-key start-date)
                     :end-date (cal/day-key end-date)
                     :user-id (get-in order [:user :id])}

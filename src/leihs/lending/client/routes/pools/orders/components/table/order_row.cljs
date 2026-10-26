@@ -53,7 +53,7 @@
                                     (.. toast (error (t "error.action.error"))))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
-    ($ TableRow {:class-name "border-l-4 border-l-transparent"}
+    ($ TableRow {:class-name "border-l-4 border-l-transparent even:bg-muted/30"}
 
        ;; Name
        ($ TableCell
@@ -138,6 +138,8 @@
                      ($ DropdownMenuTrigger {:asChild true}
                         ($ Button {:variant "outline"
                                    :size "icon"
+                                   :aria-label (t "common.more-actions")
+                                   :title (t "common.more-actions")
                                    :data-test-id "order-actions-menu"
                                    :class-name "rounded-l-none border-l-0"}
                            ($ ChevronDown)))

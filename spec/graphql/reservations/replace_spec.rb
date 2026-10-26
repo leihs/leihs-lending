@@ -123,7 +123,7 @@ describe "replacing reservations in one request" do
     expect(reservations.map(&:id)).not_to include(*old.map(&:id))
   end
 
-  it "fails when deleting comes first, as the order would run out of reservations" do
+  it "fails when deleting comes first, as the order is self-deleted when it is empty (no lines left)" do
     old = create_reservation
 
     result = replace([old.id], [model.id], delete_first: true)
@@ -153,7 +153,7 @@ describe "replacing reservations in one request" do
     unlendable = create(:leihs_model)
 
     result = replace([old.id], [model.id, unlendable.id])
-    expect(result[:errors]).not_to be_empty
+    expect_graphql_error(result, status: 422)
     expect(reservations_of_order.map(&:id)).to eq([old.id])
   end
 end

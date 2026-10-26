@@ -56,6 +56,7 @@ feature "Edit order" do
 
   def date_range_text(start_date, end_date)
     fmt = "%A %d/%m/%Y"
+    return start_date.strftime(fmt) if start_date == end_date
     "#{start_date.strftime(fmt)} – #{end_date.strftime(fmt)}"
   end
 
@@ -231,17 +232,17 @@ feature "Edit order" do
 
     visit_edit_page
     search_model("Kamera")
-    find("[data-test-id='model-search-item']", text: /^Kamera/).click
+    find("[data-test-id='model-search-item']", text: "Kamera").click
 
     expect(page).to have_content("Kamera added")
-    expect(page).to have_content(date_range_text(Date.today, Date.today))
+    expect(page).to have_content(date_range_text(next_monday, next_monday + 4))
     expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^1$})
     expect(find("[data-test-id='new-reservation-term']").value).to eq("")
 
     cameras = reservations_of(camera)
     expect(cameras.size).to eq(1)
-    expect(cameras.first.start_date).to eq(Date.today)
-    expect(cameras.first.end_date).to eq(Date.today)
+    expect(cameras.first.start_date).to eq(next_monday)
+    expect(cameras.first.end_date).to eq(next_monday + 4)
     expect(cameras.first.status).to eq("submitted")
     expect(cameras.first.user_id).to eq(borrower.id)
   end
@@ -251,7 +252,7 @@ feature "Edit order" do
 
     visit_edit_page
     search_model("Kamera")
-    find("[data-test-id='model-search-item']", text: /^Kamera/).click
+    find("[data-test-id='model-search-item']", text: "Kamera").click
 
     expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^2$})
     expect(page).to have_css("[data-test-id='reservation-line']", count: 1)
