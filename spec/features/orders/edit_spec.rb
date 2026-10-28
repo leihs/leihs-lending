@@ -47,7 +47,7 @@ feature "Edit order" do
 
   def visit_edit_page
     visit "/lending/#{pool.id}/orders/#{order.id}"
-    expect(page).to have_content("Edit order Ernst Einmalig")
+    expect(page).to have_css("h1", text: /Edit order\s+Ernst Einmalig/)
   end
 
   def line_of(model)
@@ -84,6 +84,23 @@ feature "Edit order" do
     find("[data-test-id='new-reservation-term']").set(term)
   end
 
+  def model_search_item(product)
+    find("[data-test-id='model-search-item']", text: /\AM\s+#{product}\n/)
+  end
+
+  def add_form_dates
+    [find("[data-test-id='new-reservation-start-date']").text,
+      find("[data-test-id='new-reservation-end-date']").text]
+  end
+
+  def form_date(date)
+    date.strftime("%d/%m/%Y")
+  end
+
+  def day_cell(dialog, date)
+    dialog.find("[data-day='#{date}']")
+  end
+
   def delete_line(model)
     line_of(model).find("[data-test-id='line-actions-menu']").click
     find("[data-test-id='delete-line']").click
@@ -103,6 +120,16 @@ feature "Edit order" do
     expect(page).to have_css("[data-test-id='reservation-line']", count: 2)
     expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^2$})
     expect(line_of(tripod).find("[data-test-id='line-quantity']")).to have_content(%r{^1$})
+  end
+
+  scenario "shows a single date for a one-day range" do
+    create_reservation(camera, start_date: next_monday + 2, end_date: next_monday + 2)
+
+    visit_edit_page
+
+    expect(page).to have_content(date_range_text(next_monday + 2, next_monday + 2))
+    expect(page).not_to have_content("–")
+    expect(page).to have_content("1 day")
   end
 
   scenario "changes dates and quantity of a single line" do
@@ -189,6 +216,77 @@ feature "Edit order" do
     expect(reservations_of(camera).first.start_date).to eq(next_monday)
   end
 
+  scenario "a single click picks a one-day range" do
+    create_reservation(camera)
+
+    visit_edit_page
+    line_of(camera).find("[data-test-id='edit-line']").click
+
+    dialog = calendar_dialog
+    day_cell(dialog, next_monday + 1).click
+    dialog.find("[data-test-id='calendar-save']").click
+
+    expect(page).not_to have_css("[data-test-id='calendar-dialog']")
+    expect(page).to have_content(date_range_text(next_monday + 1, next_monday + 1))
+    cameras = reservations_of(camera)
+    expect(cameras.map(&:start_date)).to eq([next_monday + 1])
+    expect(cameras.map(&:end_date)).to eq([next_monday + 1])
+  end
+
+  scenario "the quantity field can be cleared, keeping the previous quantity" do
+    create_reservation(camera)
+
+    visit_edit_page
+    line_of(camera).find("[data-test-id='edit-line']").click
+
+    dialog = calendar_dialog
+    quantity = dialog.find("[data-test-id='calendar-quantity']")
+    quantity.send_keys(:backspace, :delete)
+    expect(quantity.value).to eq("")
+    quantity.send_keys(:tab)
+    expect(quantity.value).to eq("1")
+
+    quantity.send_keys(:backspace, :delete)
+    expect(quantity.value).to eq("")
+    dialog.find("[data-test-id='calendar-save']").click
+
+    expect(page).not_to have_css("[data-test-id='calendar-dialog']")
+    expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^1$})
+    expect(reservations_of(camera).size).to eq(1)
+  end
+
+  scenario "explains restrictions of the calendar days in tooltips" do
+    create(:holiday, inventory_pool: pool, name: "Knabenschiessen",
+      start_date: (next_monday + 2).to_s, end_date: (next_monday + 2).to_s)
+    create_reservation(camera)
+
+    visit_edit_page
+    line_of(camera).find("[data-test-id='edit-line']").click
+
+    dialog = calendar_dialog
+    day_cell(dialog, next_monday + 2).find("[data-test-id='calendar-restriction']").hover
+    expect(page).to have_css("[data-slot='tooltip-content']", text: "Knabenschiessen")
+
+    day_cell(dialog, next_monday + 5).find("[data-test-id='calendar-restriction']").hover
+    expect(page).to have_css("[data-slot='tooltip-content']", text: "Closed on Saturday")
+  end
+
+  scenario "marks a start date on a closed day as not available" do
+    create_reservation(camera)
+
+    visit_edit_page
+    line_of(camera).find("[data-test-id='edit-line']").click
+
+    dialog = calendar_dialog
+    pick_range(dialog, next_monday + 1, next_monday + 2)
+    expect(day_cell(dialog, next_monday + 1)[:class]).to include("bg-lime-200")
+
+    pick_range(dialog, next_monday + 5, next_monday + 7)
+    expect(day_cell(dialog, next_monday + 5)[:class]).to include("bg-red-100")
+    expect(day_cell(dialog, next_monday + 6)[:class]).to include("bg-lime-200")
+    expect(day_cell(dialog, next_monday + 7)[:class]).to include("bg-lime-200")
+  end
+
   scenario "edits the purpose" do
     visit_edit_page
     dialog = open_purpose_dialog
@@ -232,7 +330,7 @@ feature "Edit order" do
 
     visit_edit_page
     search_model("Kamera")
-    find("[data-test-id='model-search-item']", text: "Kamera").click
+    model_search_item("Kamera").click
 
     expect(page).to have_content("Kamera added")
     expect(page).to have_content(date_range_text(next_monday, next_monday + 4))
@@ -252,11 +350,81 @@ feature "Edit order" do
 
     visit_edit_page
     search_model("Kamera")
-    find("[data-test-id='model-search-item']", text: "Kamera").click
+    model_search_item("Kamera").click
 
     expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^2$})
     expect(page).to have_css("[data-test-id='reservation-line']", count: 1)
     expect(reservations_of(camera).size).to eq(2)
+  end
+
+  scenario "the add form preselects the first date range of the order" do
+    create_reservation(tripod, start_date: next_monday + 7, end_date: next_monday + 8)
+    create_reservation(camera)
+
+    visit_edit_page
+
+    expect(add_form_dates).to eq([form_date(next_monday), form_date(next_monday + 4)])
+  end
+
+  scenario "the add form follows the first date range when it changes" do
+    create_reservation(camera)
+
+    visit_edit_page
+    expect(add_form_dates).to eq([form_date(next_monday), form_date(next_monday + 4)])
+
+    line_of(camera).find("[data-test-id='edit-line']").click
+    dialog = calendar_dialog
+    pick_range(dialog, next_monday + 1, next_monday + 3)
+    dialog.find("[data-test-id='calendar-save']").click
+
+    expect(page).not_to have_css("[data-test-id='calendar-dialog']")
+    expect(add_form_dates).to eq([form_date(next_monday + 1), form_date(next_monday + 3)])
+  end
+
+  scenario "applies the date range of a group to the add form" do
+    create_reservation(camera)
+    create_reservation(tripod, start_date: next_monday + 7, end_date: next_monday + 8)
+    microphone = lendable_model("Mikrofon")
+
+    visit_edit_page
+    first_range, second_range = all("[data-test-id='apply-range']", count: 2)
+    expect(first_range).to be_disabled
+    expect(second_range).not_to be_disabled
+
+    second_range.click
+    expect(add_form_dates).to eq([form_date(next_monday + 7), form_date(next_monday + 8)])
+    expect(second_range).to be_disabled
+    expect(first_range).not_to be_disabled
+
+    search_model("Mikrofon")
+    model_search_item("Mikrofon").click
+    expect(page).to have_content("Mikrofon added")
+
+    microphones = reservations_of(microphone)
+    expect(microphones.map(&:start_date)).to eq([next_monday + 7])
+    expect(microphones.map(&:end_date)).to eq([next_monday + 8])
+  end
+
+  scenario "offers no date range to apply when the order has a single one" do
+    create_reservation(camera)
+    create_reservation(tripod)
+
+    visit_edit_page
+
+    expect(page).to have_css("[data-test-id='reservation-line']", count: 2)
+    expect(page).not_to have_css("[data-test-id='apply-range']")
+  end
+
+  scenario "marks models without available items in the search results" do
+    create_reservation(camera)
+    tripod
+
+    visit_edit_page
+    search_model("Kamera")
+    expect(model_search_item("Kamera")).to have_css("[data-test-id='model-search-item-unavailable']")
+
+    search_model("Stativ")
+    expect(model_search_item("Stativ")).not_to have_css("[data-test-id='model-search-item-unavailable']")
   end
 
   scenario "deletes a single line" do
