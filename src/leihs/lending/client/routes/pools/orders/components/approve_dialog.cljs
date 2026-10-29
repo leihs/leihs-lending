@@ -7,12 +7,14 @@
    ["@@/label" :refer [Label]]
    ["@@/spinner" :refer [Spinner]]
    ["@@/textarea" :refer [Textarea]]
+   ["date-fns" :as date-fns]
    ["lucide-react" :refer [TriangleAlert]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
    ["sonner" :refer [toast]]
    [clojure.string :refer [trim]]
    [leihs.lending.client.components.entities.items-list :refer [ItemsList]]
+   [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.routes.pools.orders.components.styles :refer [approve-class]]
@@ -21,7 +23,7 @@
    [uix.core :as uix :refer [$ defui]]))
 
 (defui ApproveDialog
-  [{:keys [order open? set-open! use-items failed? on-edit on-success]}]
+  [{:keys [order open? set-open! use-items failed? edit-url on-success]}]
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
@@ -32,6 +34,9 @@
         [approving? set-approving!] (uix/use-state false)
         [refused? set-refused!] (uix/use-state false)
         force? (boolean (or failed? refused?))
+        expired? (and force?
+                      (some-> (:endDate order) date-from-iso
+                              (date-fns/isBefore (date-fns/startOfToday))))
         close! (fn [open?]
                  (set-open! open?)
                  (when-not open?
@@ -69,7 +74,9 @@
              (when force?
                ($ Alert {:variant "destructive"}
                   ($ TriangleAlert)
-                  ($ AlertDescription (t "orders.approve-error"))))
+                  ($ AlertDescription (if expired?
+                                        (t "orders.approve-expired-error")
+                                        (t "orders.approve-error")))))
 
              ($ :div
                 ($ :div {:class-name "font-semibold text-sm mb-2"}
@@ -87,30 +94,32 @@
                   :else
                   ($ ItemsList {:items items})))
 
-             ($ :div {:class-name "grid gap-2"}
-                ($ Label {:html-for "approve-comment"}
-                   (t "orders.approve-failed-dialog.comment"))
-                ($ Textarea {:id "approve-comment"
-                             :class-name "min-h-24"
-                             :data-test-id "approve-order-comment"
-                             :value comment
-                             :on-change #(set-comment! (.. % -target -value))})))
+             (when-not expired?
+               ($ :div {:class-name "grid gap-2"}
+                  ($ Label {:html-for "approve-comment"}
+                     (t "orders.approve-failed-dialog.comment"))
+                  ($ Textarea {:id "approve-comment"
+                               :class-name "min-h-24"
+                               :data-test-id "approve-order-comment"
+                               :value comment
+                               :on-change #(set-comment! (.. % -target -value))}))))
 
           ($ DialogFooter
              ($ DialogClose {:as-child true}
                 ($ Button {:type "button" :variant "outline"}
                    (t "common.cancel")))
-             (when (and force? on-edit)
+             (when (and force? edit-url)
+               ($ Button {:variant "outline"
+                          :asChild true}
+                  ($ router/Link {:to edit-url
+                                  :data-test-id "approve-order-edit"}
+                     (t "orders.approve-failed-dialog.edit-order"))))
+             (when-not expired?
                ($ Button {:type "button"
-                          :variant "outline"
-                          :data-test-id "approve-order-edit"
-                          :onClick on-edit}
-                  (t "orders.approve-failed-dialog.edit-order")))
-             ($ Button {:type "button"
-                        :class-name approve-class
-                        :disabled approving?
-                        :data-test-id "approve-order-submit"
-                        :onClick approve!}
-                (if force?
-                  (t "orders.approve-failed-dialog.force-approve")
-                  (t "orders.approve-dialog.approve"))))))))
+                          :class-name approve-class
+                          :disabled approving?
+                          :data-test-id "approve-order-submit"
+                          :onClick approve!}
+                  (if force?
+                    (t "orders.approve-failed-dialog.force-approve")
+                    (t "orders.approve-dialog.approve")))))))))

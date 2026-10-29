@@ -145,7 +145,7 @@
                                     :class-name (str approve-class " rounded-l-none border-l border-l-background/25")
                                     :data-test-id "approve-order-menu"}
                             ($ ChevronDown)))
-                      ($ DropdownMenuContent {:align "end"}
+                      ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
                          ($ DropdownMenuItem {:onSelect approve-with-comment!
                                               :data-test-id "approve-order-with-comment"}
                             (t "orders.edit.approve-with-comment")))))))
@@ -176,7 +176,7 @@
                                     :disabled (empty? selected)
                                     :data-test-id "selection-actions-menu"}
                             ($ ChevronDown)))
-                      ($ DropdownMenuContent {:align "end"}
+                      ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
                          ($ DropdownMenuItem {:onSelect stub!}
                             (t "orders.edit.print-selection"))
                          ($ DropdownMenuItem {:onSelect #(delete-lines! selected-lines)
@@ -200,7 +200,7 @@
                         :set-open! set-reject-open!
                         :use-items data/use-items
                         :on-success back!})
-       ($ ApproveDialog {:order order
+       ($ ApproveDialog {:order (assoc order :endDate (last (sort (keep :endDate lines))))
                          :open? approve-open?
                          :set-open! set-approve-open!
                          :use-items data/use-items

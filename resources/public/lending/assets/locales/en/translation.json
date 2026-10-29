@@ -127,6 +127,7 @@
     },
     "approve-success": "Order approved",
     "approve-error": "This order is not approvable because some reserved models are not available.",
+    "approve-expired-error": "This order is not approvable because all reservations have already ended.",
     "approve-failed-dialog": {
       "title": "Approval failed",
       "edit-order": "Edit order",

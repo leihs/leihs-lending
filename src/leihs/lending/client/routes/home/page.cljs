@@ -29,7 +29,7 @@
                       (for [pool pools]
                         ($ TableRow {:key (:id pool)
                                      :data-test-id "pool-row"
-                                     :class-name "even:bg-muted"}
+                                     :class-name "odd:bg-muted/50"}
                            ($ TableCell
                               ($ Typo {:variant "link"}
                                  ($ Link {:class-name "underline"

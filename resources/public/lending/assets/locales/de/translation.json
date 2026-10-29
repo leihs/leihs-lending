@@ -127,6 +127,7 @@
     },
     "approve-success": "Bestellung genehmigt",
     "approve-error": "Die Bestellung kann nicht genehmigt werden, weil einige reservierte Modelle nicht verfügbar sind.",
+    "approve-expired-error": "Die Bestellung kann nicht genehmigt werden, weil alle Reservationen bereits abgelaufen sind.",
     "approve-failed-dialog": {
       "title": "Genehmigung fehlgeschlagen",
       "edit-order": "Bestellung editieren",

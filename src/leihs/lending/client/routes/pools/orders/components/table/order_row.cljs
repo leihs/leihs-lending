@@ -26,8 +26,7 @@
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
-        navigate (router/useNavigate)
-        edit! #(navigate (str "/lending/" pool-id "/orders/" (:id order)))
+        edit-url (str "/lending/" pool-id "/orders/" (:id order))
         user (:user order)
         name (str (:firstname user) " " (:lastname user))
         state (:state order)
@@ -53,7 +52,7 @@
                                     (.. toast (error (t "error.action.error"))))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
-    ($ TableRow {:class-name "border-l-4 border-l-transparent even:bg-muted/30"}
+    ($ TableRow {:class-name "border-l-4 border-l-transparent odd:bg-muted/50"}
 
        ;; Name
        ($ TableCell
@@ -143,10 +142,11 @@
                                    :data-test-id "order-actions-menu"
                                    :class-name "rounded-l-none border-l-0"}
                            ($ ChevronDown)))
-                     ($ DropdownMenuContent {:align "end"}
-                        ($ DropdownMenuItem {:onSelect edit!
-                                             :data-test-id "edit-order"}
-                           (t "orders.actions.edit"))
+                     ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
+                        ($ DropdownMenuItem {:asChild true}
+                           ($ router/Link {:to edit-url
+                                           :data-test-id "edit-order"}
+                              (t "orders.actions.edit")))
                         ($ DropdownMenuItem {:onSelect #(set-reject-open! true)}
                            (t "orders.actions.reject"))))
                   ($ RejectDialog {:order order
@@ -158,7 +158,7 @@
                                     :set-open! set-approve-failed-open!
                                     :use-items use-items
                                     :failed? true
-                                    :on-edit edit!}))
+                                    :edit-url edit-url}))
 
                (= state "APPROVED")
                ($ Button {:class-name "w-full"

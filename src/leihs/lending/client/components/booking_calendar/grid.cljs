@@ -64,6 +64,7 @@
            :on-mouse-enter #(on-preview date)
            :class-name (str "flex size-full flex-col "
                             (cond
+                              (and disabled? in-range?) "cursor-default text-muted-foreground bg-hatched bg-red-100 dark:bg-red-950"
                               disabled? "cursor-default text-muted-foreground bg-hatched"
                               (and in-range? (true? available?)) "bg-lime-200 dark:bg-lime-950"
                               (and in-range? (false? available?)) "bg-red-100 dark:bg-red-950"

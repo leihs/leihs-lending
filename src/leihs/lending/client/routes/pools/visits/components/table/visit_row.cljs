@@ -25,7 +25,7 @@
                        (t "visits.actions.take-back")
                        (t "visits.actions.hand-over"))
         on-action-trigger #(.. toast (message (t "visits.actions.not-available")))]
-    ($ TableRow {:className (str "border-l-4 even:bg-muted/30 "
+    ($ TableRow {:className (str "border-l-4 odd:bg-muted/50 "
                                  (if overdue? "border-l-destructive" "border-l-transparent"))}
        ($ TableCell
           ($ UserPopover {:user user
@@ -59,7 +59,7 @@
                                  :title (t "common.more-actions")
                                  :className "rounded-l-none border-l-0"}
                          ($ ChevronDown)))
-                   ($ DropdownMenuContent {:align "end"}
+                   ($ DropdownMenuContent {:align "end" :className "min-w-48"}
                       (if is-take-back?
                         ($ DropdownMenuItem {:onClick on-action-trigger}
                            (t "visits.actions.send-reminder"))

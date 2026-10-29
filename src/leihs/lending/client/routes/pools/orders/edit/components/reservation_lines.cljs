@@ -204,7 +204,7 @@
                               :class-name "rounded-l-none border-l-0"
                               :data-test-id "line-actions-menu"}
                       ($ ChevronDown)))
-                ($ DropdownMenuContent {:align "end"}
+                ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
                    ($ DropdownMenuItem {:onSelect stub!}
                       (t "orders.edit.line-timeline"))
                    ($ DropdownMenuItem {:onSelect stub!}

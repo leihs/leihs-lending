@@ -207,7 +207,7 @@
   (let [today (tz/today tx)
         reservations (res/get-for-open-order tx id)]
     (and (seq reservations)
-         (every? #(not (t/before? today (local-date (:end_date %))))
+         (every? #(t/before? (local-date (:end_date %)) today)
                  reservations))))
 
 (defn- any-pool-closed? [tx id]
