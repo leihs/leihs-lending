@@ -17,14 +17,16 @@
    [clojure.string :refer [blank?]]
    [leihs.lending.client.components.entities.items-list :refer [ItemsList]]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.routes.pools.orders.components.styles :refer [reject-class]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui RejectDialog
   "Confirms rejecting a submitted order.
-   `use-items` is a hook `[id enabled?]` loading the items once the dialog opens."
-  [{:keys [order open? set-open! use-items]}]
+   `use-items` is a hook `[id enabled?]` loading the items once the dialog opens,
+   `on-success` replaces revalidating the current route."
+  [{:keys [order open? set-open! use-items on-success]}]
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
@@ -46,7 +48,9 @@
                   (-> (data/reject-order! pool-id (:id order) (.-reason values))
                       (p/then (fn [_]
                                 (close! false)
-                                (.revalidate revalidator)))
+                                (if on-success
+                                  (on-success)
+                                  (.revalidate revalidator))))
                       (p/catch (fn [_]
                                  (.. toast (error (t "error.action.error")))))))]
 
@@ -92,7 +96,7 @@
                               ($ FormItem
                                  ($ FormLabel (t "orders.reject-dialog.comment"))
                                  ($ FormControl
-                                    ($ Textarea {:rows 4
+                                    ($ Textarea {:class-name "min-h-24"
                                                  :data-test-id "reject-order-reason"
                                                  :name (.-name field)
                                                  :value (.-value field)
@@ -106,6 +110,7 @@
                     ($ Button {:type "button" :variant "outline"}
                        (t "common.cancel")))
                  ($ Button {:type "submit"
+                            :class-name reject-class
                             :disabled (.. form -formState -isSubmitting)
                             :data-test-id "reject-order-submit"}
                     (t "orders.actions.reject")))))))))

@@ -76,6 +76,27 @@ describe "approveOrder" do
     end
   end
 
+  context "when the last reservation ends today" do
+    it "approves the order" do
+      order = create(:order, user: user, inventory_pool: pool, state: "submitted")
+      create(:reservation,
+        user: user,
+        inventory_pool: pool,
+        leihs_model: model,
+        order: order,
+        status: "submitted",
+        start_date: (Date.today - 3).to_s,
+        end_date: Date.today.to_s)
+      result = approve_order(order.id, user.id)
+      expect_graphql_result(result, {
+        approveOrder: {
+          id: order.id.to_s,
+          state: "APPROVED"
+        }
+      })
+    end
+  end
+
   context "with a suspended user" do
     before { create(:suspension, user: user, inventory_pool: pool) }
 

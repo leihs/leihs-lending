@@ -32,6 +32,11 @@
   :Model {:fields {:id {:type (non-null :UUID)}
                    :name {:type String}
                    :manufacturer {:type String}
+                   :type {:type String :description "\"Model\" or \"Software\""}
+                   :isPackage {:type Boolean}
+                   :thumbnailUrl {:type String
+                                  :description "Base64 data URL of the model's thumbnail image"
+                                  :resolve :model-thumbnail-url}
                    :borrowableQuantity {:type (non-null Int)
                                         :description "Borrowable items (not retired, not inside a package) of the model in the pool. Ignores dates and reservations."
                                         :resolve :borrowable-quantity}
@@ -65,6 +70,8 @@
                                           :description "Case of multiple reservation lines. Each of their models has at least the required quantity available to the user on this day, the reservations themselves excluded"}
                               :totalAvailable {:type Boolean
                                                :description "Case of multiple reservation lines. Each of their models has at least the required quantity available over all groups, general included, on this day, the reservations themselves excluded"}
+                              :holidayName {:type String
+                                            :description "Name of the holiday the day falls on"}
                               :startDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}
                               :endDateRestrictions {:type (non-null (list (non-null :AvailabilityDateRestrictionEnum)))}}}
   :AvailabilityChange {:fields {:date {:type (non-null :Date)
@@ -118,12 +125,12 @@
                    :reservations {:type (list (non-null :Reservation)) :resolve :reservations}
                    :reminders {:type (list (non-null :Email)) :resolve :reminders}
                    :user {:type (non-null :User) :resolve :user}}}
-   :Order {:fields {:id {:type (non-null :UUID)}
-                    :purpose {:type String}
-                    :state {:type (non-null :OrderStateEnum)}
-                    :rejectReason {:type String}
-                    :toBeVerified {:type (non-null Boolean)}
-                    :startDate {:type :Date}
+  :Order {:fields {:id {:type (non-null :UUID)}
+                   :purpose {:type String}
+                   :state {:type (non-null :OrderStateEnum)}
+                   :rejectReason {:type String}
+                   :toBeVerified {:type (non-null Boolean)}
+                   :startDate {:type :Date}
                    :endDate {:type :Date}
                    :createdAt {:type (non-null :DateTime)}
                    :updatedAt {:type (non-null :DateTime)}
@@ -185,12 +192,12 @@
                   :page {:type Int}
                   :perPage {:type Int}}
            :resolve :visits}
-   :orders {:type (non-null :OrderList)
-            :args {:states {:type (list (non-null :OrderStateEnum))}
-                   :startDate {:type :Date}
-                   :endDate {:type :Date}
-                   :term {:type String}
-                   :page {:type Int}
+  :orders {:type (non-null :OrderList)
+           :args {:states {:type (list (non-null :OrderStateEnum))}
+                  :startDate {:type :Date}
+                  :endDate {:type :Date}
+                  :term {:type String}
+                  :page {:type Int}
                   :perPage {:type Int}
                   :toBeVerified {:type Boolean}}
            :resolve :orders}

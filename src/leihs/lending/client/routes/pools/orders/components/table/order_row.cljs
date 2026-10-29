@@ -16,7 +16,7 @@
    [leihs.lending.client.lib.date-utils :refer [date-time-from-iso format-date duration-days]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
-   [leihs.lending.client.routes.pools.orders.components.approve-failed-dialog :refer [ApproveFailedDialog]]
+   [leihs.lending.client.routes.pools.orders.components.approve-dialog :refer [ApproveDialog]]
    [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
@@ -26,6 +26,7 @@
   (let [[t] (useTranslation)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
+        edit-url (str "/lending/" pool-id "/orders/" (:id order))
         user (:user order)
         name (str (:firstname user) " " (:lastname user))
         state (:state order)
@@ -51,7 +52,7 @@
                                     (.. toast (error (t "error.action.error"))))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
-    ($ TableRow {:class-name "border-l-4 border-l-transparent"}
+    ($ TableRow {:class-name "border-l-4 border-l-transparent odd:bg-muted/50"}
 
        ;; Name
        ($ TableCell
@@ -102,7 +103,7 @@
        ($ TableCell
           (let [status-class (cond
                                (= state "SUBMITTED") "text-blue-600"
-                               (= state "APPROVED")  "text-green-600"
+                               (= state "APPROVED")  "text-lime-600"
                                (= state "REJECTED")  "text-destructive")]
             ($ :div {:class-name (str "flex justify-center " status-class)}
                ($ Tooltip
@@ -136,22 +137,28 @@
                      ($ DropdownMenuTrigger {:asChild true}
                         ($ Button {:variant "outline"
                                    :size "icon"
+                                   :aria-label (t "common.more-actions")
+                                   :title (t "common.more-actions")
                                    :data-test-id "order-actions-menu"
                                    :class-name "rounded-l-none border-l-0"}
                            ($ ChevronDown)))
-                     ($ DropdownMenuContent {:align "end"}
-                        ($ DropdownMenuItem {:onClick on-action-trigger}
-                           (t "orders.actions.edit"))
+                     ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
+                        ($ DropdownMenuItem {:asChild true}
+                           ($ router/Link {:to edit-url
+                                           :data-test-id "edit-order"}
+                              (t "orders.actions.edit")))
                         ($ DropdownMenuItem {:onSelect #(set-reject-open! true)}
                            (t "orders.actions.reject"))))
                   ($ RejectDialog {:order order
                                    :open? reject-open?
                                    :set-open! set-reject-open!
                                    :use-items use-items})
-                  ($ ApproveFailedDialog {:order order
-                                          :open? approve-failed-open?
-                                          :set-open! set-approve-failed-open!
-                                          :use-items use-items}))
+                  ($ ApproveDialog {:order order
+                                    :open? approve-failed-open?
+                                    :set-open! set-approve-failed-open!
+                                    :use-items use-items
+                                    :failed? true
+                                    :edit-url edit-url}))
 
                (= state "APPROVED")
                ($ Button {:class-name "w-full"

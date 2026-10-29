@@ -53,6 +53,121 @@
   environment_variables:
     FEATURE_NAME: "Approve order 05"
     FEATURE: './spec/features/orders/approve_spec.rb[1:5]'
+'./spec/features/orders/edit_spec.rb[1:1]':
+  name: "Edit order 01"
+  environment_variables:
+    FEATURE_NAME: "Edit order 01"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:1]'
+'./spec/features/orders/edit_spec.rb[1:2]':
+  name: "Edit order 02"
+  environment_variables:
+    FEATURE_NAME: "Edit order 02"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:2]'
+'./spec/features/orders/edit_spec.rb[1:3]':
+  name: "Edit order 03"
+  environment_variables:
+    FEATURE_NAME: "Edit order 03"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:3]'
+'./spec/features/orders/edit_spec.rb[1:4]':
+  name: "Edit order 04"
+  environment_variables:
+    FEATURE_NAME: "Edit order 04"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:4]'
+'./spec/features/orders/edit_spec.rb[1:5]':
+  name: "Edit order 05"
+  environment_variables:
+    FEATURE_NAME: "Edit order 05"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:5]'
+'./spec/features/orders/edit_spec.rb[1:6]':
+  name: "Edit order 06"
+  environment_variables:
+    FEATURE_NAME: "Edit order 06"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:6]'
+'./spec/features/orders/edit_spec.rb[1:7]':
+  name: "Edit order 07"
+  environment_variables:
+    FEATURE_NAME: "Edit order 07"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:7]'
+'./spec/features/orders/edit_spec.rb[1:8]':
+  name: "Edit order 08"
+  environment_variables:
+    FEATURE_NAME: "Edit order 08"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:8]'
+'./spec/features/orders/edit_spec.rb[1:9]':
+  name: "Edit order 09"
+  environment_variables:
+    FEATURE_NAME: "Edit order 09"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:9]'
+'./spec/features/orders/edit_spec.rb[1:10]':
+  name: "Edit order 10"
+  environment_variables:
+    FEATURE_NAME: "Edit order 10"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:10]'
+'./spec/features/orders/edit_spec.rb[1:11]':
+  name: "Edit order 11"
+  environment_variables:
+    FEATURE_NAME: "Edit order 11"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:11]'
+'./spec/features/orders/edit_spec.rb[1:12]':
+  name: "Edit order 12"
+  environment_variables:
+    FEATURE_NAME: "Edit order 12"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:12]'
+'./spec/features/orders/edit_spec.rb[1:13]':
+  name: "Edit order 13"
+  environment_variables:
+    FEATURE_NAME: "Edit order 13"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:13]'
+'./spec/features/orders/edit_spec.rb[1:14]':
+  name: "Edit order 14"
+  environment_variables:
+    FEATURE_NAME: "Edit order 14"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:14]'
+'./spec/features/orders/edit_spec.rb[1:15]':
+  name: "Edit order 15"
+  environment_variables:
+    FEATURE_NAME: "Edit order 15"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:15]'
+'./spec/features/orders/edit_spec.rb[1:16]':
+  name: "Edit order 16"
+  environment_variables:
+    FEATURE_NAME: "Edit order 16"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:16]'
+'./spec/features/orders/edit_spec.rb[1:17]':
+  name: "Edit order 17"
+  environment_variables:
+    FEATURE_NAME: "Edit order 17"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:17]'
+'./spec/features/orders/edit_spec.rb[1:18]':
+  name: "Edit order 18"
+  environment_variables:
+    FEATURE_NAME: "Edit order 18"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:18]'
+'./spec/features/orders/edit_spec.rb[1:19]':
+  name: "Edit order 19"
+  environment_variables:
+    FEATURE_NAME: "Edit order 19"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:19]'
+'./spec/features/orders/edit_spec.rb[1:20]':
+  name: "Edit order 20"
+  environment_variables:
+    FEATURE_NAME: "Edit order 20"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:20]'
+'./spec/features/orders/edit_spec.rb[1:21]':
+  name: "Edit order 21"
+  environment_variables:
+    FEATURE_NAME: "Edit order 21"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:21]'
+'./spec/features/orders/edit_spec.rb[1:22]':
+  name: "Edit order 22"
+  environment_variables:
+    FEATURE_NAME: "Edit order 22"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:22]'
+'./spec/features/orders/edit_spec.rb[1:23]':
+  name: "Edit order 23"
+  environment_variables:
+    FEATURE_NAME: "Edit order 23"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:23]'
 './spec/features/orders/filters_spec.rb[1:1]':
   name: "Orders filters 01"
   environment_variables:
