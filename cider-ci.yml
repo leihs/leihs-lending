@@ -12,7 +12,7 @@ jobs:
     context:
       task_defaults:
         traits:
-          asdf: true
+          mise: true
         environment_variables:
           LEIHS_LENDING_DIR: "{{CIDER_CI_WORKING_DIR}}"
       tasks:
@@ -57,7 +57,7 @@ jobs:
     context:
       task_defaults:
         traits:
-          asdf: true
+          mise: true
         git_options:
           submodules:
             include_match: ^.*$

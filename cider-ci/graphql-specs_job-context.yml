@@ -3,7 +3,7 @@ generate_tasks:
 
 task_defaults:
   traits:
-    asdf: true
+    mise: true
     'PostgreSQL 15': true
   include:
     - path: cider-ci/task-components/database.yml

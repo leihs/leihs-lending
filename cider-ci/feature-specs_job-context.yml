@@ -5,8 +5,7 @@ tasks:
 task_defaults:
 
   traits:
-    asdf: true
-    Firefox-ESR: true # ensures deps for asdf-firefox
+    mise: true
 
   include:
     - path: cider-ci/task-components/database.yml
