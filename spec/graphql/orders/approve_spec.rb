@@ -77,6 +77,15 @@ describe "approveOrder" do
   end
 
   context "when the last reservation ends today" do
+    # start (today - 3) or end (today) may fall on a weekend, which the
+    # factory's default workdays close; open all days to be calendar-independent
+    before do
+      days = %i[monday tuesday wednesday thursday friday saturday sunday]
+      database[:workdays]
+        .where(inventory_pool_id: pool.id)
+        .update(days.to_h { |d| [d, true] }.merge(days.to_h { |d| [:"#{d}_orders_processing", true] }))
+    end
+
     it "approves the order" do
       order = create(:order, user: user, inventory_pool: pool, state: "submitted")
       create(:reservation,
