@@ -328,6 +328,9 @@ feature "Orders list" do
     within("[data-test-id='pagination-size-dropdown']") { click_on "10" }
 
     expect(find("[data-test-id='pagination-current-page']")).to have_content("1")
+    # the shortcut clicks the next link, which exists only after the refetch
+    # (with 2 pages the second one is rendered as the last page)
+    expect(page).to have_css("[data-test-id='pagination-last-page']", text: "2")
 
     page.driver.browser.action
       .key_down(:shift)
