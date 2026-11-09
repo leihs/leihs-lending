@@ -258,6 +258,7 @@
     "year": "Jahr",
     "previous-month": "Vorheriger Monat",
     "next-month": "Nächster Monat",
+    "pick-date": "Datum wählen",
     "restrictions": {
       "NON_WORKDAY": "{{- val, datetime(weekday: long)}} geschlossen",
       "HOLIDAY": "Feiertag",

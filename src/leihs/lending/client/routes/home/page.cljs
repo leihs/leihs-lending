@@ -22,14 +22,15 @@
              ($ :div {:class-name "border rounded-md"}
                 ($ Table
                    ($ TableHeader
-                      ($ TableRow
-                         ($ TableHead (t "root.pools.name"))))
+                      ($ TableRow {:class-name "hover:bg-transparent"}
+                         ($ TableHead {:class-name "text-muted-foreground"}
+                            (t "root.pools.name"))))
 
                    ($ TableBody
                       (for [pool pools]
                         ($ TableRow {:key (:id pool)
                                      :data-test-id "pool-row"
-                                     :class-name "odd:bg-muted/50"}
+                                     :class-name "odd:bg-muted/50 odd:hover:bg-muted odd:has-aria-expanded:bg-muted"}
                            ($ TableCell
                               ($ Typo {:variant "link"}
                                  ($ Link {:class-name "underline"

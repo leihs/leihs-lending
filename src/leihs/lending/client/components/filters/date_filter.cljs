@@ -1,7 +1,7 @@
 (ns leihs.lending.client.components.filters.date-filter
   (:require
-   ["@@/button" :refer [Button]]
    ["@@/calendar" :refer [Calendar]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
    ["date-fns" :as date-fns]
    ["lucide-react" :refer [CalendarDays ChevronsUpDown]]

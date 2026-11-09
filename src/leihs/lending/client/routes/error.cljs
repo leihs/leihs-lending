@@ -1,6 +1,6 @@
 (ns leihs.lending.client.routes.error
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["lucide-react" :refer [TriangleAlert]]
    ["react-router" :refer [useRouteError Link]]
    [uix.core :as uix :refer [$ defui]]))

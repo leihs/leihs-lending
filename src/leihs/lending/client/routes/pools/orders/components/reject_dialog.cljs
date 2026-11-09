@@ -1,6 +1,6 @@
 (ns leihs.lending.client.routes.pools.orders.components.reject-dialog
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dialog" :refer [Dialog DialogClose DialogContent DialogDescription
                         DialogFooter DialogHeader DialogTitle]]
    ["@@/form" :refer [Form FormControl FormField FormItem FormLabel

@@ -25,7 +25,7 @@
                      :data-test-id "model-search-item"}
        ($ :span {:class-name "flex items-start gap-2"}
           (when (= kind :model)
-            ($ :span {:class-name "shrink-0"}
+            ($ :span {:class-name "w-10 shrink-0"}
                ($ ModelBadge {:type (if isPackage "Package" type)})))
           ($ :span {:class-name "font-medium"} (:name item)))
        (if (= kind :model)

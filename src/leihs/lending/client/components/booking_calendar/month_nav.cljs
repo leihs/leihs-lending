@@ -1,6 +1,6 @@
 (ns leihs.lending.client.components.booking-calendar.month-nav
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/select" :refer [Select SelectContent SelectItem SelectTrigger
                         SelectValue]]
    ["date-fns" :as date-fns]

@@ -1,6 +1,7 @@
 (ns leihs.lending.client.routes.pools.visits.components.table.visit-row
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/button-group" :refer [ButtonGroup]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dropdown-menu" :refer [DropdownMenu DropdownMenuContent
                                DropdownMenuItem DropdownMenuTrigger]]
    ["@@/table" :refer [TableCell TableRow]]
@@ -25,8 +26,10 @@
                        (t "visits.actions.take-back")
                        (t "visits.actions.hand-over"))
         on-action-trigger #(.. toast (message (t "visits.actions.not-available")))]
-    ($ TableRow {:className (str "border-l-4 odd:bg-muted/50 "
-                                 (if overdue? "border-l-destructive" "border-l-transparent"))}
+    ($ TableRow {:className "odd:bg-muted/50 odd:hover:bg-muted odd:has-aria-expanded:bg-muted"}
+       ($ TableCell {:data-test-id "overdue-marker"
+                     :className (str "p-0" (when overdue? " bg-destructive"))}
+          ($ :div {:className "w-1"}))
        ($ TableCell
           ($ UserPopover {:user user
                           :name name
@@ -46,9 +49,8 @@
                                :count (count reminder-list)}))
        ($ TableCell
           ($ :div {:className "flex justify-end"}
-             ($ :div {:className "inline-flex"}
+             ($ ButtonGroup
                 ($ Button {:variant "outline"
-                           :className "rounded-r-none"
                            :onClick on-action-trigger}
                    action-label)
                 ($ DropdownMenu
@@ -56,8 +58,7 @@
                       ($ Button {:variant "outline"
                                  :size "icon"
                                  :aria-label (t "common.more-actions")
-                                 :title (t "common.more-actions")
-                                 :className "rounded-l-none border-l-0"}
+                                 :title (t "common.more-actions")}
                          ($ ChevronDown)))
                    ($ DropdownMenuContent {:align "end" :className "min-w-48"}
                       (if is-take-back?

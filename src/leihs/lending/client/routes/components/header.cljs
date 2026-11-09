@@ -1,6 +1,6 @@
 (ns leihs.lending.client.routes.components.header
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dropdown-menu" :refer [DropdownMenu DropdownMenuContent
                                DropdownMenuGroup DropdownMenuItem
                                DropdownMenuLabel DropdownMenuPortal

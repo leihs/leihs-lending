@@ -1,6 +1,6 @@
 (ns leihs.lending.client.components.pagination
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dropdown-menu" :refer [DropdownMenu DropdownMenuContent
                                DropdownMenuRadioGroup DropdownMenuRadioItem
                                DropdownMenuTrigger]]
@@ -113,7 +113,8 @@
                         ($ Link {:to (gen-page-url 1)
                                  :viewTransition true}
                            "1")))
-                  ($ PaginationEllipsis)))
+                  (when (> current-page 3)
+                    ($ PaginationEllipsis))))
 
              ;; previous link
              (when (> prev-page 0)
@@ -143,7 +144,8 @@
                         ($ Link {:to (gen-page-url next-page)
                                  :viewTransition true}
                            next-page)))
-                  ($ PaginationEllipsis)))
+                  (when (< current-page (- total-pages 2))
+                    ($ PaginationEllipsis))))
 
              ;; last page
              (when (and (not= current-page total-pages)

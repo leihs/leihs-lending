@@ -1,7 +1,8 @@
 (ns leihs.lending.client.routes.pools.orders.edit.components.reservation-lines
   (:require
    ["@@/badge" :refer [Badge]]
-   ["@@/button" :refer [Button]]
+   ["@@/button-group" :refer [ButtonGroup]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/customized/checkbox" :refer [Checkbox]]
    ["@@/dropdown-menu" :refer [DropdownMenu DropdownMenuContent
                                DropdownMenuItem DropdownMenuTrigger]]
@@ -189,9 +190,8 @@
                                  :total-available-quantity totalAvailableQuantity
                                  :borrowable-quantity (:borrowableQuantity model)}))
        ($ TableCell {:class-name "text-right"}
-          ($ :div {:class-name "flex items-stretch justify-end"}
+          ($ ButtonGroup {:class-name "ml-auto"}
              ($ Button {:variant "outline"
-                        :class-name "rounded-r-none"
                         :data-test-id "edit-line"
                         :onClick on-edit}
                 (t "orders.edit.line-actions"))
@@ -201,7 +201,6 @@
                               :size "icon"
                               :aria-label (t "common.more-actions")
                               :title (t "common.more-actions")
-                              :class-name "rounded-l-none border-l-0"
                               :data-test-id "line-actions-menu"}
                       ($ ChevronDown)))
                 ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}

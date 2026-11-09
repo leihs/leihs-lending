@@ -6,6 +6,9 @@
 
 (defui SkeletonRow []
   ($ TableRow {:class-name "shadow-[0_-0.5px_0_var(--border)] h-[53px] odd:bg-muted/50"}
+     ($ TableCell {:class-name "p-0"}
+        ($ :div {:class-name "w-1"}))
+
      ($ TableCell {:class-name "w-[26%]"}
         ($ Skeleton {:class-name "w-50 h-6"}))
 

@@ -1,7 +1,7 @@
 (ns leihs.lending.client.routes.pools.orders.components.approve-dialog
   (:require
    ["@@/alert" :refer [Alert AlertDescription]]
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dialog" :refer [Dialog DialogClose DialogContent DialogDescription
                         DialogFooter DialogHeader DialogTitle]]
    ["@@/label" :refer [Label]]

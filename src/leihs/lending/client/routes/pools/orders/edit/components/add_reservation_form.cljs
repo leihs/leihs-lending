@@ -1,7 +1,7 @@
 (ns leihs.lending.client.routes.pools.orders.edit.components.add-reservation-form
   (:require
-   ["@@/button" :refer [Button]]
    ["@@/calendar" :refer [Calendar]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
    ["date-fns" :as date-fns]
    ["lucide-react" :refer [CalendarDays List]]

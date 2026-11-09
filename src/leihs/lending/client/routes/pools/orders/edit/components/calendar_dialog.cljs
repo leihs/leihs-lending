@@ -1,36 +1,25 @@
 (ns leihs.lending.client.routes.pools.orders.edit.components.calendar-dialog
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dialog" :refer [Dialog DialogClose DialogContent DialogDescription
                         DialogFooter DialogHeader DialogTitle]]
    ["@@/input" :refer [Input]]
-   ["@@/input-group" :refer [InputGroup InputGroupAddon InputGroupInput]]
    ["@@/select" :refer [Select SelectContent SelectItem SelectTrigger
                         SelectValue]]
    ["@@/spinner" :refer [Spinner]]
    ["date-fns" :as date-fns]
-   ["lucide-react" :refer [CalendarDays]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
    ["sonner" :refer [toast]]
+   [leihs.lending.client.components.booking-calendar.date-input :refer [DateInput]]
    [leihs.lending.client.components.booking-calendar.grid :refer [BookingCalendar]]
    [leihs.lending.client.components.booking-calendar.month-nav :refer [MonthNav]]
    [leihs.lending.client.lib.calendar :as cal]
    [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
-   [leihs.lending.client.lib.utils :refer [cj jc]]
+   [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.routes.pools.orders.edit.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
-
-(defui DateField
-  "Shows one end of the picked range; the range itself is picked in the grid."
-  [{:keys [t date label test-id]}]
-  ($ InputGroup {:class-name "w-36"}
-     ($ InputGroupAddon ($ CalendarDays))
-     ($ InputGroupInput {:read-only true
-                         :aria-label label
-                         :data-test-id test-id
-                         :value (if date (t "common.date.formatDate" (cj {:val date})) "")})))
 
 (defui LineSummary
   "One of the edited lines, with the quantity it asks for."
@@ -89,6 +78,13 @@
         change-range! (fn [from to]
                         (set-start-date! from)
                         (set-end-date! to))
+        show-month! #(set-month! (date-fns/startOfMonth %))
+        change-start! (fn [date]
+                        (change-range! date (cal/later date end-date))
+                        (show-month! date))
+        change-end! (fn [date]
+                      (change-range! (cal/earlier start-date date) date)
+                      (show-month! date))
         save! (fn []
                 (set-saving! true)
                 (-> (data/update-lines! pool-id order lines
@@ -127,13 +123,15 @@
              ($ :div {:class-name "flex items-end gap-2"}
                 ($ MonthNav {:month month :set-month! set-month! :min-date today})
                 ($ :div {:class-name "ml-auto flex items-end gap-2"}
-                   ($ DateField {:t t
-                                 :date start-date
+                   ($ DateInput {:date start-date
+                                 :on-change change-start!
+                                 :min-date today
                                  :label (t "orders.edit.start-date")
                                  :test-id "calendar-start-date"})
                    ($ :span {:class-name "mb-2 text-muted-foreground"} "–")
-                   ($ DateField {:t t
-                                 :date end-date
+                   ($ DateInput {:date end-date
+                                 :on-change change-end!
+                                 :min-date today
                                  :label (t "orders.edit.end-date")
                                  :test-id "calendar-end-date"})
                    (when single-line?

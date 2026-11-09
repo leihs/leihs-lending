@@ -31,8 +31,8 @@
         navigate (router/useNavigate)
         handle-reset (fn [] (navigate (str "?page=1&size=" per-page)))]
 
-    ($ Card {:class-name "pb-0 gap-0"}
-       ($ CardHeader {:className "flex bg-background rounded-xl z-10 sticky top-16 mb-6"
+    ($ Card {:class-name "py-0 gap-0"}
+       ($ CardHeader {:className "flex bg-background rounded-xl z-10 sticky top-16 py-6"
                       :style {:background "linear-gradient(to bottom, var(--background) 90%, transparent 100%)"}}
           ($ :div {:className "flex gap-2"}
              ($ TermFilter)
@@ -61,6 +61,7 @@
                   ($ Table
                      ($ TableHeader {:class-name "rounded-t-md"}
                         ($ TableRow {:class-name "rounded-t-md hover:bg-background border-b"}
+                           ($ TableHead {:className "p-0"})
                            ($ TableHead {:className "w-[26%] text-muted-foreground"}
                               (t "visits.table.name"))
                            ($ TableHead {:className "w-[9%] text-muted-foreground"}
@@ -73,7 +74,7 @@
                               (t "visits.table.notifications"))
                            ($ TableHead {:className "w-[20%] text-muted-foreground"}
                               "")))
-                     ($ TableBody {:className "[&_tr:last-child]:border-l-4"}
+                     ($ TableBody
                         (if loading?
                           (for [i (range skeleton-size)]
                             ($ SkeletonRow {:key i}))

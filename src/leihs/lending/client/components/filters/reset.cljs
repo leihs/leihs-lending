@@ -1,6 +1,6 @@
 (ns leihs.lending.client.components.filters.reset
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/tooltip" :refer [Tooltip TooltipTrigger TooltipContent]]
    ["lucide-react" :refer [ListRestart]]
    ["react-i18next" :refer [useTranslation]]

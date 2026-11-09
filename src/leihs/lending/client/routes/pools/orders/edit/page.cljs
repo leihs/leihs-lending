@@ -2,8 +2,9 @@
   (:require
    ["@@/alert" :refer [Alert AlertDescription]]
    ["@@/badge" :refer [Badge]]
-   ["@@/button" :refer [Button]]
+   ["@@/button-group" :refer [ButtonGroup ButtonGroupSeparator]]
    ["@@/card" :refer [Card CardContent CardHeader]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dropdown-menu" :refer [DropdownMenu DropdownMenuContent
                                DropdownMenuItem DropdownMenuTrigger]]
    ["lucide-react" :refer [ArrowRightLeft ChevronDown SquarePen TriangleAlert UserX]]
@@ -126,23 +127,24 @@
                               :onClick #(set-purpose-open! true)}
                       ($ SquarePen))))
 
-             ($ :div {:class-name "flex items-stretch gap-2"}
+             ($ :div {:class-name "flex items-start gap-2"}
                 ($ Button {:class-name reject-class
                            :data-test-id "reject-order"
                            :onClick #(set-reject-open! true)}
                    (t "orders.edit.reject"))
-                ($ :div {:class-name "flex items-stretch"}
-                   ($ Button {:class-name (str approve-class " rounded-r-none")
+                ($ ButtonGroup
+                   ($ Button {:class-name approve-class
                               :disabled approving?
                               :data-test-id "approve-order"
                               :onClick approve!}
                       (t "orders.edit.approve"))
+                   ($ ButtonGroupSeparator)
                    ($ DropdownMenu
                       ($ DropdownMenuTrigger {:asChild true}
                          ($ Button {:size "icon"
                                     :aria-label (t "common.more-actions")
                                     :title (t "common.more-actions")
-                                    :class-name (str approve-class " rounded-l-none border-l border-l-background/25")
+                                    :class-name approve-class
                                     :data-test-id "approve-order-menu"}
                             ($ ChevronDown)))
                       ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
@@ -160,19 +162,18 @@
                                        :dates add-dates
                                        :on-added #(.revalidate revalidator)})
 
-                ($ :div {:class-name "flex items-stretch"}
-                   ($ Button {:class-name "rounded-r-none"
-                              :disabled (empty? selected)
+                ($ ButtonGroup
+                   ($ Button {:disabled (empty? selected)
                               :data-test-id "edit-selection"
                               :onClick #(open-calendar! selected-lines)}
                       (t "orders.edit.edit-selection")
                       ($ Badge {:variant "secondary"} (count selected)))
+                   ($ ButtonGroupSeparator)
                    ($ DropdownMenu
                       ($ DropdownMenuTrigger {:asChild true}
                          ($ Button {:size "icon"
                                     :aria-label (t "common.more-actions")
                                     :title (t "common.more-actions")
-                                    :class-name "rounded-l-none border-l border-l-background/25"
                                     :disabled (empty? selected)
                                     :data-test-id "selection-actions-menu"}
                             ($ ChevronDown)))

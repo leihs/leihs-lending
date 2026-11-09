@@ -1,6 +1,7 @@
 (ns leihs.lending.client.routes.pools.orders.components.table.order-row
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/button-group" :refer [ButtonGroup]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dropdown-menu" :refer [DropdownMenu DropdownMenuContent
                                DropdownMenuItem DropdownMenuTrigger]]
    ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
@@ -52,7 +53,7 @@
                                     (.. toast (error (t "error.action.error"))))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
-    ($ TableRow {:class-name "border-l-4 border-l-transparent odd:bg-muted/50"}
+    ($ TableRow {:class-name "border-l-4 border-l-transparent odd:bg-muted/50 odd:hover:bg-muted odd:has-aria-expanded:bg-muted"}
 
        ;; Name
        ($ TableCell
@@ -124,9 +125,9 @@
           ($ :div {:class-name "min-h-9"}
              (cond
                (= state "SUBMITTED")
-               ($ :div {:class-name "w-full flex items-stretch"}
+               ($ ButtonGroup {:class-name "w-full"}
                   ($ Button {:variant "outline"
-                             :class-name "flex-1 rounded-r-none"
+                             :class-name "flex-1"
                              :disabled approving?
                              :data-test-id "approve-order"
                              :onClick approve!}
@@ -139,8 +140,7 @@
                                    :size "icon"
                                    :aria-label (t "common.more-actions")
                                    :title (t "common.more-actions")
-                                   :data-test-id "order-actions-menu"
-                                   :class-name "rounded-l-none border-l-0"}
+                                   :data-test-id "order-actions-menu"}
                            ($ ChevronDown)))
                      ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
                         ($ DropdownMenuItem {:asChild true}

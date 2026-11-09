@@ -1,6 +1,6 @@
 (ns leihs.lending.client.routes.pools.orders.edit.components.purpose-dialog
   (:require
-   ["@@/button" :refer [Button]]
+   ["@@/customized/button" :refer [Button]]
    ["@@/dialog" :refer [Dialog DialogClose DialogContent DialogFooter
                         DialogHeader DialogTitle]]
    ["@@/form" :refer [Form FormControl FormField FormItem FormLabel
@@ -62,7 +62,8 @@
                   :render (fn [^js props]
                             (let [field (.-field props)]
                               ($ FormItem
-                                 ($ FormLabel (t "orders.purpose-dialog.purpose"))
+                                 ($ FormLabel {:class-name "sr-only"}
+                                    (t "orders.purpose-dialog.purpose"))
                                  ($ FormControl
                                     ($ Textarea {:class-name "min-h-40"
                                                  :data-test-id "order-purpose"
