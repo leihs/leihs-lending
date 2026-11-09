@@ -1,7 +1,7 @@
 (ns leihs.lending.client.components.typo
   (:require
-   ["@@/utils" :refer [cn]]
    ["@radix-ui/react-slot" :refer [Slot]]
+   ["cn" :refer [cn]]
    [uix.core :as uix :refer [$ defui]]))
 
 ;; Variant classes mapping

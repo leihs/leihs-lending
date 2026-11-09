@@ -186,3 +186,13 @@ Pool roles:
 | HTTP server     | `http-kit/http-kit`                 |
 | Case conversion | `camel-snake-kebab`                 |
 | Logging         | `taoensso/timbre`                   |
+
+## Frontend
+
+### shadcn/ui
+
+Components in `src/leihs/lending/client/components/ui/` come from shadcn:
+
+- Style: `new-york` (Tailwind 4) — legacy name; its successor `radix-vega` has a slightly different look. Switching style should be done together with `../inventory`
+- Library: Radix (`radix-ui`), except `combobox.jsx`, which uses Base UI (`@base-ui/react`) — shadcn ships its combobox on Base UI in every style, since Radix has no combobox primitive
+- Vendored: files are unmodified CLI output (excluded from Prettier) and must stay so. Update them with `npx shadcn@latest add --overwrite <component>`. Customizations go in `customized/`, which wraps or forks the originals

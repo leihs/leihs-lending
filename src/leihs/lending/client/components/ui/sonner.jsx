@@ -1,4 +1,3 @@
-import * as React from "react"
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -33,7 +32,8 @@ const Toaster = ({
           "--border-radius": "var(--radius)"
         }
       }
-      {...props} />
+      {...props}
+    />
   );
 }
 

@@ -1,6 +1,5 @@
 import * as React from "react"
-
-import { cn } from "@/components/ui/utils"
+import { cn } from "cn"
 
 function Input({
   className,
@@ -17,8 +16,9 @@ function Input({
         "aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
         className
       )}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
 export { Input }

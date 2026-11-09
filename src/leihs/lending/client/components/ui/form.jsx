@@ -1,9 +1,9 @@
 "use client";
 import * as React from "react"
+import { cn } from "cn"
 import { Slot } from "radix-ui"
 import { Controller, FormProvider, useFormContext, useFormState } from "react-hook-form";
 
-import { cn } from "@/components/ui/utils"
 import { Label } from "@/components/ui/label"
 
 const Form = FormProvider
@@ -19,7 +19,7 @@ const FormField = (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
     </FormFieldContext.Provider>
-  );
+  )
 }
 
 const useFormField = () => {
@@ -55,9 +55,13 @@ function FormItem({
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div data-slot="form-item" className={cn("grid gap-2", className)} {...props} />
+      <div
+        data-slot="form-item"
+        className={cn("grid gap-2", className)}
+        {...props}
+      />
     </FormItemContext.Provider>
-  );
+  )
 }
 
 function FormLabel({
@@ -72,8 +76,9 @@ function FormLabel({
       data-error={!!error}
       className={cn("data-[error=true]:text-destructive", className)}
       htmlFor={formItemId}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
 function FormControl({
@@ -91,8 +96,9 @@ function FormControl({
           : `${formDescriptionId} ${formMessageId}`
       }
       aria-invalid={!!error}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
 function FormDescription({
@@ -106,8 +112,9 @@ function FormDescription({
       data-slot="form-description"
       id={formDescriptionId}
       className={cn("text-sm text-muted-foreground", className)}
-      {...props} />
-  );
+      {...props}
+    />
+  )
 }
 
 function FormMessage({
@@ -126,10 +133,11 @@ function FormMessage({
       data-slot="form-message"
       id={formMessageId}
       className={cn("text-sm text-destructive", className)}
-      {...props}>
+      {...props}
+    >
       {body}
     </p>
-  );
+  )
 }
 
 export {

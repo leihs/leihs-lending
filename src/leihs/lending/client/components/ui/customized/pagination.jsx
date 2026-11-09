@@ -1,52 +1,60 @@
 /**
  * Customized for Leihs
- * - code formatting
  * - asChild support on PaginationLink
  * - asChild support and `text` prop on PaginationPrevious and PaginationNext
+ * - PaginationPrevious and PaginationNext always show their text
  * */
 
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { cn } from "cn"
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MoreHorizontalIcon,
+} from "lucide-react"
+import { Slot } from "radix-ui"
 
-import { cn } from "@/components/ui/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-const Pagination = ({ className, ...props }) => (
-  <nav
-    role="navigation"
-    aria-label="pagination"
-    className={cn("mx-auto flex w-full justify-center", className)}
-    {...props}
-  />
-)
-Pagination.displayName = "Pagination"
+function Pagination({ className, ...props }) {
+  return (
+    <nav
+      role="navigation"
+      aria-label="pagination"
+      data-slot="pagination"
+      className={cn("mx-auto flex w-full justify-center", className)}
+      {...props}
+    />
+  )
+}
 
-const PaginationContent = React.forwardRef(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    className={cn("flex flex-row items-center gap-1", className)}
-    {...props}
-  />
-))
-PaginationContent.displayName = "PaginationContent"
+function PaginationContent({ className, ...props }) {
+  return (
+    <ul
+      data-slot="pagination-content"
+      className={cn("flex flex-row items-center gap-1", className)}
+      {...props}
+    />
+  )
+}
 
-const PaginationItem = React.forwardRef(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("", className)} {...props} />
-))
-PaginationItem.displayName = "PaginationItem"
+function PaginationItem({ ...props }) {
+  return <li data-slot="pagination-item" {...props} />
+}
 
-const PaginationLink = ({
+function PaginationLink({
   className,
   isActive,
   size = "icon",
   asChild = false,
   ...props
-}) => {
-  const Comp = asChild ? Slot : "a"
+}) {
+  const Comp = asChild ? Slot.Root : "a"
   return (
     <Comp
       aria-current={isActive ? "page" : undefined}
+      data-slot="pagination-link"
+      data-active={isActive}
       className={cn(
         buttonVariants({
           variant: isActive ? "outline" : "ghost",
@@ -58,92 +66,87 @@ const PaginationLink = ({
     />
   )
 }
-PaginationLink.displayName = "PaginationLink"
 
-const PaginationPrevious = ({
+function withChild(asChild, children, content) {
+  return asChild
+    ? React.cloneElement(React.Children.only(children), {}, content)
+    : content
+}
+
+function PaginationPrevious({
   className,
   asChild = false,
   children,
   text = "Previous",
   ...props
-}) => (
-  <PaginationLink
-    aria-label="Go to previous page"
-    size="default"
-    className={cn("gap-1 pl-2.5", className)}
-    asChild={asChild}
-    {...props}
-  >
-    {asChild ? (
-      React.cloneElement(
-        React.Children.only(children),
-        {},
+}) {
+  return (
+    <PaginationLink
+      aria-label="Go to previous page"
+      size="default"
+      className={cn("gap-1 pl-2.5", className)}
+      asChild={asChild}
+      {...props}
+    >
+      {withChild(
+        asChild,
+        children,
         <>
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeftIcon />
           <span>{text}</span>
         </>,
-      )
-    ) : (
-      <>
-        <ChevronLeft className="h-4 w-4" />
-        <span>{text}</span>
-      </>
-    )}
-  </PaginationLink>
-)
-PaginationPrevious.displayName = "PaginationPrevious"
+      )}
+    </PaginationLink>
+  )
+}
 
-const PaginationNext = ({
+function PaginationNext({
   className,
   asChild = false,
   children,
   text = "Next",
   ...props
-}) => (
-  <PaginationLink
-    aria-label="Go to next page"
-    size="default"
-    className={cn("gap-1 pr-2.5", className)}
-    asChild={asChild}
-    {...props}
-  >
-    {asChild ? (
-      React.cloneElement(
-        React.Children.only(children),
-        {},
+}) {
+  return (
+    <PaginationLink
+      aria-label="Go to next page"
+      size="default"
+      className={cn("gap-1 pr-2.5", className)}
+      asChild={asChild}
+      {...props}
+    >
+      {withChild(
+        asChild,
+        children,
         <>
           <span>{text}</span>
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRightIcon />
         </>,
-      )
-    ) : (
-      <>
-        <span>{text}</span>
-        <ChevronRight className="h-4 w-4" />
-      </>
-    )}
-  </PaginationLink>
-)
-PaginationNext.displayName = "PaginationNext"
+      )}
+    </PaginationLink>
+  )
+}
 
-const PaginationEllipsis = ({ className, ...props }) => (
-  <span
-    aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More pages</span>
-  </span>
-)
-PaginationEllipsis.displayName = "PaginationEllipsis"
+function PaginationEllipsis({ className, ...props }) {
+  return (
+    <span
+      aria-hidden
+      data-slot="pagination-ellipsis"
+      className={cn("flex size-9 items-center justify-center", className)}
+      {...props}
+    >
+      <MoreHorizontalIcon className="size-4" />
+      <span className="sr-only">More pages</span>
+    </span>
+  )
+}
 
 export {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
   PaginationLink,
-  PaginationNext,
+  PaginationItem,
   PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
 }

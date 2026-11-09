@@ -5,6 +5,7 @@ export default {
   outdir: "resources/public/lending/assets/js",
 
   resolveExtensions: [".js", ".jsx", ".ts", ".tsx"],
+  jsx: "automatic",
   alias: {
     src: "./src",
     "@/*": "./src/leihs/lending/client/*",
