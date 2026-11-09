@@ -13,7 +13,7 @@
                     "Something went wrong.")]
 
     ($ :div {:class-name "container mx-auto max-w-md py-16 text-center space-y-6"}
-       ($ TriangleAlert {:class-name "mx-auto h-12 w-12 text-destructive"})
+       ($ TriangleAlert {:class-name "mx-auto h-12 w-12 text-error"})
        ($ :h1 {:class-name "text-2xl font-bold"} (or status "Error"))
        ($ :p {:class-name "text-muted-foreground"} message)
        ($ Button {:as-child true :variant "outline"}

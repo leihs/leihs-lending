@@ -27,7 +27,7 @@
          ($ PopoverContent {:align "start" :class-name "w-[500px]"}
             ($ :div {:class-name "font-semibold text-base mb-4"} (t "visits.reminders.title"))
             (if error?
-              ($ :div {:class-name "text-sm text-destructive"}
+              ($ :div {:class-name "text-sm text-error"}
                  (t "common.load-error"))
               ($ ScrollArea {:class-name "max-h-72 overflow-y-auto w-full rounded-md border p-2"}
                  (for [reminder reminders]

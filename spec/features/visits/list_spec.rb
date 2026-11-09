@@ -502,7 +502,7 @@ feature "Visits list" do
     expect(find("[data-test-id='pagination-current-page']")).to have_content("1")
   end
 
-  scenario "marks overdue visits with a destructive marker" do
+  scenario "marks overdue visits with an error marker" do
     overdue_user = FactoryBot.create(:user, firstname: "Otto", lastname: "Faellig")
     punctual_user = FactoryBot.create(:user, firstname: "Fridolin", lastname: "Pünktlich")
 
@@ -515,8 +515,8 @@ feature "Visits list" do
     overdue_row = find("tbody tr", text: "Otto Faellig")
     punctual_row = find("tbody tr", text: "Fridolin Pünktlich")
 
-    expect(overdue_row.find("[data-test-id='overdue-marker']")[:class]).to include("bg-destructive")
-    expect(punctual_row.find("[data-test-id='overdue-marker']")[:class]).not_to include("bg-destructive")
+    expect(overdue_row.find("[data-test-id='overdue-marker']")[:class]).to include("bg-error")
+    expect(punctual_row.find("[data-test-id='overdue-marker']")[:class]).not_to include("bg-error")
   end
 
   scenario "paginates visits" do

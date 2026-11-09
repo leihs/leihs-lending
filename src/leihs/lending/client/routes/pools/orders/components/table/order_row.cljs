@@ -103,9 +103,9 @@
        ;; Status
        ($ TableCell
           (let [status-class (cond
-                               (= state "SUBMITTED") "text-blue-600"
-                               (= state "APPROVED")  "text-lime-600"
-                               (= state "REJECTED")  "text-destructive")]
+                               (= state "SUBMITTED") "text-info"
+                               (= state "APPROVED")  "text-success"
+                               (= state "REJECTED")  "text-error")]
             ($ :div {:class-name (str "flex justify-center " status-class)}
                ($ Tooltip
                   ($ TooltipTrigger {:as-child true

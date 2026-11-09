@@ -34,7 +34,7 @@
                (str availableQuantity " (" totalAvailableQuantity ") | " borrowableQuantity))
             ($ :span {:class-name "size-5"}
                (when unavailable?
-                 ($ X {:class-name "size-5 text-destructive"
+                 ($ X {:class-name "size-5 text-error"
                        :data-test-id "model-search-item-unavailable"}))))
          ($ :span {:class-name "shrink-0 text-xs text-muted-foreground"}
             (t "orders.edit.search.template"))))))

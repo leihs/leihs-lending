@@ -24,7 +24,7 @@
                  ($ :<>
                     ($ :span {:class-name "font-semibold"} name)
                     (when suspended?
-                      ($ UserX {:class-name "size-4 text-destructive"}))))))
+                      ($ UserX {:class-name "size-4 text-error"}))))))
        ($ PopoverContent {:align "start" :class-name "w-[400px] text-sm"}
           ($ :div {:class-name "flex gap-3"}
              (if avatar-url
@@ -37,12 +37,12 @@
              ($ :div {:class-name ""}
                 ($ :div {:class-name "font-semibold text-base"} name)
                 (if error?
-                  ($ :div {:class-name "text-destructive"} (t "common.load-error"))
+                  ($ :div {:class-name "text-error"} (t "common.load-error"))
                   ($ :div
                      ($ :div (:email details))
                      (when badge-id
                        ($ :div {:class-name "mt-2"} (t "components.entities.user-popover.badge" (cj {:badgeId badge-id}))))
                      (when suspended?
-                       ($ :p {:class-name "whitespace-pre-wrap text-destructive font-semibold mt-3"}
+                       ($ :p {:class-name "whitespace-pre-wrap text-error font-semibold mt-3"}
                           (or (:suspendedReason details)
                               (t "components.entities.user-popover.suspended"))))))))))))

@@ -164,7 +164,7 @@
                            :aria-busy true}
                      ($ Spinner)))
                 (if error?
-                  ($ :div {:class-name "p-4 text-center text-sm text-destructive"}
+                  ($ :div {:class-name "p-4 text-center text-sm text-error"}
                      (t "common.load-error"))
                   ($ BookingCalendar {:month month
                                       :set-month! set-month!

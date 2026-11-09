@@ -17,7 +17,6 @@
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.routes.pools.orders.components.approve-dialog :refer [ApproveDialog]]
    [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
-   [leihs.lending.client.routes.pools.orders.components.styles :refer [approve-class reject-class]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [leihs.lending.client.routes.pools.orders.edit.components.add-reservation-form :refer [AddReservationForm use-dates]]
    [leihs.lending.client.routes.pools.orders.edit.components.calendar-dialog :refer [CalendarDialog]]
@@ -105,7 +104,7 @@
                                       :test-id "order-user-popover-trigger"}
                          ($ :span {:class-name "font-bold"} name)
                          (when (:isSuspended user)
-                           ($ UserX {:class-name "size-5 text-destructive"}))))
+                           ($ UserX {:class-name "size-5 text-error"}))))
                    ($ Button {:variant "outline"
                               :size "icon-sm"
                               :title (t "orders.edit.swap-user")
@@ -128,12 +127,12 @@
                       ($ SquarePen))))
 
              ($ :div {:class-name "flex items-start gap-2"}
-                ($ Button {:class-name reject-class
+                ($ Button {:variant "destructive"
                            :data-test-id "reject-order"
                            :onClick #(set-reject-open! true)}
                    (t "orders.edit.reject"))
                 ($ ButtonGroup
-                   ($ Button {:class-name approve-class
+                   ($ Button {:variant "success"
                               :disabled approving?
                               :data-test-id "approve-order"
                               :onClick approve!}
@@ -144,7 +143,7 @@
                          ($ Button {:size "icon"
                                     :aria-label (t "common.more-actions")
                                     :title (t "common.more-actions")
-                                    :class-name approve-class
+                                    :variant "success"
                                     :data-test-id "approve-order-menu"}
                             ($ ChevronDown)))
                       ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}

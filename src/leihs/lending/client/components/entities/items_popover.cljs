@@ -20,6 +20,6 @@
           ($ :div {:className "font-semibold text-base mb-4"}
              (t "components.entities.items.title"))
           (if error?
-            ($ :div {:className "text-sm text-destructive"}
+            ($ :div {:className "text-sm text-error"}
                (t "common.load-error"))
             ($ ItemsList {:items items}))))))

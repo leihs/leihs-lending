@@ -1,6 +1,7 @@
 /**
  * Customized for Leihs
  * - shadow-sm on the solid variants (default, destructive, secondary)
+ * - success variant
  * */
 
 import * as React from "react"
@@ -17,6 +18,8 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
         destructive:
           "bg-destructive text-white shadow-sm hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+        success:
+          "bg-success text-success-foreground shadow-sm hover:bg-success/90 focus-visible:ring-success/20 dark:focus-visible:ring-success/40",
         outline:
           "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

@@ -81,8 +81,8 @@
   "Check when the ordered quantity is covered, else a cross."
   [{:keys [ok? class-name]}]
   (if ok?
-    ($ Check {:class-name (str "size-5 text-lime-600 " class-name)})
-    ($ X {:class-name (str "size-5 text-destructive " class-name)})))
+    ($ Check {:class-name (str "size-5 text-success " class-name)})
+    ($ X {:class-name (str "size-5 text-error " class-name)})))
 
 (defui StatusRow
   "Row of the availability popover's list, aligned to its columns."
@@ -100,9 +100,9 @@
         total-difference (- total-available-quantity quantity)
         [icon class-name status]
         (cond
-          (<= quantity available-quantity) [Check "text-lime-600" "ok"]
-          (<= quantity total-available-quantity) [Check "text-lime-600" "other-groups"]
-          :else [X "text-destructive" "unavailable"])]
+          (<= quantity available-quantity) [Check "text-success" "ok"]
+          (<= quantity total-available-quantity) [Check "text-success" "other-groups"]
+          :else [X "text-error" "unavailable"])]
     ($ Popover
        ($ PopoverTrigger {:class-name (str "flex w-full justify-center cursor-pointer " class-name)
                           :data-test-id "line-availability-status"
@@ -124,7 +124,7 @@
                   (neg? available-quantity)
                   ($ Tooltip
                      ($ TooltipTrigger {:as-child true}
-                        ($ TriangleAlert {:class-name "size-4 text-destructive"}))
+                        ($ TriangleAlert {:class-name "size-4 text-error"}))
                      ($ TooltipContent (t "orders.edit.pre-existing-overbooking")))
 
                   (not (neg? difference))

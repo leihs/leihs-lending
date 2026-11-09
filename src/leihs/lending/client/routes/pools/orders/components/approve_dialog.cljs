@@ -17,7 +17,6 @@
    [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
-   [leihs.lending.client.routes.pools.orders.components.styles :refer [approve-class]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -83,7 +82,7 @@
                    (t "components.entities.items.title"))
                 (cond
                   error?
-                  ($ :div {:class-name "text-sm text-destructive"}
+                  ($ :div {:class-name "text-sm text-error"}
                      (t "common.load-error"))
 
                   (not ready?)
@@ -116,7 +115,7 @@
                      (t "orders.approve-failed-dialog.edit-order"))))
              (when-not expired?
                ($ Button {:type "button"
-                          :class-name approve-class
+                          :variant "success"
                           :disabled approving?
                           :data-test-id "approve-order-submit"
                           :onClick approve!}

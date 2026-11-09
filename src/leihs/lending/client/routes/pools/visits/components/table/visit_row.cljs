@@ -28,7 +28,7 @@
         on-action-trigger #(.. toast (message (t "visits.actions.not-available")))]
     ($ TableRow {:className "odd:bg-muted/50 odd:hover:bg-muted odd:has-aria-expanded:bg-muted"}
        ($ TableCell {:data-test-id "overdue-marker"
-                     :className (str "p-0" (when overdue? " bg-destructive"))}
+                     :className (str "p-0" (when overdue? " bg-error"))}
           ($ :div {:className "w-1"}))
        ($ TableCell
           ($ UserPopover {:user user
