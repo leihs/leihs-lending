@@ -138,22 +138,40 @@ feature "Orders filters" do
     expect(page).to have_content("Carol Toolate")
 
     # startDate filter: from 11th — excludes 8th (Alice), keeps 14th and 21st
-    find("[data-test-id='startDate-filter-button']").click
-    within("[data-test-id='startDate-calendar']") do
+    find("[data-test-id='startDate-filter-picker']").click
+    within("[data-test-id='startDate-filter-calendar']") do
       all(:button, (base + 10).day.to_s).last.click  # 11th
     end
     expect(page).not_to have_content("Alice Tooearly")
     expect(page).to have_content("Bob Inrange")
     expect(page).to have_content("Carol Toolate")
 
-    # endDate filter: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
-    find("[data-test-id='endDate-filter-button']").click
-    within("[data-test-id='endDate-calendar']") do
-      all(:button, (base + 17).day.to_s).last.click  # 18th
-    end
+    # endDate filter, typed: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
+    end_date_input = find("[data-test-id='endDate-filter']")
+    end_date_input.set((base + 17).strftime("%d/%m/%Y"))
+    end_date_input.send_keys(:enter)
     expect(page).not_to have_content("Alice Tooearly")
     expect(page).to have_content("Bob Inrange")
     expect(page).not_to have_content("Carol Toolate")
+  end
+
+  scenario "clears a date filter by emptying its field" do
+    early_user = FactoryBot.create(:user, firstname: "Alice", lastname: "Tooearly")
+    late_user = FactoryBot.create(:user, firstname: "Carol", lastname: "Inrange")
+    create_order(target_user: early_user, created_at: (Date.today - 10).to_time)
+    create_order(target_user: late_user, created_at: Date.today.to_time)
+
+    click_on "Orders"
+    start_date_input = find("[data-test-id='startDate-filter']")
+    start_date_input.set((Date.today - 5).strftime("%d/%m/%Y"))
+    start_date_input.send_keys(:enter)
+    expect(page).not_to have_content("Alice Tooearly")
+    expect(page).to have_content("Carol Inrange")
+
+    start_date_input.send_keys(*([:backspace] * start_date_input.value.length), :enter)
+    expect(start_date_input.value).to eq("")
+    expect(page).to have_content("Alice Tooearly")
+    expect(page).to have_content("Carol Inrange")
   end
 
   scenario "resets all filters" do

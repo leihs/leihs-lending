@@ -89,8 +89,8 @@ feature "Edit order" do
   end
 
   def add_form_dates
-    [find("[data-test-id='new-reservation-start-date']").text,
-      find("[data-test-id='new-reservation-end-date']").text]
+    [find("[data-test-id='new-reservation-start-date']").value,
+      find("[data-test-id='new-reservation-end-date']").value]
   end
 
   def form_date(date)
@@ -233,6 +233,40 @@ feature "Edit order" do
     expect(cameras.map(&:end_date)).to eq([next_monday + 1])
   end
 
+  scenario "types dates into the dialog" do
+    create_reservation(camera)
+
+    visit_edit_page
+    line_of(camera).find("[data-test-id='edit-line']").click
+
+    dialog = calendar_dialog
+    start_input = dialog.find("[data-test-id='calendar-start-date']")
+    end_input = dialog.find("[data-test-id='calendar-end-date']")
+
+    # a start after the end moves the end along
+    start_input.set(form_date(next_monday + 7))
+    start_input.send_keys(:enter)
+    expect(end_input.value).to eq(form_date(next_monday + 7))
+    expect(dialog).to have_css("[data-day='#{next_monday + 7}']")
+
+    # days before today are rejected
+    start_input.set(form_date(Date.today - 1))
+    start_input.send_keys(:enter)
+    expect(start_input["aria-invalid"]).to eq("true")
+    start_input.send_keys(:tab)
+    expect(start_input.value).to eq(form_date(next_monday + 7))
+
+    end_input.set(form_date(next_monday + 9))
+    end_input.send_keys(:enter)
+    dialog.find("[data-test-id='calendar-save']").click
+
+    expect(page).not_to have_css("[data-test-id='calendar-dialog']")
+    expect(page).to have_content(date_range_text(next_monday + 7, next_monday + 9))
+    cameras = reservations_of(camera)
+    expect(cameras.map(&:start_date)).to eq([next_monday + 7])
+    expect(cameras.map(&:end_date)).to eq([next_monday + 9])
+  end
+
   scenario "the quantity field can be cleared, keeping the previous quantity" do
     create_reservation(camera)
 
@@ -364,6 +398,34 @@ feature "Edit order" do
     visit_edit_page
 
     expect(add_form_dates).to eq([form_date(next_monday), form_date(next_monday + 4)])
+  end
+
+  scenario "types and pastes dates into the add form" do
+    create_reservation(camera, start_date: Date.today, end_date: Date.today + 1)
+
+    visit_edit_page
+    start_input = find("[data-test-id='new-reservation-start-date']")
+    end_input = find("[data-test-id='new-reservation-end-date']")
+    expect(add_form_dates).to eq([form_date(Date.today), form_date(Date.today + 1)])
+    expect(page).to have_css("[data-test-id='new-reservation-start-date-relative']", text: "today")
+
+    start_input.click
+    expect(page).not_to have_css("[data-test-id='new-reservation-start-date-relative']")
+    start_input.set((next_monday + 7).strftime("%-d/%-m/%y"))
+    start_input.send_keys(:enter)
+    expect(start_input.value).to eq(form_date(next_monday + 7))
+
+    end_input.set((next_monday + 8).iso8601)
+    end_input.send_keys(:tab)
+    expect(add_form_dates).to eq([form_date(next_monday + 7), form_date(next_monday + 8)])
+    expect(page).not_to have_css("[data-test-id='new-reservation-start-date-relative']")
+
+    end_input.set("31/02/2026")
+    end_input.send_keys(:enter)
+    expect(end_input["aria-invalid"]).to eq("true")
+    end_input.send_keys(:tab)
+    expect(end_input.value).to eq(form_date(next_monday + 8))
+    expect(end_input["aria-invalid"]).to eq("false")
   end
 
   scenario "the add form follows the first date range when it changes" do

@@ -11,7 +11,7 @@
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
    ["sonner" :refer [toast]]
-   [leihs.lending.client.components.booking-calendar.date-input :refer [DateInput]]
+   [leihs.lending.client.components.date-input :refer [DateInput]]
    [leihs.lending.client.components.booking-calendar.grid :refer [BookingCalendar]]
    [leihs.lending.client.components.booking-calendar.month-nav :refer [MonthNav]]
    [leihs.lending.client.lib.calendar :as cal]

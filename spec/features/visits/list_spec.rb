@@ -415,19 +415,18 @@ feature "Visits list" do
     expect(page).to have_content("Carol Toolate")
 
     # startDate filter: from 11th — excludes 8th (Alice), keeps 14th and 21st
-    find("[data-test-id='startDate-filter-button']").click
-    within("[data-test-id='startDate-calendar']") do
+    find("[data-test-id='startDate-filter-picker']").click
+    within("[data-test-id='startDate-filter-calendar']") do
       all(:button, (base + 10).day.to_s).last.click  # 11th
     end
     expect(page).not_to have_content("Alice Tooearly")
     expect(page).to have_content("Bob Inrange")
     expect(page).to have_content("Carol Toolate")
 
-    # endDate filter: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
-    find("[data-test-id='endDate-filter-button']").click
-    within("[data-test-id='endDate-calendar']") do
-      all(:button, (base + 17).day.to_s).last.click  # 18th
-    end
+    # endDate filter, typed: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
+    end_date_input = find("[data-test-id='endDate-filter']")
+    end_date_input.set((base + 17).strftime("%d/%m/%Y"))
+    end_date_input.send_keys(:enter)
     expect(page).not_to have_content("Alice Tooearly")
     expect(page).to have_content("Bob Inrange")
     expect(page).not_to have_content("Carol Toolate")

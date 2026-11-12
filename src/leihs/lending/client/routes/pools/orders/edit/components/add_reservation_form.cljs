@@ -1,45 +1,19 @@
 (ns leihs.lending.client.routes.pools.orders.edit.components.add-reservation-form
   (:require
-   ["@@/calendar" :refer [Calendar]]
    ["@@/customized/button" :refer [Button]]
-   ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
-   ["date-fns" :as date-fns]
-   ["lucide-react" :refer [CalendarDays List]]
+   ["lucide-react" :refer [List]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
    ["sonner" :refer [toast]]
+   [leihs.lending.client.components.date-input :refer [DateInput]]
    [leihs.lending.client.lib.calendar :as cal]
-   [leihs.lending.client.lib.date-utils :refer [date-from-iso format-date]]
+   [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
    [leihs.lending.client.lib.utils :refer [cj jc]]
    [leihs.lending.client.routes.pools.orders.edit.components.model-search-field :refer [ModelSearchField]]
    [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [group-lines]]
    [leihs.lending.client.routes.pools.orders.edit.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
-
-(defui DateField
-  "Date picker of the form adding a reservation."
-  [{:keys [value set-value! label test-id]}]
-  (let [[t] (useTranslation)
-        [open? set-open!] (uix/use-state false)
-        select! (fn [date]
-                  (set-open! false)
-                  (when date (set-value! date)))]
-    ($ Popover {:open open? :on-open-change set-open!}
-       ($ PopoverTrigger {:asChild true}
-          ($ Button {:variant "outline"
-                     :class-name "min-w-44 justify-start font-normal"
-                     :aria-label label
-                     :data-test-id test-id}
-             ($ CalendarDays {:class-name "size-4"})
-             ($ :span {:class-name "truncate"} (format-date t value))))
-       ($ PopoverContent {:class-name "w-[280px]"}
-          ($ Calendar {:mode "single"
-                       :captionLayout "dropdown"
-                       :selected value
-                       :defaultMonth value
-                       :endMonth (date-fns/addYears (js/Date.) 50)
-                       :onSelect select!})))))
 
 (defn- default-range
   "Date range of the first group in the reservation list, today when there is
@@ -95,12 +69,12 @@
                  (stub!)))]
 
     ($ :div {:class-name "flex flex-wrap items-center gap-2"}
-       ($ DateField {:value start-date
-                     :set-value! set-start-date!
+       ($ DateInput {:date start-date
+                     :on-change set-start-date!
                      :label (t "orders.edit.start-date")
                      :test-id "new-reservation-start-date"})
-       ($ DateField {:value end-date
-                     :set-value! set-end-date!
+       ($ DateInput {:date end-date
+                     :on-change set-end-date!
                      :label (t "orders.edit.end-date")
                      :test-id "new-reservation-end-date"})
        ($ ModelSearchField {:date-range date-range :on-select add!})

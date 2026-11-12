@@ -183,6 +183,16 @@
   environment_variables:
     FEATURE_NAME: "Edit order 23"
     FEATURE: './spec/features/orders/edit_spec.rb[1:23]'
+'./spec/features/orders/edit_spec.rb[1:24]':
+  name: "Edit order 24"
+  environment_variables:
+    FEATURE_NAME: "Edit order 24"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:24]'
+'./spec/features/orders/edit_spec.rb[1:25]':
+  name: "Edit order 25"
+  environment_variables:
+    FEATURE_NAME: "Edit order 25"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:25]'
 './spec/features/orders/filters_spec.rb[1:1]':
   name: "Orders filters 01"
   environment_variables:
@@ -218,6 +228,11 @@
   environment_variables:
     FEATURE_NAME: "Orders filters 07"
     FEATURE: './spec/features/orders/filters_spec.rb[1:7]'
+'./spec/features/orders/filters_spec.rb[1:8]':
+  name: "Orders filters 08"
+  environment_variables:
+    FEATURE_NAME: "Orders filters 08"
+    FEATURE: './spec/features/orders/filters_spec.rb[1:8]'
 './spec/features/orders/list_spec.rb[1:1]':
   name: "Orders list 01"
   environment_variables:

@@ -240,7 +240,7 @@
                                  :on-apply (when several?
                                              #(on-apply-range (:start-date date-range)
                                                               (:end-date date-range)))}))
-                 ($ TableBody {:class-name "border border-muted-foreground/20"}
+                 ($ TableBody {:class-name "outline -outline-offset-1 outline-muted-foreground/20"}
                     (for [line (:lines date-range)]
                       ($ LineRow {:key (line-key line)
                                   :line line

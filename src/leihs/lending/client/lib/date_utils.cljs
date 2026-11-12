@@ -1,7 +1,7 @@
 (ns leihs.lending.client.lib.date-utils
   (:require
    ["date-fns" :as date-fns]
-   [clojure.string :refer [split]]))
+   [clojure.string :as str :refer [split trim]]))
 
 (defn date-from-iso
   "Create a JS Date object with the given date at 0:00:00 in the client's time zone
@@ -20,15 +20,45 @@
   (when iso-date-time-string
     (js/Date. iso-date-time-string)))
 
+(defn relative-day-label
+  "Translated \"today\" or \"yesterday\" for such a day, else nil."
+  [t d]
+  (when d
+    (cond
+      (date-fns/isToday d) (t "common.date.today")
+      (date-fns/isYesterday d) (t "common.date.yesterday"))))
+
 (defn format-date
   "Format JS date object in a human readable way. Returns nil for nil input."
   [t d]
   (when d
     (let [date-string (t "common.date.formatDate" #js{:val d})]
-      (cond
-        (date-fns/isToday d) (str date-string " (" (t "common.date.today") ")")
-        (date-fns/isYesterday d) (str date-string " (" (t "common.date.yesterday") ")")
-        :else date-string))))
+      (if-let [label (relative-day-label t d)]
+        (str date-string " (" label ")")
+        date-string))))
+
+(defn- date-pattern
+  "date-fns pattern of `common.date.formatDate`, derived from a sample date."
+  [t]
+  (-> (t "common.date.formatDate" #js{:val (js/Date. 2033 10 22)})
+      (str/replace "2033" "yyyy")
+      (str/replace "11" "MM")
+      (str/replace "22" "dd")))
+
+(defn parse-date
+  "Parse user input in the format of `common.date.formatDate`, also with
+   1-digit day/month, 2-digit year or without separators, or an ISO date.
+   Returns nil when not a valid date."
+  [t s]
+  (let [pattern (date-pattern t)
+        compact (str/replace pattern #"[^dMy]" "")
+        short-year #(str/replace % "yyyy" "yy")
+        text (trim (or s ""))]
+    (some (fn [p]
+            (let [d (date-fns/parse text p (js/Date.))]
+              (when (and (date-fns/isValid d) (<= 1000 (date-fns/getYear d) 9999))
+                d)))
+          [(short-year pattern) pattern (short-year compact) compact "yyyy-MM-dd"])))
 
 (defn format-weekday-date
   "Format JS date object as weekday plus date, e.g. \"Dienstag 02.12.2025\".
