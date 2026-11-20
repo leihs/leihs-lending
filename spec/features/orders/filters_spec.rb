@@ -180,15 +180,12 @@ feature "Orders filters" do
   scenario "focuses term filter input with Alt+Shift+F" do
     click_on "Orders"
 
-    page.driver.browser.action
-      .key_down(:shift)
-      .key_down(:alt)
-      .send_keys("f")
-      .key_up(:alt)
-      .key_up(:shift)
-      .perform
+    # Wait for TermFilter mount (keydown listener) before the chord.
+    # One-shot activeElement checks race focus under Firefox 153 / geckodriver 0.37.
+    term_input = find("input[name='term']")
+    find("body").send_keys([:shift, :alt, "f"])
 
-    expect(page.evaluate_script("document.activeElement.name")).to eq("term")
+    expect(term_input).to match_css(":focus")
   end
 
   scenario "resets filters with Alt+Shift+R" do

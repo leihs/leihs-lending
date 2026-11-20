@@ -68,7 +68,12 @@ feature "Edit order" do
 
   def pick_range(dialog, start_date, end_date)
     dialog.find("[data-day='#{start_date}']").click
+    # wait for the first click to commit before extending the range
+    expect(dialog.find("[data-test-id='calendar-start-date']").value)
+      .to eq(start_date.strftime("%d/%m/%Y"))
     dialog.find("[data-day='#{end_date}']").click
+    expect(dialog.find("[data-test-id='calendar-end-date']").value)
+      .to eq(end_date.strftime("%d/%m/%Y"))
   end
 
   def reservations_of(model)
@@ -378,6 +383,9 @@ feature "Edit order" do
     dialog.find("[data-test-id='calendar-save']").click
 
     expect(page).not_to have_css("[data-test-id='calendar-dialog']")
+    # wait for order revalidation to refresh the add-form defaults
+    expect(page).to have_css("[data-test-id='new-reservation-start-date']",
+      text: form_date(next_monday + 1))
     expect(add_form_dates).to eq([form_date(next_monday + 1), form_date(next_monday + 3)])
   end
 
