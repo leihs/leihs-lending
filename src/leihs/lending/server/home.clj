@@ -43,12 +43,12 @@
                [:dd (:login authenticated-entity)]]]
              [:div.actions
               [:a.button {:href "/lending/graphiql"} "Open GraphiQL"]
-              [:form {:method "POST" :action "/lending/sign-out"}
+              [:form {:method "POST" :action "/sign-out"}
                [:input {:type "hidden" :name ANTI_CSRF_TOKEN_FORM_PARAM_NAME :value (anti-csrf/anti-csrf-token request)}]
                [:button {:type "submit"} "Sign out"]]]]]))})
 
 (defn sign-out-handler [{:keys [tx authenticated-entity]}]
   (when-let [session-id (:user_session_id authenticated-entity)]
     (jdbc-delete! tx :user_sessions ["id = ?" session-id]))
-  (-> (redirect "/")
+  (-> (redirect "/lending/")
       (set-cookie USER_SESSION_COOKIE_NAME "" {:path "/" :max-age 0})))

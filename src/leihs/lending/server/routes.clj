@@ -15,7 +15,7 @@
   [["/lending/sign-in"
     {:get {:handler sign-in/get-handler}
      :post {:handler sign-in/post-handler}}]
-   ["/lending/sign-out"
+   ["/sign-out"
     {:post {:handler home/sign-out-handler}}]
    ["/lending/graphql"
     {:post {:handler #(graphql/handler :root %)}}]
