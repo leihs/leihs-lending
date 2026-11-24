@@ -67,8 +67,8 @@ feature "Edit order" do
   end
 
   def pick_range(dialog, start_date, end_date)
-    dialog.find("[data-day='#{start_date}']").click
-    dialog.find("[data-day='#{end_date}']").click
+    day_cell(dialog, start_date).click
+    day_cell(dialog, end_date).click
   end
 
   def reservations_of(model)
@@ -97,8 +97,13 @@ feature "Edit order" do
     date.strftime("%d/%m/%Y")
   end
 
+  # switches to the next month when the date is beyond the shown weeks
   def day_cell(dialog, date)
-    dialog.find("[data-day='#{date}']")
+    selector = "[data-day='#{date}']"
+    unless dialog.has_css?(selector, wait: 1)
+      dialog.find("[data-test-id='calendar-next-month']").click
+    end
+    dialog.find(selector)
   end
 
   def delete_line(model)
@@ -523,28 +528,33 @@ feature "Edit order" do
     expect(reservations_of(other).size).to eq(1)
   end
 
-  scenario "refuses to delete all lines of the order" do
+  def expect_delete_blocked(test_id)
+    expect(page).to have_css("[data-test-id='#{test_id}'][data-disabled]")
+    find("[data-test-id='delete-blocked-info']").hover
+    expect(page).to have_content("An order needs at least one reservation")
+  end
+
+  scenario "disables deleting all lines of the order" do
     create_reservation(camera)
     create_reservation(tripod)
 
     visit_edit_page
     find("[data-test-id='select-range']").click
     find("[data-test-id='selection-actions-menu']").click
-    find("[data-test-id='delete-selection']").click
 
-    expect(page).to have_content("You cannot delete all reservations of an order")
+    expect_delete_blocked("delete-selection")
     expect(page).to have_css("[data-test-id='reservation-line']", count: 2)
     expect(reservations_of(camera).size).to eq(1)
     expect(reservations_of(tripod).size).to eq(1)
   end
 
-  scenario "refuses to delete the only line of the order" do
+  scenario "disables deleting the only line of the order" do
     create_reservation(camera)
 
     visit_edit_page
-    delete_line(camera)
+    line_of(camera).find("[data-test-id='line-actions-menu']").click
 
-    expect(page).to have_content("You cannot delete all reservations of an order")
+    expect_delete_blocked("delete-line")
     expect(line_of(camera)).to be_present
     expect(reservations_of(camera).size).to eq(1)
   end

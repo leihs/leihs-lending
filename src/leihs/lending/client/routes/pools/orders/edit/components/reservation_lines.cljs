@@ -9,7 +9,7 @@
    ["@@/popover" :refer [Popover PopoverContent PopoverTrigger]]
    ["@@/table" :refer [Table TableBody TableCell TableHeader TableRow]]
    ["@@/tooltip" :refer [Tooltip TooltipContent TooltipTrigger]]
-   ["lucide-react" :refer [CalendarArrowUp Check ChevronDown TriangleAlert X]]
+   ["lucide-react" :refer [CalendarArrowUp Check ChevronDown Info TriangleAlert X]]
    ["react-i18next" :refer [useTranslation]]
    ["sonner" :refer [toast]]
    [leihs.lending.client.components.entities.model-badge :refer [ModelBadge]]
@@ -151,8 +151,26 @@
                          ($ :dd {:class-name "text-right"} total-difference)
                          ($ StatusIcon {:ok? false})))))))))))
 
+(defui DeleteMenuItem
+  "Menu item deleting reservations. Disabled when `blocked?` (it would delete all
+   of the order's reservations), with an info icon explaining why."
+  [{:keys [blocked? on-select data-test-id children]}]
+  (let [[t] (useTranslation)]
+    ($ DropdownMenuItem {:disabled blocked?
+                         :onSelect on-select
+                         :data-test-id data-test-id}
+       children
+       (when blocked?
+         ($ Tooltip
+            ($ TooltipTrigger {:as-child true}
+               ($ :span {:class-name "ml-auto pointer-events-auto"
+                         :data-test-id "delete-blocked-info"}
+                  ($ Info)))
+            ($ TooltipContent {:class-name "max-w-64"}
+               (t "orders.edit.delete-all-hint")))))))
+
 (defui LineRow
-  [{:keys [line selected? toggle! on-edit on-delete]}]
+  [{:keys [line selected? toggle! on-edit on-delete delete-blocked?]}]
   (let [[t] (useTranslation)
         {:keys [model quantity availableQuantity totalAvailableQuantity]} line
         stub! #(.. toast (message (t "orders.actions.not-available")))]
@@ -208,8 +226,9 @@
                       (t "orders.edit.line-timeline"))
                    ($ DropdownMenuItem {:onSelect stub!}
                       (t "orders.edit.line-swap-model"))
-                   ($ DropdownMenuItem {:onSelect on-delete
-                                        :data-test-id "delete-line"}
+                   ($ DeleteMenuItem {:blocked? delete-blocked?
+                                      :on-select on-delete
+                                      :data-test-id "delete-line"}
                       (t "orders.edit.line-delete")))))))))
 
 (defui ReservationLines
@@ -247,4 +266,5 @@
                                   :selected? (contains? selected (line-key line))
                                   :toggle! #(toggle! (line-key line) %)
                                   :on-edit #(on-edit-line line)
-                                  :on-delete #(on-delete-line line)}))))))))))
+                                  :on-delete #(on-delete-line line)
+                                  :delete-blocked? (= 1 (count lines))}))))))))))

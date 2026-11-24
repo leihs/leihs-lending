@@ -2,6 +2,7 @@
   (:require
    [leihs.lending.client.lib.utils :refer [jc]]
    [leihs.lending.client.routes.data :rename {loader root-data-loader}]
+   [leihs.lending.client.routes.debug.data :as debug-data]
    [leihs.lending.client.routes.pools.orders.data :rename {list-loader orders-list-loader}]
    [leihs.lending.client.routes.pools.orders.edit.data :rename {loader order-edit-loader}]
    [leihs.lending.client.routes.pools.visits.data :rename {list-loader visits-list-loader}]))
@@ -12,6 +13,16 @@
 ;; get GC'd. Loaders and <pool-provider> don't share clients — the loader's
 ;; result reaches components via useRouteLoaderData, not urql's cache.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn not-found
+  []
+  (throw (js/Response. nil #js {:status 404})))
+
+(defn debug-error
+  "Throws the error named by the `:kind` route param, to test the error boundary."
+  [route-data]
+  (let [{:keys [kind]} (jc ^js (.-params route-data))]
+    (throw (debug-data/error kind))))
 
 (defn root-layout
   []

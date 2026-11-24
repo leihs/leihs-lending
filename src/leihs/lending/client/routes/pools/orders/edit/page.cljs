@@ -15,19 +15,21 @@
    [leihs.lending.client.components.entities.user-popover :refer [UserPopover]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.components.approve-dialog :refer [ApproveDialog]]
    [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [leihs.lending.client.routes.pools.orders.edit.components.add-reservation-form :refer [AddReservationForm use-dates]]
    [leihs.lending.client.routes.pools.orders.edit.components.calendar-dialog :refer [CalendarDialog]]
    [leihs.lending.client.routes.pools.orders.edit.components.purpose-dialog :refer [PurposeDialog]]
-   [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [ReservationLines line-key]]
+   [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [DeleteMenuItem ReservationLines line-key]]
    [leihs.lending.client.routes.pools.orders.edit.data :as edit-data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui page []
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         navigate (router/useNavigate)
         {:keys [order]} (router/useLoaderData)
@@ -53,7 +55,7 @@
                                   (if (= 422 (urql/error-status error))
                                     (do (set-approve-failed! true)
                                         (set-approve-open! true))
-                                    (.. toast (error (t "error.action.error"))))))
+                                    (show-error! error))))
                        (p/finally (fn [_ _] (set-approving! false)))))
         approve-with-comment! (fn []
                                 (set-approve-failed! false)
@@ -75,14 +77,11 @@
                  (.revalidate revalidator))
         selected-lines (filterv #(contains? selected (line-key %)) lines)
         delete-lines! (fn [to-delete]
-                        (if (= (count to-delete) (count lines))
-                          (.. toast (error (t "orders.edit.delete-all-error")))
-                          (-> (edit-data/delete-lines! pool-id to-delete)
-                              (p/then (fn [_]
-                                        (set-selected! #(apply disj % (map line-key to-delete)))
-                                        (.revalidate revalidator)))
-                              (p/catch (fn [_]
-                                         (.. toast (error (t "error.action.error"))))))))]
+                        (-> (edit-data/delete-lines! pool-id to-delete)
+                            (p/then (fn [_]
+                                      (set-selected! #(apply disj % (map line-key to-delete)))
+                                      (.revalidate revalidator)))
+                            (p/catch show-error!)))]
 
     ($ Card
        ($ CardHeader
@@ -179,8 +178,9 @@
                       ($ DropdownMenuContent {:align "end" :class-name "min-w-48"}
                          ($ DropdownMenuItem {:onSelect stub!}
                             (t "orders.edit.print-selection"))
-                         ($ DropdownMenuItem {:onSelect #(delete-lines! selected-lines)
-                                              :data-test-id "delete-selection"}
+                         ($ DeleteMenuItem {:blocked? (= (count selected-lines) (count lines))
+                                            :on-select #(delete-lines! selected-lines)
+                                            :data-test-id "delete-selection"}
                             (t "orders.edit.delete-selection"))))))
 
              ($ ReservationLines {:lines lines

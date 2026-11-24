@@ -83,6 +83,7 @@
   "root": {
     "title": "Leihs Lending",
     "api_browser": "API browser (root schema)",
+    "debug": "Debug",
     "pools": {
       "name": "Pool"
     }
@@ -170,7 +171,7 @@
       "edit-selection": "Edit selection",
       "print-selection": "Print selection",
       "delete-selection": "Delete selection",
-      "delete-all-error": "You cannot delete all reservations of an order. Perhaps you want to reject it instead?",
+      "delete-all-hint": "An order needs at least one reservation. To remove all reservations, reject the order instead.",
       "date-range": "{{- startDate}} – {{- endDate}}",
       "select-range": "Select all entries of the period",
       "apply-range": "Use period for adding",
@@ -241,13 +242,86 @@
   },
   "error": {
     "action": {
-      "error": "Error",
-      "error_detail": "HTTP {{httpStatus}}"
+      "unauthorized": {
+        "title": "Session Expired",
+        "description": "Your session has expired. Please sign in again."
+      },
+      "forbidden": {
+        "title": "Action Not Allowed",
+        "description": "You don't have permission to perform this action."
+      },
+      "not_found": {
+        "title": "Not Found",
+        "description": "The data has been changed or deleted in the meantime. Please reload the page."
+      },
+      "bad_request": {
+        "title": "Action Failed",
+        "description": "The server was unable to process your request."
+      },
+      "server_error": {
+        "title": "Server Error",
+        "description": "Something went wrong on the server. The action was not carried out. Please try again later."
+      },
+      "network": {
+        "title": "No connection",
+        "description": "The server could not be reached. The action was not carried out. Please check your internet connection and try again."
+      },
+      "application_error": {
+        "title": "Application Error",
+        "description": "An error occurred while carrying out the action."
+      },
+      "unknown": {
+        "title": "Something Went Wrong",
+        "description": "An unexpected error occurred. Please try again or contact support if the problem persists."
+      },
+      "reload": "Reload page"
     },
     "alerts": {
       "offline": {
         "title": "No connection",
         "description": "Please check your internet connection."
+      }
+    },
+    "boundary": {
+      "not_found": {
+        "title": "Page Not Found",
+        "description": "The page you're looking for doesn't exist."
+      },
+      "unauthorized": {
+        "title": "Unauthorized",
+        "description": "You need to log in to access this page."
+      },
+      "forbidden": {
+        "title": "Access Forbidden",
+        "description": "You don't have permission to access this page."
+      },
+      "bad_request": {
+        "title": "Bad Request",
+        "description": "The server was unable to process your request."
+      },
+      "server_error": {
+        "title": "Server Error",
+        "description": "Something went wrong on the Server. Please try again later."
+      },
+      "network": {
+        "title": "No connection",
+        "description": "The data for this page could not be loaded. Please check your internet connection and try again."
+      },
+      "application_error": {
+        "title": "Application Error",
+        "description": "An error occurred during rendering of the application."
+      },
+      "unknown": {
+        "title": "Something Went Wrong",
+        "description": "An unexpected error occurred. Please try again or contact support if the problem persists."
+      },
+      "open": "Open error message",
+      "details": "Technical details",
+      "actions": {
+        "close": "Close",
+        "go_home": "Go to Home",
+        "go_signin": "Go to sign in",
+        "retry": "Retry"
       }
     }
   },

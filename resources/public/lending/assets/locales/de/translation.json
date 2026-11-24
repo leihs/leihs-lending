@@ -83,6 +83,7 @@
   "root": {
     "title": "Leihs Verleih",
     "api_browser": "API browser (root schema)",
+    "debug": "Debug",
     "pools": {
       "name": "Pool"
     }
@@ -170,7 +171,7 @@
       "edit-selection": "Auswahl editieren",
       "print-selection": "Auswahl ausdrucken",
       "delete-selection": "Auswahl löschen",
-      "delete-all-error": "Sie können nicht alle Reservationen einer Bestellung löschen. Möchten Sie die Bestellung stattdessen ablehnen?",
+      "delete-all-hint": "Eine Bestellung muss mindestens eine Reservation enthalten. Um alle Reservationen zu entfernen, lehnen Sie stattdessen die Bestellung ab.",
       "date-range": "{{- startDate}} – {{- endDate}}",
       "select-range": "Alle Einträge des Zeitraums auswählen",
       "apply-range": "Zeitraum für «Hinzufügen» übernehmen",
@@ -241,13 +242,86 @@
   },
   "error": {
     "action": {
-      "error": "Fehler",
-      "error_detail": "HTTP {{httpStatus}}"
+      "unauthorized": {
+        "title": "Sitzung abgelaufen",
+        "description": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+      },
+      "forbidden": {
+        "title": "Aktion nicht erlaubt",
+        "description": "Sie haben keine Berechtigung, diese Aktion auszuführen."
+      },
+      "not_found": {
+        "title": "Nicht gefunden",
+        "description": "Die Daten wurden in der Zwischenzeit geändert oder gelöscht. Bitte laden Sie die Seite neu."
+      },
+      "bad_request": {
+        "title": "Aktion fehlgeschlagen",
+        "description": "Der Server konnte Ihre Anfrage nicht verarbeiten."
+      },
+      "server_error": {
+        "title": "Serverfehler",
+        "description": "Auf dem Server ist etwas schief gelaufen. Die Aktion wurde nicht ausgeführt. Bitte versuchen Sie es später erneut."
+      },
+      "network": {
+        "title": "Keine Verbindung",
+        "description": "Der Server konnte nicht erreicht werden. Die Aktion wurde nicht ausgeführt. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut."
+      },
+      "application_error": {
+        "title": "Applikationsfehler",
+        "description": "Beim Ausführen der Aktion ist ein Fehler aufgetreten."
+      },
+      "unknown": {
+        "title": "Ein Fehler ist aufgetreten",
+        "description": "Es ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, falls das Problem weiterhin besteht."
+      },
+      "reload": "Seite neu laden"
     },
     "alerts": {
       "offline": {
         "title": "Keine Verbindung",
         "description": "Bitte überprüfen Sie Ihre Internetverbindung."
+      }
+    },
+    "boundary": {
+      "not_found": {
+        "title": "Seite nicht gefunden",
+        "description": "Die gesuchte Seite existiert nicht oder wurde verschoben."
+      },
+      "unauthorized": {
+        "title": "Nicht autorisiert",
+        "description": "Sie müssen sich anmelden, um auf diese Seite zuzugreifen."
+      },
+      "forbidden": {
+        "title": "Zugriff verweigert",
+        "description": "Sie haben keine Berechtigung, um auf diese Seite zuzugreifen."
+      },
+      "bad_request": {
+        "title": "Ungültige Anfrage",
+        "description": "Der Server konnte Ihre Anfrage nicht verarbeiten."
+      },
+      "server_error": {
+        "title": "Serverfehler",
+        "description": "Auf dem Server ist etwas schief gelaufen. Bitte versuchen Sie es später erneut."
+      },
+      "network": {
+        "title": "Keine Verbindung",
+        "description": "Die Daten für diese Seite konnten nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut."
+      },
+      "application_error": {
+        "title": "Applikationsfehler",
+        "description": "Es gab ein Problem mit der Applikation. Bitte versuchen Sie es erneut."
+      },
+      "unknown": {
+        "title": "Ein Fehler ist aufgetreten",
+        "description": "Es ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, falls das Problem weiterhin besteht."
+      },
+      "open": "Fehlermeldung anzeigen",
+      "details": "Technische Details",
+      "actions": {
+        "close": "Schliessen",
+        "go_home": "Zur Startseite",
+        "go_signin": "Zur Anmeldung",
+        "retry": "Erneut versuchen"
       }
     }
   },

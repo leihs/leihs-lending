@@ -11,12 +11,12 @@
    ["lucide-react" :refer [ChevronsUpDown CircleUser LayoutGrid Search]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
-   ["sonner" :refer [toast]]
    ["~/i18n.config.js" :default i18n]
    [leihs.core.core :refer [detect]]
    [leihs.lending.client.lib.csrf :as csrf]
    [leihs.lending.client.lib.urql :refer [default-client run-mutation]]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.provider.theme-provider :refer [use-theme]]
    [promesa.core :as p]
    [uix.core :refer [$ defui]]))
@@ -26,6 +26,7 @@
 
 (defui main [{:keys [currentUser activeLanguages appSettings]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         {:keys [theme set-theme]} (use-theme)
         revalidator (router/useRevalidator)
@@ -35,8 +36,7 @@
                                (p/then (fn [_]
                                          (.changeLanguage i18n locale)
                                          (.revalidate revalidator)))
-                               (p/catch (fn [_]
-                                          (.. toast (error (t "error.action.error")))))))
+                               (p/catch show-error!)))
         user (-> currentUser :user)
         available-pools (:availablePools currentUser)
         available-sub-app-urls (into {}

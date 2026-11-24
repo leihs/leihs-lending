@@ -12,11 +12,11 @@
    ["react-hook-form" :refer [useForm]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
-   ["sonner" :refer [toast]]
    ["zod" :as z]
    [clojure.string :refer [blank?]]
    [leihs.lending.client.components.entities.items-list :refer [ItemsList]]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -26,6 +26,7 @@
    `use-items` is a hook `[id enabled?]` loading the items once the dialog opens."
   [{:keys [order open? set-open! use-items on-success]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
         schema (uix/use-memo
@@ -49,8 +50,7 @@
                                 (if on-success
                                   (on-success)
                                   (.revalidate revalidator))))
-                      (p/catch (fn [_]
-                                 (.. toast (error (t "error.action.error")))))))]
+                      (p/catch show-error!)))]
 
     ($ Dialog {:open open? :on-open-change close!}
        ($ DialogContent {:class-name "sm:max-w-[780px]"

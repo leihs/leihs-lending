@@ -11,9 +11,9 @@
    ["react-hook-form" :refer [useForm]]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
-   ["sonner" :refer [toast]]
    ["zod" :as z]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.edit.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -22,6 +22,7 @@
   "Edits the purpose of an order."
   [{:keys [order open? set-open!]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
         schema (uix/use-memo
@@ -37,8 +38,7 @@
                     (p/then (fn [_]
                               (set-open! false)
                               (.revalidate revalidator)))
-                    (p/catch (fn [_]
-                               (.. toast (error (t "error.action.error")))))))]
+                    (p/catch show-error!)))]
 
     (uix/use-effect
      (fn []
