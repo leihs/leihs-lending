@@ -9,6 +9,7 @@
    [leihs.lending.client.lib.calendar :as cal]
    [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
    [leihs.lending.client.lib.utils :refer [cj jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.edit.components.model-search-field :refer [ModelSearchField]]
    [leihs.lending.client.routes.pools.orders.edit.components.reservation-lines :refer [group-lines]]
    [leihs.lending.client.routes.pools.orders.edit.data :as data]
@@ -51,6 +52,7 @@
    `dates` from `use-dates`. `on-added` runs after a successful add."
   [{:keys [order dates on-added]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         {:keys [start-date end-date set-start-date! set-end-date!]} dates
         date-range {:start-date (cal/day-key start-date)
@@ -64,8 +66,7 @@
                                (.. toast (success (t "orders.edit.added"
                                                      (cj {:name (:name item)}))))
                                (on-added)))
-                     (p/catch (fn [_]
-                                (.. toast (error (t "error.action.error"))))))
+                     (p/catch show-error!))
                  (stub!)))]
 
     ($ :div {:class-name "flex flex-wrap items-center gap-2"}

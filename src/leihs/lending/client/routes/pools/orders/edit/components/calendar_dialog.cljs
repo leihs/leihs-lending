@@ -10,13 +10,13 @@
    ["date-fns" :as date-fns]
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :as router]
-   ["sonner" :refer [toast]]
    [leihs.lending.client.components.date-input :refer [DateInput]]
    [leihs.lending.client.components.booking-calendar.grid :refer [BookingCalendar]]
    [leihs.lending.client.components.booking-calendar.month-nav :refer [MonthNav]]
    [leihs.lending.client.lib.calendar :as cal]
    [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.edit.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -37,6 +37,7 @@
    `on-saved` is called once the change is saved."
   [{:keys [order lines open? set-open! on-saved]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         user (:user order)
         single-line (when (= 1 (count lines)) (first lines))
@@ -94,8 +95,7 @@
                     (p/then (fn [_]
                               (set-open! false)
                               (on-saved)))
-                    (p/catch (fn [_]
-                               (.. toast (error (t "error.action.error")))))
+                    (p/catch show-error!)
                     (p/finally (fn [_ _] (set-saving! false)))))]
 
     (uix/use-effect

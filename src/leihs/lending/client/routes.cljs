@@ -4,6 +4,7 @@
    [leihs.lending.client.lib.utils :refer [cj]]
    [leihs.lending.client.components.loading :refer [loading-fallback]]
    [leihs.lending.client.loader :as loader]
+   [leihs.lending.client.routes.debug.page :rename {page debug-page}]
    [leihs.lending.client.routes.error :rename {page error-page}]
    [leihs.lending.client.routes.layout :rename {layout root-layout}]
    [leihs.lending.client.routes.home.page :rename {page home-page}]
@@ -27,39 +28,52 @@
       :loader loader/root-layout
 
       :children
-      [{:index true
-        :element ($ home-page)}
-
-       {:path ":pool-id/"
-        :id "pool"
-        :element ($ pool-provider)
-        ;;:loader loader/pool-layout
-
+      [{:errorElement ($ error-page)
         :children
-        [{:element ($ pools-layout)
+        [{:index true
+          :element ($ home-page)}
+
+         {:path "debug"
+          :element ($ debug-page)}
+
+         {:path "debug/error/:kind"
+          :loader loader/debug-error}
+
+         {:path ":pool-id/"
+          :id "pool"
+          :element ($ pool-provider)
+
           :children
-          [{:index true
-            :loader #(router/redirect "daily")}
-
-           {:path "daily"
-            :element ($ daily-page)}
-
-           {:path "orders"
+          [{:element ($ pools-layout)
             :children
-            [{:index true
-              :loader loader/orders-page
-              :element ($ orders-page)}
+            [{:errorElement ($ error-page)
+              :children
+              [{:index true
+                :loader #(router/redirect "daily")}
 
-             {:path ":order-id"
-              :loader loader/order-edit-page
-              :element ($ order-edit-page)}]}
+               {:path "daily"
+                :element ($ daily-page)}
 
-           {:path "visits"
-            :loader loader/visits-page
-            :element ($ visits-page)}
+               {:path "orders"
+                :children
+                [{:index true
+                  :loader loader/orders-page
+                  :element ($ orders-page)}
 
-           {:path "contracts"
-            :element ($ contracts-page)}]}]}]}
+                 {:path ":order-id"
+                  :loader loader/order-edit-page
+                  :element ($ order-edit-page)}]}
+
+               {:path "visits"
+                :loader loader/visits-page
+                :element ($ visits-page)}
+
+               {:path "contracts"
+                :element ($ contracts-page)}]}]}]}
+
+         {:path "*"
+          :loader loader/not-found}]}]}
 
      {:path "*"
-      :element ($ error-page)}])))
+      :loader loader/not-found
+      :errorElement ($ error-page)}])))

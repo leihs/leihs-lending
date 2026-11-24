@@ -17,6 +17,7 @@
    [leihs.lending.client.lib.date-utils :refer [date-time-from-iso format-date duration-days]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.components.approve-dialog :refer [ApproveDialog]]
    [leihs.lending.client.routes.pools.orders.components.reject-dialog :refer [RejectDialog]]
    [leihs.lending.client.routes.pools.orders.data :as data]
@@ -25,6 +26,7 @@
 
 (defui OrderRow [{:keys [order use-user-details use-items]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
         edit-url (str "/lending/" pool-id "/orders/" (:id order))
@@ -50,7 +52,7 @@
                        (p/catch (fn [error]
                                   (if (= 422 (urql/error-status error))
                                     (set-approve-failed-open! true)
-                                    (.. toast (error (t "error.action.error"))))))
+                                    (show-error! error))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
     ($ TableRow {:class-name "border-l-4 border-l-transparent odd:bg-muted/50 odd:hover:bg-muted odd:has-aria-expanded:bg-muted"}

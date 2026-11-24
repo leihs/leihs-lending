@@ -17,7 +17,7 @@ feature "Sign-in / Sign-out" do
     click_button "Sign in"
 
     expect(page).to have_content("Invalid credentials")
-    expect(current_path).to eq "/lending/sign-in"
+    expect(page).to have_current_path("/lending/sign-in")
   end
 
   scenario "sign-in with valid credentials lands on home page" do
@@ -26,8 +26,8 @@ feature "Sign-in / Sign-out" do
     fill_in "password", with: "password"
     click_button "Sign in"
 
-    expect(current_path).to eq "/lending/"
-    expect(page).to have_content(@user.login)
+    expect(page).to have_current_path("/lending/")
+    expect(find("header")).to have_content("#{@user.firstname} #{@user.lastname}")
   end
 
   scenario "sign-out clears session and redirects to sign-in" do
@@ -36,7 +36,7 @@ feature "Sign-in / Sign-out" do
     fill_in "password", with: "password"
     click_button "Sign in"
 
-    expect(current_path).to eq "/lending/"
+    expect(page).to have_current_path("/lending/")
 
     # Wait for successful sign-in - header should appear
     expect(page).not_to have_selector("form.ui-form-signin")
@@ -53,6 +53,6 @@ feature "Sign-in / Sign-out" do
     # Click logout button in the dropdown menu
     click_button "Logout"
 
-    expect(current_path).to eq "/lending/sign-in"
+    expect(page).to have_current_path("/lending/sign-in")
   end
 end

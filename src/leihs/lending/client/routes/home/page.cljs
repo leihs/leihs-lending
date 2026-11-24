@@ -6,7 +6,6 @@
    ["react-i18next" :refer [useTranslation]]
    ["react-router" :refer [Link useRouteLoaderData]]
    [leihs.lending.client.components.typo :refer [Typo]]
-   [leihs.lending.client.lib.utils :refer [cj]]
    [uix.core :as uix :refer [$ defui]]))
 
 (defui page []
@@ -37,15 +36,11 @@
                                           :to (str (:id pool))}
                                     (:name pool))))))))))
 
-          ($ CardFooter {:class-name "py-3 px-6 border-t-[1px] bg-muted/50 flex items-center justify-end"}
+          ($ CardFooter {:class-name "py-3 px-6 border-t-[1px] bg-muted/50 flex items-center justify-end gap-6"}
+             ($ Typo {:variant "link"}
+                ($ Link {:to "debug"}
+                   (t "root.debug")))
              ($ Typo {:variant "link"}
                 ($ :a {:target "_blank"
                        :href "/lending/graphiql"}
-                   (t "root.api_browser")))))
-       ($ Card
-          ($ CardHeader
-             ($ CardTitle  "DEV / DEBUG"))
-          ($ CardContent
-             ($ Typo {:variant "p" :class "text-muted-foreground mb-2"} "Root loader data")
-             ($ :pre {:class-name "text-xs overflow-hidden text-ellipsis"}
-                (.stringify js/JSON (cj data) nil 2)))))))
+                   (t "root.api_browser"))))))))

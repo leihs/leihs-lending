@@ -17,6 +17,7 @@
    [leihs.lending.client.lib.date-utils :refer [date-from-iso]]
    [leihs.lending.client.lib.urql :as urql]
    [leihs.lending.client.lib.utils :refer [jc]]
+   [leihs.lending.client.provider.action-error-provider :refer [use-show-error]]
    [leihs.lending.client.routes.pools.orders.data :as data]
    [promesa.core :as p]
    [uix.core :as uix :refer [$ defui]]))
@@ -24,6 +25,7 @@
 (defui ApproveDialog
   [{:keys [order open? set-open! use-items failed? edit-url on-success]}]
   (let [[t] (useTranslation)
+        show-error! (use-show-error)
         {:keys [pool-id]} (jc (router/useParams))
         revalidator (router/useRevalidator)
         {items :data ready? :ready? error? :error?} (use-items (:id order) open?)
@@ -55,7 +57,7 @@
                                   (if (and (not force?)
                                            (= 422 (urql/error-status error)))
                                     (set-refused! true)
-                                    (.. toast (error (t "error.action.error"))))))
+                                    (show-error! error))))
                        (p/finally (fn [_ _] (set-approving! false)))))]
 
     ($ Dialog {:open open? :on-open-change close!}
