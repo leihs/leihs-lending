@@ -66,9 +66,33 @@ feature "Edit order" do
     end
   end
 
+  # The grid is six ISO weeks of the month it opened on. A later day can sit on
+  # the next page; step forward until it is shown. Click the start day before
+  # advancing so the in-progress range anchor stays put.
+  def reveal_day(dialog, date)
+    selector = "[data-day='#{date}']"
+    3.times do
+      break if dialog.has_css?(selector, wait: 0)
+
+      shown = dialog.find("[data-test-id='calendar-month']").text.strip
+      dialog.find("[data-test-id='calendar-next-month']").click
+      dialog.find("[data-test-id='calendar-month']") { |el|
+        label = el.text.strip
+        !label.empty? && label != shown
+      }
+      expect(dialog).not_to have_css("[aria-busy='true']")
+    end
+    dialog.find(selector)
+  end
+
   def pick_range(dialog, start_date, end_date)
-    dialog.find("[data-day='#{start_date}']").click
-    dialog.find("[data-day='#{end_date}']").click
+    reveal_day(dialog, start_date).click
+    # wait for the first click to commit before extending the range
+    expect(dialog.find("[data-test-id='calendar-start-date']").value)
+      .to eq(start_date.strftime("%d/%m/%Y"))
+    reveal_day(dialog, end_date).click
+    expect(dialog.find("[data-test-id='calendar-end-date']").value)
+      .to eq(end_date.strftime("%d/%m/%Y"))
   end
 
   def reservations_of(model)
@@ -440,6 +464,10 @@ feature "Edit order" do
     dialog.find("[data-test-id='calendar-save']").click
 
     expect(page).not_to have_css("[data-test-id='calendar-dialog']")
+    # wait for order revalidation to refresh the add-form defaults (input value, not text)
+    find("[data-test-id='new-reservation-start-date']") { |el|
+      el.value == form_date(next_monday + 1)
+    }
     expect(add_form_dates).to eq([form_date(next_monday + 1), form_date(next_monday + 3)])
   end
 
