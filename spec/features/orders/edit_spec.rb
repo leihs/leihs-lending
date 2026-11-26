@@ -66,9 +66,35 @@ feature "Edit order" do
     end
   end
 
+  # The grid is six ISO weeks of the month it opened on. A later day can sit on
+  # the next page; step forward until it is shown. Click the start day before
+  # advancing so the in-progress range anchor stays put.
+  def reveal_day(dialog, date)
+    selector = "[data-day='#{date}']"
+    3.times do
+      break if dialog.has_css?(selector, wait: 0)
+
+      shown = dialog.find("[data-test-id='calendar-month']").text.strip
+      dialog.find("[data-test-id='calendar-next-month']").click
+      dialog.find("[data-test-id='calendar-month']") { |el|
+        label = el.text.strip
+        !label.empty? && label != shown
+      }
+      expect(dialog).not_to have_css("[aria-busy='true']")
+    end
+    dialog.find(selector)
+  end
+
   def pick_range(dialog, start_date, end_date)
-    day_cell(dialog, start_date).click
-    day_cell(dialog, end_date).click
+    reveal_day(dialog, start_date).click
+    # wait for the first click to commit before extending the range
+    dialog.find("[data-test-id='calendar-start-date']") { |el|
+      el.value == form_date(start_date)
+    }
+    reveal_day(dialog, end_date).click
+    dialog.find("[data-test-id='calendar-end-date']") { |el|
+      el.value == form_date(end_date)
+    }
   end
 
   def reservations_of(model)
@@ -277,15 +303,21 @@ feature "Edit order" do
     # a start after the end moves the end along
     start_input.set(form_date(next_monday + 7))
     start_input.send_keys(:enter)
-    expect(end_input.value).to eq(form_date(next_monday + 7))
+    dialog.find("[data-test-id='calendar-end-date']") { |el|
+      el.value == form_date(next_monday + 7)
+    }
     expect(dialog).to have_css("[data-day='#{next_monday + 7}']")
 
     # days before today are rejected
     start_input.set(form_date(Date.today - 1))
     start_input.send_keys(:enter)
-    expect(start_input["aria-invalid"]).to eq("true")
+    dialog.find("[data-test-id='calendar-start-date']") { |el|
+      el["aria-invalid"] == "true"
+    }
     start_input.send_keys(:tab)
-    expect(start_input.value).to eq(form_date(next_monday + 7))
+    dialog.find("[data-test-id='calendar-start-date']") { |el|
+      el.value == form_date(next_monday + 7)
+    }
 
     end_input.set(form_date(next_monday + 9))
     end_input.send_keys(:enter)
@@ -446,19 +478,29 @@ feature "Edit order" do
     expect(page).not_to have_css("[data-test-id='new-reservation-start-date-relative']")
     start_input.set((next_monday + 7).strftime("%-d/%-m/%y"))
     start_input.send_keys(:enter)
-    expect(start_input.value).to eq(form_date(next_monday + 7))
+    find("[data-test-id='new-reservation-start-date']") { |el|
+      el.value == form_date(next_monday + 7)
+    }
 
     end_input.set((next_monday + 8).iso8601)
     end_input.send_keys(:tab)
-    expect(add_form_dates).to eq([form_date(next_monday + 7), form_date(next_monday + 8)])
+    find("[data-test-id='new-reservation-start-date']") { |el|
+      el.value == form_date(next_monday + 7)
+    }
+    find("[data-test-id='new-reservation-end-date']") { |el|
+      el.value == form_date(next_monday + 8)
+    }
     expect(page).not_to have_css("[data-test-id='new-reservation-start-date-relative']")
 
     end_input.set("31/02/2026")
     end_input.send_keys(:enter)
-    expect(end_input["aria-invalid"]).to eq("true")
+    find("[data-test-id='new-reservation-end-date']") { |el|
+      el["aria-invalid"] == "true"
+    }
     end_input.send_keys(:tab)
-    expect(end_input.value).to eq(form_date(next_monday + 8))
-    expect(end_input["aria-invalid"]).to eq("false")
+    find("[data-test-id='new-reservation-end-date']") { |el|
+      el.value == form_date(next_monday + 8) && el["aria-invalid"] == "false"
+    }
   end
 
   scenario "the add form follows the first date range when it changes" do

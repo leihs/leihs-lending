@@ -146,11 +146,31 @@ feature "Orders filters" do
     expect(page).to have_content("Bob Inrange")
     expect(page).to have_content("Carol Toolate")
 
-    # endDate filter, typed: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
+    # endDate filter via calendar: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
+    find("[data-test-id='endDate-filter-picker']").click
+    within("[data-test-id='endDate-filter-calendar']") do
+      all(:button, (base + 17).day.to_s).last.click  # 18th
+    end
+    expect(page).not_to have_content("Alice Tooearly")
+    expect(page).to have_content("Bob Inrange")
+    expect(page).not_to have_content("Carol Toolate")
+  end
+
+  scenario "filters orders by end date typed into the date field" do
+    base = Date.today.beginning_of_month
+
+    mid_user = FactoryBot.create(:user, firstname: "Bob", lastname: "Inrange")
+    late_user = FactoryBot.create(:user, firstname: "Carol", lastname: "Toolate")
+    create_order(target_user: mid_user, created_at: (base + 13).to_time)
+    create_order(target_user: late_user, created_at: (base + 20).to_time)
+
+    click_on "Orders"
     end_date_input = find("[data-test-id='endDate-filter']")
     end_date_input.set((base + 17).strftime("%d/%m/%Y"))
     end_date_input.send_keys(:enter)
-    expect(page).not_to have_content("Alice Tooearly")
+    find("[data-test-id='endDate-filter']") { |el|
+      el.value == (base + 17).strftime("%d/%m/%Y")
+    }
     expect(page).to have_content("Bob Inrange")
     expect(page).not_to have_content("Carol Toolate")
   end

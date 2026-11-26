@@ -423,10 +423,11 @@ feature "Visits list" do
     expect(page).to have_content("Bob Inrange")
     expect(page).to have_content("Carol Toolate")
 
-    # endDate filter, typed: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
-    end_date_input = find("[data-test-id='endDate-filter']")
-    end_date_input.set((base + 17).strftime("%d/%m/%Y"))
-    end_date_input.send_keys(:enter)
+    # endDate filter via calendar: up to 18th — excludes 21st (Carol), leaves 14th (Bob)
+    find("[data-test-id='endDate-filter-picker']").click
+    within("[data-test-id='endDate-filter-calendar']") do
+      all(:button, (base + 17).day.to_s).last.click  # 18th
+    end
     expect(page).not_to have_content("Alice Tooearly")
     expect(page).to have_content("Bob Inrange")
     expect(page).not_to have_content("Carol Toolate")
