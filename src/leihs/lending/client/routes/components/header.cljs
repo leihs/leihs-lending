@@ -119,12 +119,14 @@
 
              ($ DropdownMenu
                 ($ DropdownMenuTrigger {:asChild "true" :className "ml-4"}
-                   ($ Button {:variant "outline"}
+                   ($ Button {:variant "outline"
+                              :data-test-id "user-menu"}
                       ($ :<>
                          ($ CircleUser {:className "h-4 w-4"})
                          ($ :span {:className "hidden lg:block"} user-name)
                          ($ ChevronsUpDown {:className "h-4 w-4 hidden lg:block"}))))
-                ($ DropdownMenuContent {:className "ml-auto"}
+                ($ DropdownMenuContent {:className "ml-auto"
+                                        :data-test-id "user-menu-content"}
                    ($ DropdownMenuGroup
                       (when-let [url (some-> (appSettings :externalBaseUrl)
                                              (str "/borrow/current-user"))]
@@ -166,21 +168,25 @@
                    ($ DropdownMenuSub
                       ($ DropdownMenuSubTrigger
                          ($ :button {:class-name "flex items-center gap-2"
-                                     :type "button"}
+                                     :type "button"
+                                     :data-test-id "theme-menu"}
                             (t "header.user-menu.theme.title")))
                       ($ DropdownMenuSubContent {:align "end"}
                          ($ DropdownMenuItem {:as-child true
                                               :onClick #(set-theme "light")}
                             ($ :button {:type "button"
+                                        :data-test-id "theme-light"
                                         :class-name (str "w-full font-normal " (when (= theme "light") "font-semibold"))}
                                (t "header.user-menu.theme.light")))
                          ($ DropdownMenuItem {:as-child true
                                               :onClick #(set-theme "dark")}
                             ($ :button {:type "button"
+                                        :data-test-id "theme-dark"
                                         :class-name (str "w-full font-normal " (when (= theme "dark") "font-semibold"))}
                                (t "header.user-menu.theme.dark")))
                          ($ DropdownMenuItem {:as-child true
                                               :onClick #(set-theme "system")}
                             ($ :button {:type "button"
+                                        :data-test-id "theme-system"
                                         :class-name (str "w-full font-normal " (when (= theme "system") "font-semibold"))}
                                (t "header.user-menu.theme.system"))))))))))))
