@@ -306,19 +306,21 @@ feature "Edit order" do
   end
 
   scenario "marks a start date on a closed day as not available" do
-    create_reservation(camera)
+    # mid-month monday: monday + 7 stays within the calendar grid
+    monday = Date.today.next_month.beginning_of_month.next_occurring(:monday) + 7
+    create_reservation(camera, start_date: monday, end_date: monday + 4)
 
     visit_edit_page
     line_of(camera).find("[data-test-id='edit-line']").click
 
     dialog = calendar_dialog
-    pick_range(dialog, next_monday + 1, next_monday + 2)
-    expect(day_cell(dialog, next_monday + 1)[:class]).to include("bg-lime-200")
+    pick_range(dialog, monday + 1, monday + 2)
+    expect(day_cell(dialog, monday + 1)[:class]).to include("bg-lime-200")
 
-    pick_range(dialog, next_monday + 5, next_monday + 7)
-    expect(day_cell(dialog, next_monday + 5)[:class]).to include("bg-red-100")
-    expect(day_cell(dialog, next_monday + 6)[:class]).to include("bg-lime-200")
-    expect(day_cell(dialog, next_monday + 7)[:class]).to include("bg-lime-200")
+    pick_range(dialog, monday + 5, monday + 7)
+    expect(day_cell(dialog, monday + 5)[:class]).to include("bg-red-100")
+    expect(day_cell(dialog, monday + 6)[:class]).to include("bg-lime-200")
+    expect(day_cell(dialog, monday + 7)[:class]).to include("bg-lime-200")
   end
 
   scenario "edits the purpose" do
