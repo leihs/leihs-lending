@@ -323,6 +323,11 @@
   environment_variables:
     FEATURE_NAME: "Edit order 25"
     FEATURE: './spec/features/orders/edit_spec.rb[1:25]'
+'./spec/features/orders/edit_spec.rb[1:26]':
+  name: "Edit order 26"
+  environment_variables:
+    FEATURE_NAME: "Edit order 26"
+    FEATURE: './spec/features/orders/edit_spec.rb[1:26]'
 './spec/features/orders/filters_spec.rb[1:1]':
   name: "Orders filters 01"
   environment_variables:

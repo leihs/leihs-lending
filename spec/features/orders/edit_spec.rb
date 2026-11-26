@@ -111,6 +111,17 @@ feature "Edit order" do
     find("[data-test-id='delete-line']").click
   end
 
+  def add_image(model, content:, thumbnail_content:)
+    image_id = database[:images].insert(
+      target_id: model.id, target_type: "Model",
+      filename: "image.jpg", content_type: "image/jpeg", content: content
+    )
+    database[:images].insert(
+      target_id: model.id, target_type: "Model", parent_id: image_id, thumbnail: true,
+      filename: "image_thumb.jpg", content_type: "image/jpeg", content: thumbnail_content
+    )
+  end
+
   scenario "shows the order's lines grouped by date range" do
     2.times { create_reservation(camera) }
     create_reservation(tripod, end_date: next_monday + 1)
@@ -125,6 +136,21 @@ feature "Edit order" do
     expect(page).to have_css("[data-test-id='reservation-line']", count: 2)
     expect(line_of(camera).find("[data-test-id='line-quantity']")).to have_content(%r{^2$})
     expect(line_of(tripod).find("[data-test-id='line-quantity']")).to have_content(%r{^1$})
+  end
+
+  scenario "shows the full-size image of a model in a dialog" do
+    add_image(camera, content: "RlVMTA==", thumbnail_content: "VEhVTUI=")
+    create_reservation(camera)
+
+    visit_edit_page
+    thumbnail = line_of(camera).find("[data-test-id='model-image'] img")
+    expect(thumbnail[:src]).to eq("data:image/jpeg;base64,VEhVTUI=")
+    thumbnail.click
+
+    within find("[data-test-id='model-image-dialog']") do
+      expect(page).to have_content("Kamera")
+      expect(page).to have_css("img[src='data:image/jpeg;base64,RlVMTA==']")
+    end
   end
 
   scenario "shows a single date for a one-day range" do

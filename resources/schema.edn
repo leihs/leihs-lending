@@ -37,6 +37,9 @@
                    :thumbnailUrl {:type String
                                   :description "Base64 data URL of the model's thumbnail image"
                                   :resolve :model-thumbnail-url}
+                   :imageUrl {:type String
+                              :description "Base64 data URL of the model's full-size image"
+                              :resolve :model-image-url}
                    :borrowableQuantity {:type (non-null Int)
                                         :description "Borrowable items (not retired, not inside a package) of the model in the pool. Ignores dates and reservations."
                                         :resolve :borrowable-quantity}

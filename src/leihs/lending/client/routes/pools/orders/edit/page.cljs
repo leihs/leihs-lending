@@ -190,7 +190,8 @@
                                   :applied-range (:range add-dates)
                                   :on-apply-range (:set-range! add-dates)
                                   :on-edit-line #(open-calendar! [%])
-                                  :on-delete-line #(delete-lines! [%])})))
+                                  :on-delete-line #(delete-lines! [%])
+                                  :use-model-image edit-data/use-model-image})))
 
        ($ PurposeDialog {:order order
                          :open? purpose-open?

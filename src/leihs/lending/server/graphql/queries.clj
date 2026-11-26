@@ -19,6 +19,7 @@
    :current-user users/get-current
    :entitlement-group entitlement-groups/get-one
    :model models/get-one
+   :model-image-url models/get-image-url
    :model-thumbnail-url models/get-thumbnail-url
    :models models/get-multiple
    :option options/get-one

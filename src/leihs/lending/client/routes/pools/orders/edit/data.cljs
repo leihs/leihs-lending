@@ -44,6 +44,19 @@
         {:order order}
         (throw (js/Response. nil #js {:status 404 :statusText "Order not found"}))))))
 
+(def model-image-query
+  "query ($id: UUID!) {
+     model(id: $id) {
+       imageUrl
+     }
+   }")
+
+(defn use-model-image
+  "Loads the full-size image the model image dialog shows."
+  [model-id enabled?]
+  (-> (urql/use-lazy-query model-image-query {:id model-id} enabled?)
+      (update :data #(-> % :model :imageUrl))))
+
 (def model-availability-query
   "query ($modelId: UUID!, $startDate: Date!, $endDate: Date!, $userId: UUID,
           $excludeReservationIds: [UUID!]) {

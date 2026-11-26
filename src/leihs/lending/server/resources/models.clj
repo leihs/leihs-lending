@@ -67,13 +67,13 @@
       first
       :count))
 
-(defn get-thumbnail-url
-  "Base64 data URL of the model's thumbnail -- the cover image's thumbnail when
-  a cover is set, else any thumbnail attached to the model itself."
-  [{{tx :tx} :request} _ {:keys [id cover-image-id]}]
+(defn- image-data-url
+  "Base64 data URL of the model's cover image (or its thumbnail) when a cover is
+  set, else of any such image attached to the model itself."
+  [tx {:keys [id cover-image-id]} thumbnail?]
   (some-> (-> (sql/select :images.content)
               (sql/from :images)
-              (sql/where [:= :images.thumbnail true])
+              (sql/where [:= :images.thumbnail thumbnail?])
               (sql/where (if cover-image-id
                            [:or
                             [:= :images.id cover-image-id]
@@ -85,6 +85,14 @@
               first
               :content)
           images/prefix-with-data-url))
+
+(defn get-thumbnail-url
+  [{{tx :tx} :request} _ model]
+  (image-data-url tx model true))
+
+(defn get-image-url
+  [{{tx :tx} :request} _ model]
+  (image-data-url tx model false))
 
 (defn get-multiple
   [{{tx :tx pool-id :pool-id} :request} {:keys [term category-id]} _]

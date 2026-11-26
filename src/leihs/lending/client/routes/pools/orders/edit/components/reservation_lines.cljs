@@ -170,7 +170,7 @@
                (t "orders.edit.delete-all-hint")))))))
 
 (defui LineRow
-  [{:keys [line selected? toggle! on-edit on-delete delete-blocked?]}]
+  [{:keys [line selected? toggle! on-edit on-delete delete-blocked? use-model-image]}]
   (let [[t] (useTranslation)
         {:keys [model quantity availableQuantity totalAvailableQuantity]} line
         stub! #(.. toast (message (t "orders.actions.not-available")))]
@@ -182,7 +182,7 @@
                        :aria-label (t "orders.edit.select-line")
                        :on-checked-change toggle!}))
        ($ TableCell {:class-name "w-16"}
-          ($ ModelImage {:model model}))
+          ($ ModelImage {:model model :use-image use-model-image}))
        ($ TableCell {:class-name "w-12"}
           ($ ModelBadge {:type (-> model :type)}))
        ($ TableCell {:class-name "w-full font-semibold whitespace-normal"}
@@ -236,9 +236,10 @@
    `selected` is the set of selected line keys, `on-edit-line` opens a line's
    calendar, `on-delete-line` deletes a line, `on-apply-range` gets a group's
    start and end date unless they equal `applied-range`, offered only when
-   there are several groups."
+   there are several groups. `use-model-image` loads a model's full-size image
+   (see ModelImage)."
   [{:keys [lines selected toggle! toggle-many! applied-range on-apply-range
-           on-edit-line on-delete-line]}]
+           on-edit-line on-delete-line use-model-image]}]
   (let [[t] (useTranslation)
         groups (group-lines lines)
         several? (> (count groups) 1)]
@@ -267,4 +268,5 @@
                                   :toggle! #(toggle! (line-key line) %)
                                   :on-edit #(on-edit-line line)
                                   :on-delete #(on-delete-line line)
-                                  :delete-blocked? (= 1 (count lines))}))))))))))
+                                  :delete-blocked? (= 1 (count lines))
+                                  :use-model-image use-model-image}))))))))))
