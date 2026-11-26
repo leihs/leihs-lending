@@ -34,7 +34,7 @@
     ($ Card {:class-name "py-0 gap-0"}
        ($ CardHeader {:className "flex bg-background rounded-xl z-10 sticky top-16 py-6"
                       :style {:background "linear-gradient(to bottom, var(--background) 90%, transparent 100%)"}}
-          ($ :div {:className "flex gap-2"}
+          ($ :div {:className "flex flex-wrap gap-2"}
              ($ TermFilter)
              ($ DateFilter {:param "startDate" :title (t "orders.filters.start-date")})
              ($ DateFilter {:param "endDate" :title (t "orders.filters.end-date")})
