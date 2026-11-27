@@ -91,6 +91,7 @@ jobs:
 
   all-ok:
     name: All Tests OK
+    priority: 999
     depends_on: &ALLOK_DEPS
       build-uberjar passed:
         type: job
@@ -132,7 +133,7 @@ jobs:
 
   good-to-merge:
     name: "⚑ Good To Merge"
-    priority: 99
+    priority: 999
     depends_on: &GOOD_TO_MERGE_DEPS
       all passed:
         type: job
