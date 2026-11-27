@@ -25,13 +25,23 @@ feature "Theme ", type: :feature do
   end
 
   def open_theme_menu
-    # Click on username to open user dropdown
-    click_on "#{user.firstname} #{user.lastname}"
-    # Click on "Appearance" to open theme submenu
-    click_on "Appearance"
-    expect(page).to have_content("Light")
-    expect(page).to have_content("Dark")
-    expect(page).to have_content("System")
+    # Theme changes remount the header; close any leftover Radix menu first
+    # so the next trigger click opens instead of toggling closed.
+    page.send_keys(:escape)
+    expect(page).not_to have_css("[data-test-id='user-menu-content']")
+
+    find("[data-test-id='user-menu']", text: "#{user.firstname} #{user.lastname}").click
+    expect(page).to have_css("[data-test-id='user-menu-content']")
+    find("[data-test-id='theme-menu']", text: "Appearance").click
+    expect(page).to have_css("[data-test-id='theme-light']", text: "Light")
+    expect(page).to have_css("[data-test-id='theme-dark']", text: "Dark")
+    expect(page).to have_css("[data-test-id='theme-system']", text: "System")
+  end
+
+  def select_theme(theme)
+    find("[data-test-id='theme-#{theme}']").click
+    # Wait for menus to close after selection before reopening
+    expect(page).not_to have_css("[data-test-id='user-menu-content']")
   end
 
   scenario "toggle between dark and light themes" do
@@ -42,7 +52,7 @@ feature "Theme ", type: :feature do
     open_theme_menu
 
     # Select Dark theme
-    click_on "Dark"
+    select_theme("dark")
 
     # Verify localStorage is set to "dark"
     expect(get_theme_from_storage).to eq("dark")
@@ -57,7 +67,7 @@ feature "Theme ", type: :feature do
     open_theme_menu
 
     # Select Light theme
-    click_on "Light"
+    select_theme("light")
 
     # Verify localStorage is set to "light"
     expect(get_theme_from_storage).to eq("light")
@@ -76,7 +86,7 @@ feature "Theme ", type: :feature do
     open_theme_menu
 
     # Select System theme
-    click_on "System"
+    select_theme("system")
 
     # Verify localStorage is set to "system"
     expect(get_theme_from_storage).to eq("system")
@@ -95,7 +105,7 @@ feature "Theme ", type: :feature do
 
     # Set dark theme
     open_theme_menu
-    click_on "Dark"
+    select_theme("dark")
     expect(get_theme_from_storage).to eq("dark")
 
     # Reload the page

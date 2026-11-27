@@ -458,14 +458,13 @@ feature "Visits list" do
   scenario "focuses term filter input with Alt+Shift+F" do
     click_on "Visits"
 
-    page.driver.browser.action
-      .key_down(:shift)
-      .key_down(:alt)
-      .send_keys("f")
-      .key_up(:alt)
-      .key_up(:shift)
-      .perform
+    # Wait for TermFilter mount (keydown listener) before the chord.
+    # Under Firefox 153 / geckodriver 0.37 the ActionBuilder chord can race
+    # mount, and a one-shot activeElement check can miss focus settling.
+    find("input[name='term']")
+    find("body").send_keys([:shift, :alt, "f"])
 
+    expect(page).to have_css("input[name='term']:focus")
     expect(page.evaluate_script("document.activeElement.name")).to eq("term")
   end
 
